@@ -1,0 +1,56 @@
+{
+  "name": "nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@prisma/client": "^6.8.2",
+    "@tabler/icons-react": "^3.31.0",
+    "@tosspayments/tosspayments-sdk": "^2.3.6",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
+    "canvas-confetti": "^1.9.3",
+    "dotenv": "^17.0.0",
+    "howler": "^2.2.4",
+    "immer": "^10.1.1",
+    "motion": "^12.12.0",
+    "next": "15.2.4",
+    "next-auth": "^5.0.0-beta.29",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-toastify": "^11.0.5",
+    "wavesurfer.js": "^7.9.4",
+    "zod": "^3.25.67",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+
+    "@tailwindcss/postcss": "^4",
+    "lightningcss": "^1.28.2",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "lato-font": "^3.0.0",
+    "prisma": "^6.8.2",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.1.7",
+    "@tailwindcss/oxide-linux-arm64-gnu": "^4.1.7",
+    "@tailwindcss/oxide-darwin-x64": "^4.1.7",
+    "@tailwindcss/oxide-darwin-arm64": "^4.1.7",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.1.7",
+    "lightningcss-linux-x64-gnu": "^1.28.2",
+    "lightningcss-linux-arm64-gnu": "^1.28.2",
+    "lightningcss-darwin-x64": "^1.28.2",
+    "lightningcss-darwin-arm64": "^1.28.2",
+    "lightningcss-win32-x64-msvc": "^1.28.2"
+  }
+}
