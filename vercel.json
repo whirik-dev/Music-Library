@@ -7,7 +7,7 @@
       "runtime": "nodejs18.x"
     }
   },
-  "regions": ["icn1", "hnd1"],
+  "regions": ["icn1"],
   "env": {
     "NODE_ENV": "production"
   }
