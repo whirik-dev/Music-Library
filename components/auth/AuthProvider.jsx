@@ -27,6 +27,8 @@ export default function AuthProvider() {
         const verifySession = async (session) => {
             // JWT 토큰에서 가져온 사용자 정보와 인증 상태 확인
             console.log('debug1');
+            console.log(JSON.stringify(session));
+            console.log(session);
             if (session?.user?.hasAuth) {
                 try {
                     console.log('debug2');
@@ -222,6 +224,7 @@ export default function AuthProvider() {
                 }
             }
             else {
+                console.log('debug3');
                 // Silently handle logout state
                 clearUserInfo();
                 toggleIsLogged(false);
