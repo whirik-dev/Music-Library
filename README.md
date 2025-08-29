@@ -27,4 +27,3 @@ npm run dev
 │── public/
 └── README.md   # Project documentation
 ```
-# Music-Library

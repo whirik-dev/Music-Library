@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import { ToastContainer, toast } from 'react-toastify';
 import useAuthStore from "@/stores/authStore";
@@ -10,7 +10,7 @@ const DownloadBtn = ({ asset_id }) => {
     const [downloaded, setDownloaded] = useState(false);
     const [isPrepare, setIsPrepare] = useState(false); 
     const [count, setCount] = useState(1);
-    const { data: session, status } = useJWTAuth();
+    const { data: session, status } = useSession();
     const {
         downloadPoints,
         setDownloadPoints,
@@ -42,7 +42,7 @@ const DownloadBtn = ({ asset_id }) => {
     
         setIsPrepare(true);
         toggleIsDownloading(true);
-        // 3초 준비 시간
+        // 10초 기다리는 함수 따로 빼기
         const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         for(let i=0; i<3; i++)
         {
@@ -52,25 +52,21 @@ const DownloadBtn = ({ asset_id }) => {
         toggleIsDownloading(false);
     
         try {
-            // 서버 API를 통해 다운로드 권한 확인
-            const downloadPermission = await fetch('/api/user/download', {
-                method: 'POST',
+            const downloadPermission = await fetch(`https://w46-g5e.whirik.com/download/${asset_id}`, {
+                method: 'GET',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${session.user.ssid}`
                 },
-                credentials: 'include',
-                body: JSON.stringify({ asset_id })
             });
     
             const result = await downloadPermission.json();
     
-            if (!result.success) {
-                if (result.error && downloadPoints === 0) {
+            if (result.error) {
+                if (downloadPoints === 0) {
                     toast.warn("No download points available.");
                     return;
                 }
-                toast.error(result.message || "Download permission denied.");
-                return;
             }
     
             if (result.data.pointDownShift) {
@@ -83,10 +79,13 @@ const DownloadBtn = ({ asset_id }) => {
     
             setDownloaded(true);
     
-            // 서버 API를 통해 파일 다운로드
-            const response = await fetch(`/api/user/download?fileId=${result.data.id}`, {
+            const fileUrl = `https://mimiu-test.changhyun-me.workers.dev/${result.data.id}`;
+    
+            const response = await fetch(fileUrl, {
                 method: 'GET',
-                credentials: 'include'
+                headers: {
+                    'Authorization': `Bearer ${session.user.ssid}`
+                }
             });
     
             if (!response.ok) {

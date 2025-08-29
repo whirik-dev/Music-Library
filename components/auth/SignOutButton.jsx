@@ -1,39 +1,36 @@
 "use client";
 
 import { IconLogout } from "@tabler/icons-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from 'react-toastify';
-import { useJWTAuth } from "@/hooks/useJWTAuth";
-import { clearTokenCache } from "@/utils/jwtHelpers";
 
 import useAuthStore from "@/stores/authStore";
 
 const SignOutButton = () => {
     const { toggleIsLogged, clearUserInfo, initializing } = useAuthStore();
-    const { data: session } = useJWTAuth();
+    const { data: session } = useSession();
 
   const handleSignOut = async () => {
 
     try {
-      // 인증 상태 확인 (ssid는 서버에서만 확인)
-      if (!session?.user?.hasAuth) {
+      const session_id = session.user.ssid; // 세션에서 ssid 추출
+      if (!session_id) {
         alert('로그인 정보가 없습니다.');
-        console.log('No authentication found');
+        console.log(JSON.stringify(session.user));
         return;
       }
 
-      const response = await fetch('/api/auth/signout', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signout`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.ssid}`
         },
       });
 
       const result = await response.json();
 
-      if (result.success || response.status === 401) {
-        // 성공하거나 이미 로그아웃된 상태(401)면 정상 처리
-        clearTokenCache(); // JWT 캐시 클리어
+      if (result.success) {
         toggleIsLogged(false);
         clearUserInfo();
         initializing();
@@ -45,14 +42,8 @@ const SignOutButton = () => {
         toast.error('Signout Fail');
       }
     } catch (error) {
-      console.error('Signout error:', error);
-      // 네트워크 오류나 기타 오류가 발생해도 로그아웃 처리
-      clearTokenCache(); // JWT 캐시 클리어
-      toggleIsLogged(false);
-      clearUserInfo();
-      initializing();
-      await signOut({ redirect: false });
-      toast.success('Signout Success');
+      // toast.error('Server Error');
+      alert('서버 오류: ' + error.message);
     }
   };
 

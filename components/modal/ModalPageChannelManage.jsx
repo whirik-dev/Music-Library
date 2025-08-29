@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
@@ -124,7 +124,7 @@ const ModalPageChannelManage = ({ }) => {
     });
 
     const { path, depth, setDepth } = modalStore();
-    const { data: session, status } = useJWTAuth();
+    const { data: session, status } = useSession();
 
     // 여기서부터 시작
 
@@ -140,9 +140,12 @@ const ModalPageChannelManage = ({ }) => {
     useEffect(() => {
         const fetchChannels = async () => {
             try {
-                const res = await fetch('/api/user/channels', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channels`, {
                     method: 'GET',
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.user.ssid}`
+                    }
                 });
 
                 if (!res.ok) {
@@ -178,11 +181,11 @@ const ModalPageChannelManage = ({ }) => {
             }
         };
 
-        if (session?.user?.hasAuth) {
+        if (session?.user?.ssid) {
             fetchChannels();
         }
 
-    }, [session?.user?.hasAuth]);
+    }, [session?.user?.ssid]);
 
     useEffect(() => {
         const platformDetected = detectPlatform(inputUrl);
@@ -225,12 +228,12 @@ const ModalPageChannelManage = ({ }) => {
 
         setLoading(true);
         try {
-            const res = await fetch('/api/user/channels', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channel`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.user.ssid}`
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     name: inputName,
                     description: inputDescription || `${platform} channel`,
@@ -245,9 +248,12 @@ const ModalPageChannelManage = ({ }) => {
 
             if (res.ok && responseData.success) {
                 // 성공적으로 추가됨 - 채널 목록 새로고침
-                const channelsRes = await fetch('/api/user/channels', {
+                const channelsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channels`, {
                     method: 'GET',
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.user.ssid}`
+                    }
                 });
 
                 if (channelsRes.ok) {
@@ -280,9 +286,12 @@ const ModalPageChannelManage = ({ }) => {
 
     const handleToggleAutoRenewal = async (channelId, newValue) => {
         try {
-            const res = await fetch(`/api/user/channels/${channelId}/auto-renewal`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channel/${channelId}/auto-renewal`, {
                 method: 'PUT',
-                credentials: 'include'
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.user.ssid}`
+                }
             });
 
             const responseData = await res.json();
@@ -313,9 +322,12 @@ const ModalPageChannelManage = ({ }) => {
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/user/channels?id=${channelId}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channel/${channelId}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.user.ssid}`
+                }
             });
 
             const responseData = await res.json();
@@ -351,12 +363,12 @@ const ModalPageChannelManage = ({ }) => {
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/user/channels/${editingChannel?.id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/channel/${editingChannel?.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.user.ssid}`
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     name: inputName,
                     description: inputDescription || `${platform} channel`,

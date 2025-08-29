@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { IconLoader2, IconCheck, IconX } from "@tabler/icons-react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 
 import useTailoredStore from "@/stores/useTailoredStore";
 import useModalStore from "@/stores/modalStore";
@@ -69,7 +69,7 @@ const TailoredSubmit = () => {
     const { userInfo } = useAuthStore();
     const [currentStatus, setCurrentStatus] = useState("");
     const [jobState, setJobState] = useState("processing"); // processing, success, error
-    const { data: session, status } = useJWTAuth();
+    const { data: session, status } = useSession();
 
     useEffect(() => {
         setCurrentStatus("요청하신 Tailored 작업을 발행 중 입니다.");
@@ -91,12 +91,12 @@ const TailoredSubmit = () => {
                 // currentTailoredInfo.data의 내용만 body로 전송
                 const requestBody = currentTailoredInfo?.data || {};
 
-                const response = await fetch('/api/jobs/create', {
+                const response = await fetch('http://localhost:3030/jobs/create', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.user.ssid}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify(requestBody)
                 });
 

@@ -5,17 +5,7 @@ const nextConfig: NextConfig = {
     images: {
         domains: ['asset.changhyun.me'],
     },
-    reactStrictMode: false,
-    
-    experimental: {
-        turbo: {
-            rules: {
-                '*.css': {
-                    loaders: ['@tailwindcss/postcss'],
-                },
-            },
-        },
-    },
+    reactStrictMode:false
 };
 
 export default nextConfig;

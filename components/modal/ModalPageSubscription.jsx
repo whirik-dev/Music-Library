@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 
 import useToggle from "@/utils/useToggle";
 import useAuthStore from "@/stores/authStore";
@@ -11,7 +11,7 @@ import ModalTable from "@/components/modal/ModalTable";
 import modalStore from "@/stores/modalStore";
 
 const ModalPageSubscription = ({}) => {
-    const { data: session, status } = useJWTAuth();
+    const { data: session, status } = useSession();
     const [userMembershipData, setUserMembershipData] = useState(null);
     const { setPath, setDepth } = modalStore();
     const {
@@ -24,28 +24,22 @@ const ModalPageSubscription = ({}) => {
 
     useEffect(() => {
         const fetchMembership = async () => {
-            try {
-                const res = await fetch('/api/user/membership', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const result = await res.json();
-                
-                if (result.success) {
-                    setUserMembershipData(result.data);
-                } else {
-                    console.error('Failed to fetch membership:', result.message);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/membership`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${session.user.ssid}`
                 }
-            } catch (error) {
-                console.error('Error fetching membership:', error);
-            }
+            });
+            const data = await res.json();
+            setUserMembershipData(data.data);
         };
 
-        if (session?.user?.hasAuth) {
+        if (session.user.ssid) {
             fetchMembership();
         }
 
-    }, [session?.user?.hasAuth]);
+    }, [session?.user?.ssid]);
 
     function formatDateToDottedText(dateString) 
     {

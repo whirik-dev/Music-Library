@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 import { IconHeart, IconHeartFilled } from "@tabler/icons-react"
 import useAuthStore from "@/stores/authStore";
 
 const FavoriteHeart = ({ asset_id }) => {
-    const { data: session, status } = useJWTAuth();
+    const { data: session, status } = useSession();
     const {
         favoriteId,
         favoriteList,
@@ -25,10 +25,11 @@ const FavoriteHeart = ({ asset_id }) => {
         // 스토어 업데이트도 같이
         if (newHeart) {
 
-            const addRequest = await fetch('/api/playlist/add', {
+            const addRequest = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/playlist/add`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${session.user.ssid}`
                 },
                 body: JSON.stringify({
                     playlist_id: favoriteId,
@@ -43,10 +44,11 @@ const FavoriteHeart = ({ asset_id }) => {
             }
         } else {
 
-            const removeRequest = await fetch('/api/playlist/remove', {
+            const removeRequest = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/playlist/remove`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${session.user.ssid}`
                 },
                 body: JSON.stringify({
                     playlist_id: favoriteId,

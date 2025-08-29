@@ -50,7 +50,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
                 .requestBillingAuth({
                     method: 'CARD',
                     successUrl: `${window.location.origin}/payment/billing`,
-                    failUrl: `${window.location.origin}/payment/fail`,
+                    failUrl: `${window.location.origin}/fail`,
                     customerEmail: 'customer123@gmail.com',
                     customerName: '김토스',
                 });

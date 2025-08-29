@@ -8,7 +8,7 @@ const HealthCheckProvider = ({ children }) => {
     useEffect(() => {
         const checkHealth = async () => {
             try {
-                const res = await fetch('/api/health');
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/health`);
                 const data = await res.json();
                 setIsHealthy(data.status === "ok" && true);
             } catch (err) {

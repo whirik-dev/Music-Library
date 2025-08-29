@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
 import Provider from "@/components/Provider";
+import AuthProvider from "@/components/auth/AuthProvider";
 import HealthCheckProvider from "@/components/HealthCheckProvider";
 
 import MainLayout from "../../components/MainLayout"
@@ -47,6 +48,7 @@ export default function AppLayout({ children }) {
           pauseOnHover
           theme="dark"
         />
+        <AuthProvider />
       </Provider>
       <SpeedInsights />
       <Analytics />

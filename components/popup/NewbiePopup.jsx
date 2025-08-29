@@ -1,13 +1,13 @@
 "use client"
 import { useEffect } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
+import { useSession } from "next-auth/react";
 import useAuthStore from "@/stores/authStore";
 import useConfetti from "@/hooks/useConfetti";
 import PopupBase from "./PopupBase";
 import Button from "@/components/ui/Button2";
 
 const NewbiePopup = () => {
-    const { data: session } = useJWTAuth();
+    const { data: session } = useSession();
     const {
         isNewbie,
         setIsNewbie
@@ -27,12 +27,14 @@ const NewbiePopup = () => {
                 'Content-Type': 'application/json',
             };
 
-            const response = await fetch('/api/auth/newbie-confirm', {
+            // 세션이 있고 토큰이 있으면 Authorization 헤더 추가
+            if (session?.user?.ssid) {
+                headers['Authorization'] = `Bearer ${session.user.ssid}`;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/newbie/confirm`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
+                headers
             });
 
             if (response.ok) {

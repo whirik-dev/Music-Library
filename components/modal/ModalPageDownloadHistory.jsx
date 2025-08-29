@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
-import { IconLoader2 } from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 import useAuthStore from "@/stores/authStore";
@@ -42,6 +41,7 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
     };
 
     const title = getMetadataValue('title');
+    const subtitle = getMetadataValue('subtitle');
     const duration = parseFloat(getMetadataValue('duration'));
 
     // keywords에서 태그 추출
@@ -89,7 +89,7 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
 };
 
 const ModalPageDownloadHistory = ({ }) => {
-    const { data: session } = useJWTAuth();
+    const { data: session } = useSession();
     const { downloadHistory } = useAuthStore();
     const { toggleExpand, setDepth } = modalStore();
     const [musicDataList, setMusicDataList] = useState({});
@@ -105,73 +105,95 @@ const ModalPageDownloadHistory = ({ }) => {
         }
     );
 
+    // URL에서 음악 ID 추출하는 함수
+    const extractMusicIdFromUrl = (url) => {
+        console.log('Trying to extract ID from URL:', url);
+
+        // 다양한 UUID 패턴을 시도
+        const patterns = [
+            /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i, // 표준 UUID with dashes
+            /\/([a-f0-9]{32})/i, // UUID without dashes
+            /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i, // UUID anywhere in string
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) {
+                console.log('Found ID:', match[1]);
+                return match[1];
+            }
+        }
+
+        console.log('No ID found in URL');
+        return null;
+    };
+
+    // 음악 정보를 가져오는 함수
+    const fetchMusicData = async (musicId) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/${musicId}`, {
+                headers: {
+                    'Authorization': `Bearer ${session?.user?.ssid}`
+                }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                return result.data;
+            }
+            return null;
+        } catch (error) {
+            console.error(`Error fetching music data for ${musicId}:`, error);
+            return null;
+        }
+    };
+
     // downloadHistory가 변경될 때마다 음악 정보를 가져옴
     useEffect(() => {
         const loadMusicData = async () => {
-            console.log('DownloadHistory - Session status:', session);
-            console.log('DownloadHistory - downloadHistory:', downloadHistory);
+            console.log('Download History:', downloadHistory);
+            console.log('Session:', session?.user?.ssid);
 
-            if (!session?.user?.hasAuth) {
-                console.log('DownloadHistory - Not authenticated');
+            if (!session?.user?.ssid) {
+                console.log('No session found');
                 setLoading(false);
                 return;
             }
 
             if (downloadHistory.length === 0) {
-                console.log('DownloadHistory - No download history found');
+                console.log('No download history found');
                 setLoading(false);
                 return;
             }
 
             setLoading(true);
+            const musicData = {};
 
-            try {
-                // 서버 API를 통해 다운로드 히스토리 음악 정보를 가져옴
-                const encodedUrls = downloadHistory.map(url => encodeURIComponent(url)).join(',');
-                const response = await fetch(`/api/user/download-history?urls=${encodedUrls}`, {
-                    credentials: 'include'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    const musicData = {};
-                    result.data.forEach(item => {
-                        musicData[item.id] = item.data;
-                    });
-                    console.log('DownloadHistory - Final music data:', musicData);
-                    setMusicDataList(musicData);
-                } else {
-                    console.error('DownloadHistory - API error:', result.message);
+            // URL에서 음악 ID를 추출하고 음악 정보를 가져옴
+            const promises = downloadHistory.map(async (url) => {
+                console.log('Processing URL:', url);
+                const musicId = extractMusicIdFromUrl(url);
+                console.log('Extracted Music ID:', musicId);
+
+                if (musicId) {
+                    const data = await fetchMusicData(musicId);
+                    console.log('Fetched data for', musicId, ':', data);
+                    if (data) {
+                        musicData[musicId] = data;
+                    }
                 }
-            } catch (error) {
-                console.error('DownloadHistory - Fetch error:', error);
-            }
+            });
 
+            await Promise.all(promises);
+            console.log('Final music data:', musicData);
+            setMusicDataList(musicData);
             setLoading(false);
         };
 
         loadMusicData();
     }, [downloadHistory, session]);
 
-    // URL에서 음악 ID 추출하는 함수 (클라이언트에서 표시용)
-    const extractMusicIdFromUrl = (url) => {
-        const patterns = [
-            /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
-            /\/([a-f0-9]{32})/i,
-            /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
-        ];
-
-        for (const pattern of patterns) {
-            const match = url.match(pattern);
-            if (match) {
-                return match[1];
-            }
-        }
-        return null;
-    };
-
-    // 유니크한 음악 ID 목록 생성 (표시용)
+    // 유니크한 음악 ID 목록 생성
     const uniqueMusicIds = [...new Set(
         downloadHistory
             .map(url => extractMusicIdFromUrl(url))
@@ -187,9 +209,8 @@ const ModalPageDownloadHistory = ({ }) => {
             <div className="mx-3">
                 <ModalPageDownloadHistoryItem type="head" />
                 {loading ? (
-                    <div className="py-8 text-center text-foreground/50 flex items-center justify-center">
-                        {/* Loading your download history... */}
-                        <IconLoader2 className="animate-spin" />
+                    <div className="py-8 text-center text-foreground/50">
+                        Loading your download history...
                     </div>
                 ) : uniqueMusicIds.length === 0 ? (
                     <div className="py-8 text-center text-foreground/50">

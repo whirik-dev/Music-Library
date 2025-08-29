@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useJWTAuth } from "@/hooks/useJWTAuth";
-import { IconLoader2 } from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 import useAuthStore from "@/stores/authStore";
@@ -42,6 +41,7 @@ const ModalPageFavoriteListItem = ({ type, musicData }) => {
     };
 
     const title = getMetadataValue('title');
+    const subtitle = getMetadataValue('subtitle');
     const duration = parseFloat(getMetadataValue('duration'));
 
     // keywords에서 태그 추출
@@ -86,7 +86,7 @@ const ModalPageFavoriteListItem = ({ type, musicData }) => {
 };
 
 const ModalPageFavoriteList = ({ }) => {
-    const { data: session } = useJWTAuth();
+    const { data: session } = useSession();
     const { favoriteList } = useAuthStore();
     const { toggleExpand, setDepth } = modalStore();
     const [musicDataList, setMusicDataList] = useState({});
@@ -102,48 +102,47 @@ const ModalPageFavoriteList = ({ }) => {
         }
     );
 
+    // 음악 정보를 가져오는 함수
+    const fetchMusicData = async (musicId) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/${musicId}`, {
+                headers: {
+                    'Authorization': `Bearer ${session?.user?.ssid}`
+                }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                return result.data;
+            }
+            return null;
+        } catch (error) {
+            console.error(`Error fetching music data for ${musicId}:`, error);
+            return null;
+        }
+    };
+
     // favoriteList가 변경될 때마다 음악 정보를 가져옴
     useEffect(() => {
         const loadMusicData = async () => {
-            console.log('FavoriteList - Session status:', session);
-            console.log('FavoriteList - favoriteList:', favoriteList);
-
-            if (!session?.user?.hasAuth) {
-                console.log('FavoriteList - Not authenticated');
-                setLoading(false);
-                return;
-            }
-
-            if (favoriteList.length === 0) {
-                console.log('FavoriteList - No favorites found');
+            if (!session?.user?.ssid || favoriteList.length === 0) {
                 setLoading(false);
                 return;
             }
 
             setLoading(true);
+            const musicData = {};
 
-            try {
-                // 서버 API를 통해 즐겨찾기 음악 정보를 가져옴
-                const response = await fetch(`/api/user/favorites?ids=${favoriteList.join(',')}`, {
-                    credentials: 'include'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const musicData = {};
-                    result.data.forEach(item => {
-                        musicData[item.id] = item.data;
-                    });
-                    console.log('FavoriteList - Final music data:', musicData);
-                    setMusicDataList(musicData);
-                } else {
-                    console.error('FavoriteList - API error:', result.message);
+            // 모든 즐겨찾기 음악의 정보를 병렬로 가져옴
+            const promises = favoriteList.map(async (musicId) => {
+                const data = await fetchMusicData(musicId);
+                if (data) {
+                    musicData[musicId] = data;
                 }
-            } catch (error) {
-                console.error('FavoriteList - Fetch error:', error);
-            }
+            });
 
+            await Promise.all(promises);
+            setMusicDataList(musicData);
             setLoading(false);
         };
 
@@ -159,9 +158,8 @@ const ModalPageFavoriteList = ({ }) => {
             <div className="mx-3">
                 <ModalPageFavoriteListItem type="head" />
                 {loading ? (
-                    <div className="py-8 text-center text-foreground/50 flex items-center justify-center">
-                        {/* Loading your favorites... */}
-                        <IconLoader2 className="animate-spin" />
+                    <div className="py-8 text-center text-foreground/50">
+                        Loading your favorites...
                     </div>
                 ) : favoriteList.length === 0 ? (
                     <div className="py-8 text-center text-foreground/50">
