@@ -26,8 +26,10 @@ export default function AuthProvider() {
 
         const verifySession = async (session) => {
             // JWT 토큰에서 가져온 사용자 정보와 인증 상태 확인
+            console.log('debug1');
             if (session?.user?.hasAuth) {
                 try {
+                    console.log('debug2');
                     toggleIsLoading(true);
                     console.log(`[${new Date().toISOString()}] Starting user initialization for user: ${session.user.email}`);
 
