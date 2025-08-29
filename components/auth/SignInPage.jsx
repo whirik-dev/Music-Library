@@ -52,7 +52,7 @@ const SignInPage = () => {
                 {/* Sign Up Area */}
                 <div className="flex-1 flex flex-col gap-3">
                     <span className="text-3xl mb-10">Sign Up</span>
-                    <span>회원가입 독려 메시지, ex)지금 바로 고퀄리티 라이브러리의 접근권한을 얻으세요! 등...</span>
+                    {/* <span>회원가입 독려 메시지, ex)지금 바로 고퀄리티 라이브러리의 접근권한을 얻으세요! 등...</span> */}
 
                     <Button name="Sign Up" onClick={()=>setModalPage('signup')} className="mt-auto"/>
                 </div>
