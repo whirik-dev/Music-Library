@@ -90,11 +90,14 @@ const useMusicListStore = create((set, get) => ({
                     : null;
 
                 if (imageUrl) {
-                    await new Promise((res, rej) => {
+                    await new Promise((res) => {
                         const img = new Image();
                         img.src = imageUrl;
                         img.onload = res;
-                        img.onerror = rej;
+                        img.onerror = () => {
+                            console.warn(`Thumbnail not found for ID: ${item.id}`);
+                            res(); // 에러가 발생해도 resolve로 처리
+                        };
                     });
                 }
 
@@ -104,11 +107,14 @@ const useMusicListStore = create((set, get) => ({
                     : null;
 
                 if (waveUrl) {
-                    await new Promise((res, rej) => {
+                    await new Promise((res) => {
                         const img = new Image();
                         img.src = waveUrl;
                         img.onload = res;
-                        img.onerror = rej;
+                        img.onerror = () => {
+                            console.warn(`Wave image not found for ID: ${item.id}`);
+                            res(); // 에러가 발생해도 resolve로 처리
+                        };
                     });
                 }
 

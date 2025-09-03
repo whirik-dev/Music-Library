@@ -62,6 +62,10 @@ const WaveProgress = ({ id, metadata }) => {
                             height="50"
                             alt="wave graph"
                             ref={boxRef}
+                            onError={(e) => {
+                                console.warn(`Wave image not found for ID: ${id}`);
+                                e.target.style.display = 'none';
+                            }}
                         />
                     )}
                 </div>
@@ -81,6 +85,10 @@ const WaveProgress = ({ id, metadata }) => {
                                 width="800"
                                 height="50"
                                 alt="wave graph"
+                                onError={(e) => {
+                                    console.warn(`Wave progress image not found for ID: ${id}`);
+                                    e.target.style.display = 'none';
+                                }}
                             />
                         </div>
                     </div>

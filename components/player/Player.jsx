@@ -1,4 +1,5 @@
 import { IconScissors, IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconPlayerTrackNextFilled, IconLoader2 } from "@tabler/icons-react"
+import { useState, useEffect } from "react";
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
 import useMusicListStore from "@/stores/useMusicListStore";
@@ -36,6 +37,10 @@ const Player = ({}) => {
                                 <img
                                     src={`https://asset.probgm.com/${playingTrackId}?r=thumbnail`}
                                     alt="albumart image"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.parentElement.innerHTML = '<div class="w-full h-full bg-foreground/10 rounded-sm"></div>';
+                                    }}
                                 />
                             </div>
                         ) : (
