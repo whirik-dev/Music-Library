@@ -86,7 +86,7 @@ const useMusicListStore = create((set, get) => ({
             items.map(async (item) => {
                 const hasThumbnail = item.files.includes('thumbnail');
                 const imageUrl = hasThumbnail
-                    ? `https://asset.mimiu.me/${item.id}?r=thumbnail`
+                    ? `https://asset.probgm.com/${item.id}?r=thumbnail`
                     : null;
 
                 if (imageUrl) {
@@ -100,7 +100,7 @@ const useMusicListStore = create((set, get) => ({
 
                 const hasWaveimage = item.files.includes('waveimg');
                 const waveUrl = hasWaveimage
-                    ? `https://asset.mimiu.me/${item.id}?r=waveimage`
+                    ? `https://asset.probgm.com/${item.id}?r=waveimage`
                     : null;
 
                 if (waveUrl) {

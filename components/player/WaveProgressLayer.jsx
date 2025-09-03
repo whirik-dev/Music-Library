@@ -54,7 +54,7 @@ const WaveProgressLayer = ({ id, metadata }) => {
         if (playingTrackId !== id || playingTrackId === null) {
             // 다른 트랙에서 이동
             try {
-                await play(id, metadata, `https://asset.mimiu.me/${id}?r=preview`);
+                await play(id, metadata, `https://asset.probgm.com/${id}?r=preview`);
                 seek(metadata.find(item => item.type === "duration").content * ratio);
             } catch (error) {
                 console.error("트랙 재생 실패:", error);

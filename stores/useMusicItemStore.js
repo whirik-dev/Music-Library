@@ -57,7 +57,7 @@ const useMusicItemStore = create((set, get) => {
             const musicList = useMusicListStore.getState().musicList;
             const metadata = musicList.find((m) => m.id === trackId).metadata;
             const files = musicList.find((m) => m.id === trackId).files;
-            const url = `https://asset.mimiu.me/${trackId}?r=preview`;
+            const url = `https://asset.probgm.com/${trackId}?r=preview`;
 
             const prevPlayer = get().player;
             if (prevPlayer) {

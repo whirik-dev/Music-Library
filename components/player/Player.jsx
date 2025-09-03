@@ -34,7 +34,7 @@ const Player = ({}) => {
                         playingFiles?.includes('thumbnail') ? (
                             <div className="rounded-sm overflow-hidden">
                                 <img
-                                    src={`https://asset.mimiu.me/${playingTrackId}?r=thumbnail`}
+                                    src={`https://asset.probgm.com/${playingTrackId}?r=thumbnail`}
                                     alt="albumart image"
                                 />
                             </div>

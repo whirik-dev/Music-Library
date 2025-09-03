@@ -49,7 +49,7 @@ const TailoredPlayer = ({ id }) => {
                     musicList.data.files?.includes('thumbnail') ? (
                         <div className="rounded-sm overflow-hidden">
                             <img
-                                src={`https://asset.mimiu.me/${id}?r=thumbnail`}
+                                src={`https://asset.probgm.com/${id}?r=thumbnail`}
                                 alt="albumart image"
                             />
                         </div>
