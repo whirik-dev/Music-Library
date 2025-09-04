@@ -79,7 +79,7 @@ const DownloadBtn = ({ asset_id }) => {
     
             setDownloaded(true);
     
-            const fileUrl = `https://mimiu-test.changhyun-me.workers.dev/${result.data.id}`;
+            const fileUrl = `https://asset.probgm.com/${result.data.id}`;
     
             const response = await fetch(fileUrl, {
                 method: 'GET',

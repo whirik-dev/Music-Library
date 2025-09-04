@@ -12,7 +12,7 @@ import DownloadBtn from "@/components/player/DownloadBtn";
 import TailoredBtn from "@/components/player/TailoredBtn";
 import VolumeBar from "@/components/player/VolumeBar";
 
-const Player = ({}) => {
+const Player = ({ }) => {
     const { status, playingAlbumart, playingMetadata, playingTrackId, playingFiles, play, resume, pause, stop } = useMusicItemStore();
     const { musicList } = useMusicListStore();
 
@@ -53,18 +53,18 @@ const Player = ({}) => {
                 <div className="flex flex-col w-auto md:w-36 xl:w-48">
                     <div className="font-bold">{status != null ? playingMetadata.find(item => item.type === "title")?.content : (<span className="text-white/30">Now Stanby</span>)}</div>
                     <div className="hidden md:block text-foreground/40">
-                        {status != null ? playingMetadata.find(item => item.type === "subtitle")?.content 
-                                        : (<span className="text-foreground/30">Sub Title</span>)}
+                        {status != null ? playingMetadata.find(item => item.type === "subtitle")?.content
+                            : (<span className="text-foreground/30">Sub Title</span>)}
                     </div>
                 </div>
 
                 {/* 재생정지버튼 */}
                 <div className="flex flex-row items-center gap-1">
                     {status != null ? (
-                        <IconPlayerStopFilled size="18" className="cursor-pointer hover:opacity-70" onClick={() => {stop();}} />
+                        <IconPlayerStopFilled size="18" className="cursor-pointer hover:opacity-70" onClick={() => { stop(); }} />
                     ) : (
                         <div className="size-7"></div>
-                    )} 
+                    )}
 
                     <div className="size-12 bg-zinc-800 rounded-full flex items-center justify-center">
                         {status === "loading" ? (
@@ -74,9 +74,9 @@ const Player = ({}) => {
                         ) : (
                             <>
                                 {status === "playing" ? (
-                                    <IconPlayerPauseFilled size="24" className="cursor-pointer hover:opacity-70" onClick={() => {status == "playing" && pause()}} />
+                                    <IconPlayerPauseFilled size="24" className="cursor-pointer hover:opacity-70" onClick={() => { status == "playing" && pause() }} />
                                 ) : (
-                                    <IconPlayerPlayFilled size="28" className="cursor-pointer hover:opacity-70" onClick={() => {resume()}} />
+                                    <IconPlayerPlayFilled size="28" className="cursor-pointer hover:opacity-70" onClick={() => { resume() }} />
                                 )}
 
                             </>
@@ -87,33 +87,33 @@ const Player = ({}) => {
                         <IconPlayerTrackNextFilled size="18" className="cursor-pointer hover:opacity-70" onClick={() => nextMusic()} />
                     ) : (
                         <div className="size-7"></div>
-                    )} 
+                    )}
                 </div>
 
                 <div className="min-w-[68px] text-center">
                     {status !== null && (
-                    <DurationMeter id={playingTrackId} metadata={playingMetadata} />
+                        <DurationMeter id={playingTrackId} metadata={playingMetadata} />
                     )}
                 </div>
 
                 {/* 웨이브 파형 */}
                 <div className="hidden xl:block flex-1 h-12">
                     {status != 'loading' ? (
-                        <WaveProgress id={playingTrackId} metadata={playingMetadata}/>
+                        <WaveProgress id={playingTrackId} metadata={playingMetadata} />
                     ) : (
                         <WaveProgressSkeleton />
                     )}
                 </div>
-                
+
                 {/* 볼륨바 */}
                 <div className="">
                     <VolumeBar />
                 </div>
                 {/* 기능아이콘 */}
                 <div className="flex flex-row gap-3 items-center">
-                    <DownloadBtn asset_id={playingTrackId}/>
-                    <FavoriteHeart asset_id={playingTrackId}/>
-                    <TailoredBtn id={playingTrackId}/>
+                    <DownloadBtn asset_id={playingTrackId} />
+                    <FavoriteHeart asset_id={playingTrackId} />
+                    <TailoredBtn id={playingTrackId} />
                 </div>
             </div>
         </div>
