@@ -52,7 +52,7 @@ const DownloadBtn = ({ asset_id }) => {
         toggleIsDownloading(false);
     
         try {
-            const downloadPermission = await fetch(`https://w46-g5e.whirik.com/download/${asset_id}`, {
+            const downloadPermission = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/${asset_id}`, {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json', 

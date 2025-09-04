@@ -10,6 +10,8 @@ let skipNextUpdate = false;
 
 const useMusicItemStore = create((set, get) => {
 
+    let currentPlayPromise = null; // 현재 진행 중인 재생 요청 추적
+
     const startTimer = () => {
         const update = (currentTime) => {
             const player = get().player;
@@ -53,11 +55,20 @@ const useMusicItemStore = create((set, get) => {
         volume: 0.20,
 
         play: async (trackId) => {
+            // 이미 같은 트랙이 재생 중이면 무시
+            if (get().playingTrackId === trackId && get().status !== null) {
+                return;
+            }
+
+            // 이전 재생 요청이 있으면 취소
+            if (currentPlayPromise) {
+                currentPlayPromise.cancelled = true;
+            }
 
             const musicList = useMusicListStore.getState().musicList;
             const metadata = musicList.find((m) => m.id === trackId).metadata;
             const files = musicList.find((m) => m.id === trackId).files;
-            const url = `https://asset.probgm.com/${trackId}?r=preview`;
+            const url = `https://asset.mimiu.me/${trackId}?r=preview`;
 
             const prevPlayer = get().player;
             if (prevPlayer) {
@@ -77,16 +88,18 @@ const useMusicItemStore = create((set, get) => {
                 player: null,
             });
 
-            return new Promise((resolve, reject) => {
+            const playPromise = new Promise((resolve, reject) => {
                 const howl = new Howl({
                     src: [url],
                     format: ['mp3'],
                     html5: true,
                     xhrWithCredentials: false,
                     onloaderror: (id, error) => {
+                        if (playPromise.cancelled) return;
                         reject(new Error(`Failed to load audio: ${error}`));
                     },
                     onend: () => {
+                        if (playPromise.cancelled) return;
                         stopTimer();
                         set({
                             status: null,
@@ -105,6 +118,12 @@ const useMusicItemStore = create((set, get) => {
                 howl.play();
 
                 howl.once('play', () => {
+                    if (playPromise.cancelled) {
+                        howl.stop();
+                        howl.unload();
+                        return;
+                    }
+
                     set({
                         duration: howl.duration(),
                         player: howl,
@@ -114,6 +133,20 @@ const useMusicItemStore = create((set, get) => {
                     resolve();
                 });
             });
+
+            currentPlayPromise = playPromise;
+
+            try {
+                await playPromise;
+            } catch (error) {
+                if (!playPromise.cancelled) {
+                    console.error('Play error:', error);
+                }
+            } finally {
+                if (currentPlayPromise === playPromise) {
+                    currentPlayPromise = null;
+                }
+            }
         },
 
         seek: (time) => {

@@ -18,6 +18,7 @@ const WaveProgress = ({ id, metadata }) => {
     const { colorMode } = useUiStore();
 
     const [sizeOfBox, setSizeOfBox] = useState(null);
+    const [waveImageError, setWaveImageError] = useState(false);
     const boxRef = useRef(null);
 
     function boxObserver() {
@@ -46,6 +47,11 @@ const WaveProgress = ({ id, metadata }) => {
         };
     }, []);
 
+    // 트랙이 바뀔 때마다 웨이브 이미지 에러 상태 리셋
+    useEffect(() => {
+        setWaveImageError(false);
+    }, [id]);
+
 
     return (
         <div className="relative w-full h-full cursor-none backdrop-blur-md">
@@ -55,16 +61,16 @@ const WaveProgress = ({ id, metadata }) => {
                     {/* 이거 중요함 웨이브가 볼륨이 0인 부분에서 선 표시하는거임 */}
                     <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white" />
                     {/* TODO: 나중에 Next image로 바꾸는 거 고려 */}
-                    {id != null && (
+                    {id != null && !waveImageError && (
                         <img className="w-full h-full object-fill" 
                             src={`https://asset.probgm.com/${id}?r=waveimage`}
                             width="800"
                             height="50"
                             alt="wave graph"
                             ref={boxRef}
-                            onError={(e) => {
+                            onError={() => {
                                 console.warn(`Wave image not found for ID: ${id}`);
-                                e.target.style.display = 'none';
+                                setWaveImageError(true);
                             }}
                         />
                     )}
@@ -79,17 +85,19 @@ const WaveProgress = ({ id, metadata }) => {
                         <div className="absolute top-0 left-0 w-full h-full"
                              style={{ width:`${sizeOfBox}px` }}
                         >
-                            <img className={`w-full h-full absolute top-0 opacity-50 ${colorMode === "light" ? "brightness-50" : "brightness-75"}`}
-                                src={`https://asset.probgm.com/${id}?r=waveimage`}
-                                style={{left:"0%"}}
-                                width="800"
-                                height="50"
-                                alt="wave graph"
-                                onError={(e) => {
-                                    console.warn(`Wave progress image not found for ID: ${id}`);
-                                    e.target.style.display = 'none';
-                                }}
-                            />
+                            {!waveImageError && (
+                                <img className={`w-full h-full absolute top-0 opacity-50 ${colorMode === "light" ? "brightness-50" : "brightness-75"}`}
+                                    src={`https://asset.probgm.com/${id}?r=waveimage`}
+                                    style={{left:"0%"}}
+                                    width="800"
+                                    height="50"
+                                    alt="wave graph"
+                                    onError={() => {
+                                        console.warn(`Wave progress image not found for ID: ${id}`);
+                                        setWaveImageError(true);
+                                    }}
+                                />
+                            )}
                         </div>
                     </div>
                 )}

@@ -15,6 +15,12 @@ import VolumeBar from "@/components/player/VolumeBar";
 const Player = ({ }) => {
     const { status, playingAlbumart, playingMetadata, playingTrackId, playingFiles, play, resume, pause, stop } = useMusicItemStore();
     const { musicList } = useMusicListStore();
+    const [thumbnailError, setThumbnailError] = useState(false);
+
+    // 트랙이 바뀔 때마다 썸네일 에러 상태 리셋
+    useEffect(() => {
+        setThumbnailError(false);
+    }, [playingTrackId]);
 
     const nextMusic = () => {
         if (musicList.length > 0 && playingTrackId) {
@@ -32,14 +38,14 @@ const Player = ({ }) => {
                 <div className="size-12">
                     {
                         // 썸네일이 있을 경우
-                        playingFiles?.includes('thumbnail') ? (
+                        playingFiles?.includes('thumbnail') && !thumbnailError ? (
                             <div className="rounded-sm overflow-hidden">
                                 <img
                                     src={`https://asset.probgm.com/${playingTrackId}?r=thumbnail`}
                                     alt="albumart image"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.parentElement.innerHTML = '<div class="w-full h-full bg-foreground/10 rounded-sm"></div>';
+                                    onError={() => {
+                                        console.warn(`Thumbnail not found for ID: ${playingTrackId}`);
+                                        setThumbnailError(true);
                                     }}
                                 />
                             </div>
