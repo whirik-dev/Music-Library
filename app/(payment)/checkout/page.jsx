@@ -1,12 +1,12 @@
 "use client"
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 
 import usePaymentStore from "@/stores/paymentStore";
 
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button2";
-import PaymentModal from "@/components/payment/PaymentModal";
 
 import pricePlans from "@/data/pricePlans";
 
@@ -144,13 +144,18 @@ export default function Checkout() {
         paymentStep,
         setPaymentStep,
         selectedMembershipPlan,
-        setSelectedMembershipPlan
+        setSelectedMembershipPlan,
+        selectedPaymentType,
+        setSelectedPaymentType
     } = usePaymentStore();
-
-    // 선택된 결제 방식 상태 (yearly: 연간, monthly: 월간)
-    const [selectedPaymentType, setSelectedPaymentType] = useState('yearly');
     // 이용약관 동의 상태
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
+    // 선택된 결제 수단
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CARD');
+    // 토스페이먼츠 인스턴스
+    const [tossPayments, setTossPayments] = useState(null);
+
+    const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_TEST;
 
     useEffect(() => {
         // selectedMembershipPlan이 없거나 필수 속성이 없으면 가격 페이지로 리다이렉트
@@ -161,15 +166,103 @@ export default function Checkout() {
             paymentStep !== 'payment') {
             router.push('/price');
         }
-    }, [selectedMembershipPlan, router, paymentStep])
+    }, [selectedMembershipPlan, router, paymentStep]);
 
-    function nextStepHandler() {
+    // 토스페이먼츠 초기화
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                if (!clientKey) throw new Error('Missing env: NEXT_PUBLIC_TOSS_CLIENT_TEST');
+                const tossPaymentsInstance = await loadTossPayments(clientKey);
+
+                if (mounted) {
+                    setTossPayments(tossPaymentsInstance);
+                }
+            } catch (err) {
+                console.error('[TossPayments] load error:', err);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [clientKey]);
+
+    // 주문 ID 생성
+    const generateOrderId = () => `order_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    // 고객 키 생성
+    const generateCustomerKey = () => `customer_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    const handlePayment = useCallback(async (method, isInternational = false) => {
+        if (!tossPayments) {
+            alert('결제 시스템을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
         if (!isTermsAgreed) {
             alert('이용약관에 동의해주세요.');
             return;
         }
-        setPaymentStep('payment');
-    }
+
+        try {
+            const orderId = generateOrderId();
+            const customerKey = generateCustomerKey();
+
+            // 결제창 초기화
+            const payment = tossPayments.payment({
+                customerKey: customerKey
+            });
+
+            // 결제 정보 계산
+            const selectedPlan = selectedMembershipPlan ?
+                pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
+
+            const paymentAmount = selectedPlan ?
+                (selectedPaymentType === 'yearly' ? selectedPlan.pricing.krw.yearlyTotal : selectedPlan.pricing.krw.monthly)
+                : 10000;
+
+            const planName = `${selectedMembershipPlan?.planName?.toUpperCase()} 플랜 (${selectedPaymentType === 'yearly' ? '연간' : '월간'})`;
+
+            const paymentData = {
+                method: method,
+                amount: {
+                    currency: 'KRW',
+                    value: paymentAmount,
+                },
+                orderId: orderId,
+                orderName: planName,
+                successUrl: `${window.location.origin}/payment?r=success`,
+                failUrl: `${window.location.origin}/payment?r=fail`,
+                customerEmail: 'customer@example.com',
+                customerName: '고객',
+                customerMobilePhone: '01012345678',
+            };
+
+            // 해외 카드 결제인 경우 추가 옵션
+            if (method === 'CARD' && isInternational) {
+                paymentData.card = {
+                    useInternationalCardOnly: true
+                };
+            }
+
+            // 가상계좌인 경우 추가 옵션
+            if (method === 'VIRTUAL_ACCOUNT') {
+                paymentData.virtualAccount = {
+                    cashReceipt: {
+                        type: '소득공제',
+                    },
+                    useEscrow: false,
+                    validHours: 24,
+                };
+            }
+
+            await payment.requestPayment(paymentData);
+
+        } catch (err) {
+            console.error('[TossPayments] requestPayment error:', err);
+            alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+    }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType]);
 
     function formatNumberKR(num) {
         return Number(num).toLocaleString('ko-KR');
@@ -258,45 +351,72 @@ export default function Checkout() {
                     <div className="text-lg font-semibold">결제방법</div>
 
                     {/* Payment Options Grid */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="card" className="mr-3 text-blue-600" defaultChecked />
-                            <span className="font-medium text-sm">신용카드</span>
+                            <input
+                                type="radio"
+                                name="payment"
+                                value="CARD"
+                                className="mr-3 text-blue-600"
+                                defaultChecked
+                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                            />
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <span className="font-medium text-sm">국내 카드</span>
+                                    <div className="text-xs text-gray-500">신용카드, 체크카드</div>
+                                </div>
+                                {/* <div className="text-2xl">💳</div> */}
+                            </div>
+                        </label>
+
+                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                            <input
+                                type="radio"
+                                name="payment"
+                                value="FOREIGN_CARD"
+                                className="mr-3 text-blue-600"
+                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                            />
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <span className="font-medium text-sm">해외 카드</span>
+                                    <div className="text-xs text-gray-500">VISA, Master, JCB, UnionPay</div>
+                                </div>
+                                {/* <div className="text-2xl">🌍</div> */}
+                            </div>
                         </label>
 
                         {/* <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="card" className="mr-3 text-blue-600" defaultChecked />
-                            <span className="font-medium text-sm">해외신용카드</span>
-                        </label>
-
-                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="paypal" className="mr-3 text-blue-600" />
-                            <div className="text-blue-600 font-bold text-sm mr-3">PayPal</div>
-                            <span className="font-medium text-sm">PayPal</span>
-                        </label>
-
-                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="kakaopay" className="mr-3 text-blue-600" />
-                            <div className="w-16 h-6 bg-yellow-400 rounded flex items-center justify-center mr-3">
-                                <span className="text-xs font-bold text-black">Kakao</span>
+                            <input
+                                type="radio"
+                                name="payment"
+                                value="VIRTUAL_ACCOUNT"
+                                className="mr-3 text-blue-600"
+                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                            />
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <span className="font-medium text-sm">가상계좌</span>
+                                    <div className="text-xs text-gray-500">계좌이체</div>
+                                </div>
                             </div>
-                            <span className="font-medium text-sm">카카오페이</span>
                         </label>
 
                         <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="naverpay" className="mr-3 text-blue-600" />
-                            <div className="w-16 h-6 bg-green-500 rounded flex items-center justify-center mr-3">
-                                <span className="text-xs font-bold text-white">NAVER</span>
+                            <input
+                                type="radio"
+                                name="payment"
+                                value="TRANSFER"
+                                className="mr-3 text-blue-600"
+                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                            />
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <span className="font-medium text-sm">계좌이체</span>
+                                    <div className="text-xs text-gray-500">실시간 계좌이체</div>
+                                </div>
                             </div>
-                            <span className="font-medium text-sm">네이버페이</span>
-                        </label>
-
-                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input type="radio" name="payment" value="apple" className="mr-3 text-blue-600" />
-                            <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                            </svg>
-                            <span className="font-medium text-sm">Apple Pay</span>
                         </label> */}
                     </div>
 
@@ -323,17 +443,23 @@ export default function Checkout() {
                 </div>
 
                 <Button
-                    name="결제하기"
-                    className={`w-full ${!isTermsAgreed ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    bg={isTermsAgreed ? "bg-purple-600 font-bold" : "bg-gray-400 font-bold"}
-                    onClick={nextStepHandler}
+                    name={tossPayments ? "결제하기" : "결제 시스템 로딩 중..."}
+                    className={`w-full ${(!isTermsAgreed || !tossPayments) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    bg={(isTermsAgreed && tossPayments) ? "bg-purple-600 font-bold" : "bg-gray-400 font-bold"}
+                    onClick={() => {
+                        if (selectedPaymentMethod === 'FOREIGN_CARD') {
+                            handlePayment('CARD', true);
+                        } else {
+                            handlePayment(selectedPaymentMethod, false);
+                        }
+                    }}
                 />
                 <Button
                     name="(dev only) 결제성공or실패"
-                    onClick={()=>{router.push('/payment')}}
+                    onClick={() => { router.push('/payment') }}
                 />
             </CheckoutPage>
-            <PaymentModal onClose={() => setPaymentStep(null)} />
+
         </CheckoutWrapper>
     );
 }

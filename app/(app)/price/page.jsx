@@ -4,9 +4,7 @@ import Heading from "@/components/ui/Heading";
 import HeadingSub from "@/components/ui/HeadingSub";
 import PriceDiffTable from "@/components/page/PriceDiffTable"
 
-// import Toss from "@/components/payment/PaymentModal";
 import Checkout from "@/components/payment/CheckoutModal";
-import Toss from "@/components/payment/PaymentModal";
 
 export default function Price() 
 {
@@ -31,7 +29,6 @@ export default function Price()
             </PageWrapper>
             
             <Checkout />
-            <Toss />
         </>
     );
 }

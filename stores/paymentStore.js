@@ -8,6 +8,7 @@ const usePaymentStore = create(
     immer((set, get) => ({
         currentMembershipPlan: "free",
         selectedMembershipPlan: null,
+        selectedPaymentType: "yearly", // 'yearly' or 'monthly'
         checkout: null,
         paymentStep: null,
 
@@ -20,6 +21,11 @@ const usePaymentStore = create(
         setSelectedMembershipPlan: (plan) =>
             set((state) => {
                 state.selectedMembershipPlan = plan;
+            }),
+
+        setSelectedPaymentType: (type) =>
+            set((state) => {
+                state.selectedPaymentType = type;
             }),
 
         setCheckout: (checkoutData) =>
@@ -38,6 +44,7 @@ const usePaymentStore = create(
             set((state) => {
                 state.currentMembershipPlan = "free";
                 state.selectedMembershipPlan = null;
+                state.selectedPaymentType = "yearly";
                 state.checkout = null;
             }),
     }))
