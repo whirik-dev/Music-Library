@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /* config options here */
-    images: {
-        domains: ['asset.changhyun.me'],
-    },
-    reactStrictMode:false
+  images: {
+    domains: ['asset.probgm.com'],
+  },
+  reactStrictMode: false
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+export default withNextIntl(nextConfig);

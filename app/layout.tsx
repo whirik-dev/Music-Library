@@ -1,5 +1,6 @@
 import "./globals.css";
 import HTML from "@/components/HTMLProvider";
+import {NextIntlClientProvider} from 'next-intl';
 
 export default function RootLayout({
     children,
@@ -9,7 +10,9 @@ export default function RootLayout({
     return (
       <HTML>
         <body className="antialiased">
-          {children}
+          <NextIntlClientProvider>
+            {children}
+          </NextIntlClientProvider>
         </body>
       </HTML>
     );

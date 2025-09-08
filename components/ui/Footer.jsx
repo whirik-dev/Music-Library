@@ -1,4 +1,9 @@
+import {useTranslations} from 'next-intl';
+
 const Footer = ({ }) => {
+
+    const t = useTranslations('test');
+
     const footerLinks = [
         {
             id: 'terms',
@@ -32,7 +37,7 @@ const Footer = ({ }) => {
                                     <span className="text-xs font-medium text-zinc-400">powered by WhiRik</span>
                                 </div>
                                 <p className="text-sm text-zinc-500 leading-relaxed">
-                                    프로가 쓰는 음원 라이브러리, Anywhere! Anytime!
+                                    {t('test')}
                                 </p>
                             </div>
 
