@@ -1,5 +1,48 @@
 {
     "test" : {
         "test" : "probgm"
+    },
+    "company" : {
+        "company_name" : "whirik inc.",
+        "company_owner" : "Sunjo Lee, Jeongwoo Choi",
+        "company_owner_array" : ["sunjo lee", "jeongwoo choi"],
+        "company_email" : "ir@whirik.com",
+        "company_address" : "___",
+        "company_phone" : "+82 507 1373 0978",
+        "company_buisness_number" : "224-88-03066",
+        "company_licence_number" : "제2025-서울관악-1041호"
+    },
+    "ui" : {
+        "service_title" : "probgm",
+        "service_description" : "explorer unlimited background music",
+        "explorer" : "explorer",
+        "playlist" : "playlist",
+        "tailored_service" : "tailored_service",
+        "pricing" : "pricing",
+        "filter" : "filter",
+        "sort" : "sort",
+        "tool_tab" : "tool_tab",
+        "favorite" : "favorite",
+        "download" : "download",
+        "downloaded" : "downloaded",
+        "credits" : "credits"
+    },
+    "audio" : {
+        "player" : "player",
+        "play" : "play",
+        "pause" : "pause",
+        "stop" : "stop",
+        "next" : "next",
+        "previous" : "previous",
+        "shuffle" : "shuffle",
+        "repeat" : "repeat",
+        "repeat_one" : "repeat_one",
+        "repeat_off" : "repeat_off",
+        "volume" : "volume",
+        "volume_up" : "volume_up",
+        "volume_down" : "volume_down",
+        "volume_off" : "volume_off",
+        "mute" : "mute",
+        "unmute" : "unmute"
     }
 }
