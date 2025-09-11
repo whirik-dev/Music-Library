@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { getRequestConfig } from 'next-intl/server';
 
 // 지원하는 로케일 목록
-const supportedLocales = ['en', 'ko'];
+const supportedLocales = ['en']; // 'ko'는 만들어둠, 근데 의도적으로 일단 뺌
 const defaultLocale = 'en';
 
 function detectLocaleFromHeaders(acceptLanguage: string | null): string {
