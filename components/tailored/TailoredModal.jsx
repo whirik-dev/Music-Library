@@ -3,6 +3,7 @@
 import { motion } from "motion/react"
 import { ToastContainer, toast } from 'react-toastify';
 import { IconX, IconChevronLeft} from "@tabler/icons-react"
+import { useTranslations } from 'next-intl';
 
 import useTailoredStore from "@/stores/useTailoredStore";
 import useUiStore from "@/stores/uiStore";
@@ -27,12 +28,13 @@ import Divider from "@/components/ui/Divider";
 const TailoredModal = ({}) => {
     const { target,initTailoredState,works,step,setStep,detail,setDetail,currentTailoredInfo } = useTailoredStore();
     const { colorMode } = useUiStore();
+    const t = useTranslations('tailored');
 
     function exitModalHander()
     {
         if( step === 2 || step === 3 )
         {
-            if( window.confirm('창을 나가면 다 사라짐, 입력한 내용은 저장되지 않습니다.') )
+            if( window.confirm(t('exit_confirmation')) )
             {
                 initTailoredState();
             }
@@ -51,7 +53,7 @@ const TailoredModal = ({}) => {
         }
         else
         {
-            toast('please select works');
+            toast(t('please_select_works'));
         }
     }
 
@@ -67,7 +69,7 @@ const TailoredModal = ({}) => {
         }
         else
         {
-            toast('please enter request detail');
+            toast(t('please_enter_request_detail'));
         }
     }
 
@@ -106,7 +108,7 @@ const TailoredModal = ({}) => {
                                 
                                 </div>
                                 <div className="font-black">
-                                    Tailored Service
+                                    {t('tailored_service')}
                                 </div>
 
                                 <div className="w-10 flex justify-end text-white/50 hover:text-white transition-colors duration-300 cursor-pointer"
@@ -124,7 +126,7 @@ const TailoredModal = ({}) => {
                         <div className="m-2">
                             <TailoredList />
                              {/* TODO: 현상황에서 리스트가 길어지면 스크롤 내려야 버튼이 보임 이거 좀 아닌거같음 해결해야함 */}
-                            <Button name="next step" onClick={()=>step1to2Handler()}/>
+                            <Button name={t('next_step')} onClick={()=>step1to2Handler()}/>
                         </div>
                     )}
 
@@ -137,7 +139,7 @@ const TailoredModal = ({}) => {
                                 
                                 <TailoredDetails />
                                 {/* <Button name="prev step" onClick={()=>setStep(1)}/> */}
-                                <Button name="요청하기" onClick={()=>step2to3Handler()}/>
+                                <Button name={t('request')} onClick={()=>step2to3Handler()}/>
                             </div>
                         </div>
                     )}
@@ -150,8 +152,8 @@ const TailoredModal = ({}) => {
                                 <TailoredWorksView />
                                 {/* <Divider name="" /> */}
                                 <TailoredConfirm />
-                                <Button name="수정하기" onClick={()=>setStep(2)}/>
-                                <Button name="제출하기" onClick={()=>setStep(4)}/>
+                                <Button name={t('modify')} onClick={()=>setStep(2)}/>
+                                <Button name={t('submit')} onClick={()=>setStep(4)}/>
                             </div>
                         </div>
                     )}

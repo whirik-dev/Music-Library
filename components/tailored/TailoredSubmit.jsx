@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { IconLoader2, IconCheck, IconX } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 
 import useTailoredStore from "@/stores/useTailoredStore";
 import useModalStore from "@/stores/modalStore";
@@ -25,6 +26,7 @@ const ProcessingJobs = ({ status }) => {
 const SuccessJobs = ({ status }) => {
     const { initTailoredState } = useTailoredStore();
     const { toggleModal, setPath, setDepth } = useModalStore();
+    const t = useTranslations('tailored');
 
     const jobsListHandler = () => {
         initTailoredState();
@@ -37,10 +39,10 @@ const SuccessJobs = ({ status }) => {
         <div className="aspect-square flex flex-col items-center justify-center gap-5">
             <IconCheck size="72" className="text-green-500" />
             <div className="text-sm mt-8 text-center">
-                Tailored 작업 발행이 완료되었습니다.
+                {t('tailored_work_completed')}
                 <div className="flex flex-row gap-3 mt-10 justify-center">
-                    <Button name="작업목록 보기" onClick={jobsListHandler} className="min-w-34" />
-                    <Button name="닫기" onClick={initTailoredState} className="min-w-34" />
+                    <Button name={t('view_job_list')} onClick={jobsListHandler} className="min-w-34" />
+                    <Button name={t('close')} onClick={initTailoredState} className="min-w-34" />
                 </div>
             </div>
         </div>
@@ -49,6 +51,7 @@ const SuccessJobs = ({ status }) => {
 
 const ErrorJobs = ({ status }) => {
     const { initTailoredState } = useTailoredStore();
+    const t = useTranslations('tailored');
 
     return (
         <div className="aspect-square flex flex-col items-center justify-center gap-5">
@@ -56,8 +59,8 @@ const ErrorJobs = ({ status }) => {
             <div className="text-sm mt-8 text-center">
                 {status}
                 <div className="flex flex-row gap-3 mt-10 justify-center">
-                    <Button name="다시 시도" onClick={() => window.location.reload()} className="min-w-34" />
-                    <Button name="닫기" onClick={initTailoredState} className="min-w-34" />
+                    <Button name={t('try_again')} onClick={() => window.location.reload()} className="min-w-34" />
+                    <Button name={t('close')} onClick={initTailoredState} className="min-w-34" />
                 </div>
             </div>
         </div>
@@ -70,21 +73,22 @@ const TailoredSubmit = () => {
     const [currentStatus, setCurrentStatus] = useState("");
     const [jobState, setJobState] = useState("processing"); // processing, success, error
     const { data: session, status } = useSession();
+    const t = useTranslations('tailored');
 
     useEffect(() => {
-        setCurrentStatus("요청하신 Tailored 작업을 발행 중 입니다.");
+        setCurrentStatus(t('tailored_request_being_processed'));
 
         // Jobs API 요청
         const submitTailoredJob = async () => {
             try {
-                setCurrentStatus("Tailored 요청사항을 검토하는중...");
+                setCurrentStatus(t('reviewing_tailored_request'));
 
                 // 1~7초 랜덤 지연
                 const randomDelay = Math.floor(Math.random() * 7000) + 1000; // 1000ms ~ 7000ms
 
                 await new Promise(resolve => setTimeout(resolve, randomDelay));
 
-                setCurrentStatus("Tailored 작업을 서버에 전송 중...");
+                setCurrentStatus(t('sending_tailored_work'));
                 
                 await new Promise(resolve => setTimeout(resolve, randomDelay));
 
@@ -106,15 +110,15 @@ const TailoredSubmit = () => {
                     // 에러 응답 처리
                     if (response.status === 400) {
                         const errorMessages = result.errors?.map(err => err.message).join(', ') || result.message;
-                        setCurrentStatus(`검증 오류: ${errorMessages}`);
+                        setCurrentStatus(`${t('validation_error')}: ${errorMessages}`);
                     } else if (response.status === 401) {
-                        setCurrentStatus("인증이 필요합니다. 다시 로그인해주세요.");
+                        setCurrentStatus(t('authentication_required'));
                     } else if (response.status === 502) {
-                        setCurrentStatus("서비스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                        setCurrentStatus(t('service_connection_failed'));
                     } else if (response.status === 503) {
-                        setCurrentStatus("서비스가 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.");
+                        setCurrentStatus(t('service_temporarily_unavailable'));
                     } else {
-                        setCurrentStatus(`작업 발행 실패: ${result.message || '알 수 없는 오류'}`);
+                        setCurrentStatus(`${t('work_publication_failed')}: ${result.message || t('unknown_error')}`);
                     }
                     setJobState("error");
                     return;
@@ -122,17 +126,17 @@ const TailoredSubmit = () => {
 
                 // 성공 응답 처리
                 if (result.success) {
-                    setCurrentStatus("Tailored 작업이 성공적으로 발행되었습니다.");
+                    setCurrentStatus(t('tailored_work_published_successfully'));
                     setJobState("success");
                     console.log('Job created successfully:', result.data);
                 } else {
-                    setCurrentStatus(`작업 발행 실패: ${result.message}`);
+                    setCurrentStatus(`${t('work_publication_failed')}: ${result.message}`);
                     setJobState("error");
                 }
 
             } catch (error) {
                 console.error('네트워크 오류:', error);
-                setCurrentStatus("네트워크 오류가 발생했습니다. 연결을 확인하고 다시 시도해주세요.");
+                setCurrentStatus(t('network_error'));
                 setJobState("error");
             }
         };

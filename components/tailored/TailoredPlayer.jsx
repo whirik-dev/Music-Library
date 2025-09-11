@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslations } from 'next-intl';
 import WaveProgress from "@/components/player/WaveProgress";
 import TailoredPlayerSkeleton from "@/components/skeleton/TailoredPlayerSkeleton";
 
@@ -6,6 +7,7 @@ import TailoredPlayerSkeleton from "@/components/skeleton/TailoredPlayerSkeleton
 // 이 부분은 사실 플레이어 상태를 공유함으로써 생기는 현상
 // 그렇다고 플레이어 상태를 또 만드는거보다 그냥 시각적으로만 안보이게 하면 좋을듯.
 const TailoredPlayer = ({ id }) => {
+  const t = useTranslations('errors');
   const [state, setState] = useState({
     musicList: null,
     isLoading: false,
@@ -17,13 +19,13 @@ const TailoredPlayer = ({ id }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/${id}`);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(t('http_error', { status: response.status }));
       }
       const data = await response.json();
       setState((prev) => ({ ...prev, musicList: data, isLoading: false }));
     } catch (error) {
       setState((prev) => ({ ...prev, error: error.message, isLoading: false }));
-      console.error("Failed to load item:", error);
+      console.error(t('failed_to_load_item'), error);
     }
   };
 
@@ -36,8 +38,8 @@ const TailoredPlayer = ({ id }) => {
   const { musicList, isLoading, error } = state;
 
   if (isLoading) return <TailoredPlayerSkeleton />;
-  if (error) return <div>error: {error}</div>;
-  if (!musicList) return <div>error: no data</div>;
+  if (error) return <div>{t('error_no_data')}: {error}</div>;
+  if (!musicList) return <div>{t('error_no_data')}</div>;
   // console.log(musicList.data)
 
   return (

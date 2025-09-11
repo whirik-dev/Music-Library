@@ -1,4 +1,11 @@
-const Button = ({ name, onClick, size="md", className, bg="bg-zinc-800", color="text-foreground" }) => {
+import { useTranslations } from 'next-intl';
+
+const Button = ({ name, translationKey, namespace = 'ui', onClick, size="md", className, bg="bg-zinc-800", color="text-foreground" }) => {
+    const t = useTranslations(namespace);
+    
+    // Use translation key if provided, otherwise use name prop directly
+    const displayText = translationKey ? t(translationKey) : name;
+    
     const textSizes = {
         xs: "text-xs",
         sm: "text-sm",
@@ -24,7 +31,7 @@ const Button = ({ name, onClick, size="md", className, bg="bg-zinc-800", color="
              onClick={onClick}
         >
             <span className={`${textSizes[size]} uppercase ${color}`}>
-                {name}
+                {displayText}
             </span>
         </div>
     )

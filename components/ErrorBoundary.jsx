@@ -15,7 +15,7 @@ export default class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return <h1>오류 발생! 콘솔 확인</h1>;
+      return <h1>An unexpected error occurred. Please check the console.</h1>;
     }
     return this.props.children;
   }

@@ -24,10 +24,10 @@ const pricePlans: PricePlan[] = [
     {
         id: 'basic',
         name: 'BASIC',
-        description: '개인 사용자를 위한 기본 플랜',
+        description: 'pricing.basic_description',
         features: [
-            '무제한 라이브러리 음원 다운로드',
-            '고음질 WAV 24bit 파일 제공',
+            'Unlimited library music downloads',
+            'High-quality WAV 24bit files',
         ],
         monthlyCredits: 70,
         pricing: {
@@ -48,11 +48,11 @@ const pricePlans: PricePlan[] = [
     {
         id: 'pro',
         name: 'PRO',
-        description: '전문가를 위한 고급 플랜',
+        description: 'pricing.pro_description',
         features: [
-            '무제한 라이브러리 음원 다운로드',
-            '고음질 WAV 24bit 파일 제공',
-            '고급 검색 및 필터',
+            'Unlimited library music downloads',
+            'High-quality WAV 24bit files',
+            'Advanced search and filters',
         ],
         monthlyCredits: 150,
         pricing: {
@@ -73,11 +73,11 @@ const pricePlans: PricePlan[] = [
     {
         id: 'master',
         name: 'MASTER',
-        description: '무제한 사용을 위한 프리미엄 플랜',
+        description: 'pricing.master_description',
         features: [
-            '무제한 라이브러리 음원 다운로드',
-            '고음질 WAV 24bit 파일 제공',
-            '고급 검색 및 필터',
+            'Unlimited library music downloads',
+            'High-quality WAV 24bit files',
+            'Advanced search and filters',
         ],
         monthlyCredits: 500,
         pricing: {

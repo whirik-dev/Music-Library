@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 
 import useToggle from "@/utils/useToggle";
 import useAuthStore from "@/stores/authStore";
@@ -11,6 +12,7 @@ import ModalTable from "@/components/modal/ModalTable";
 import modalStore from "@/stores/modalStore";
 
 const ModalPageSubscription = ({}) => {
+    const t = useTranslations('modal');
     const { data: session, status } = useSession();
     const [userMembershipData, setUserMembershipData] = useState(null);
     const { setPath, setDepth } = modalStore();
@@ -74,21 +76,21 @@ const ModalPageSubscription = ({}) => {
 
     return (
         <>
-            <ModalTable head="Credits" 
+            <ModalTable head={t('credits')} 
                         data={[
-                            ["your balance", `${credits} credits`],
+                            [t('your_balance'), `${credits} credits`],
                         ]}
             />
-            <ModalTable head="Subsription Information" 
+            <ModalTable head={t('subscription_information')} 
                         data={[
-                            ["your plan", userMembershipData ? tierText[userMembershipData["tier"]] : '-'],
-                            ["member since", userMembershipData ? formatDateToDottedText(userMembershipData["started_at"]) : '-'],
-                            ["billing date", userMembershipData ? `${getBillingDate(userMembershipData["started_at"])}/mo.` : '-']
+                            [t('your_plan'), userMembershipData ? tierText[userMembershipData["tier"]] : '-'],
+                            [t('member_since'), userMembershipData ? formatDateToDottedText(userMembershipData["started_at"]) : '-'],
+                            [t('billing_date'), userMembershipData ? `${getBillingDate(userMembershipData["started_at"])}/mo.` : '-']
                         ]}
             />
-            <ModalCard title="Upgrade Plan" desc="you can change membership plan" 
+            <ModalCard title={t('upgrade_plan')} desc={t('you_can_change_membership')} 
                        type="action" action="Upgrade" onClick={()=>{setPath('subscription/upgradePlan')}}/>
-            <ModalCard title="Payment History" desc="You are currently registered for 3 platforms." 
+            <ModalCard title={t('payment_history')} desc={t('you_are_registered', { count: 3 })} 
                        type="action" action="view" onClick={()=>{setPath('subscription/paymentHistory')}}/>
         </>
     )

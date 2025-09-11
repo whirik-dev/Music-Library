@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import { ToastContainer, toast } from 'react-toastify';
+import { useTranslations } from 'next-intl';
 import useAuthStore from "@/stores/authStore";
 
 const DownloadBtn = ({ asset_id }) => {
@@ -11,6 +12,7 @@ const DownloadBtn = ({ asset_id }) => {
     const [isPrepare, setIsPrepare] = useState(false); 
     const [count, setCount] = useState(1);
     const { data: session, status } = useSession();
+    const t = useTranslations('player');
     const {
         downloadPoints,
         setDownloadPoints,
@@ -36,7 +38,7 @@ const DownloadBtn = ({ asset_id }) => {
 
         if (isDownloading)
         {
-            toast.error('now dowinloading...')
+            toast.error(t('now_downloading'))
             return;
         }
     
@@ -64,7 +66,7 @@ const DownloadBtn = ({ asset_id }) => {
     
             if (result.error) {
                 if (downloadPoints === 0) {
-                    toast.warn("No download points available.");
+                    toast.warn(t('no_download_points'));
                     return;
                 }
             }
@@ -72,9 +74,9 @@ const DownloadBtn = ({ asset_id }) => {
             if (result.data.pointDownShift) {
                 setDownloadPoints(downloadPoints - 1);
                 addDownloadHistory(asset_id);
-                toast.success('Your download is on the way! Points have been used.');
+                toast.success(t('download_started_points_used'));
             } else {
-                toast.success('Your download is on the way!');
+                toast.success(t('download_started'));
             }
     
             setDownloaded(true);
@@ -89,7 +91,7 @@ const DownloadBtn = ({ asset_id }) => {
             });
     
             if (!response.ok) {
-                toast.error("Download failed.");
+                toast.error(t('download_failed'));
                 return;
             }
     
@@ -106,7 +108,7 @@ const DownloadBtn = ({ asset_id }) => {
             window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error(error);
-            toast.error("Unexpected error during download.");
+            toast.error(t('download_error'));
         }
     };
 

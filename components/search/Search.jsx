@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import useMusicListStore from "@/stores/useMusicListStore";
 import { IconSearch, IconCornerDownLeft, IconX } from "@tabler/icons-react";
 
@@ -8,6 +9,7 @@ import SearchKeyPressEvent from "@/components/command/searchKeyPressEvent";
 import RelatedSuggest from "@/components/search/RelatedSuggest";
 
 const Search = () => {
+    const t = useTranslations('search');
 
     const [ familyClicked, setFamilyClicked ] = useState(false);
     const { query, setQuery, searchTab, toggleSearchTab, queryMusicList, fetchMusicList, listMode, error, relatedKeywords, relSelected, setRelSelected } = useMusicListStore();
@@ -153,7 +155,7 @@ const Search = () => {
                         <input
                             ref={inputRef}
                             type="text"
-                            placeholder="Search"
+                            placeholder={t('placeholder')}
                             className="focus:outline-0 w-full"
                             value={query}
                             onChange={(e) => {setQuery(e.target.value), e.target.value.length === 0 && setRelSelected(null)}}

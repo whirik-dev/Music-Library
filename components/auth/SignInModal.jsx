@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 
 import useAuthStore from "@/stores/authStore";
 import useUiStore from "@/stores/uiStore";
@@ -16,11 +17,12 @@ import SignUpPage from "@/components/auth/SignUpPage";
 const SignInModal = () => {
     const { authModal, isLogged, toggleAuthModal, modalPage } = useAuthStore();
     const { colorMode } = useUiStore();
+    const t = useTranslations('auth');
 
     if (!authModal || isLogged) return null;
 
     const closeAuthModalHelper = () => {
-        (modalPage === "signup" && window.confirm('입력중인 정보가 초기화됩니다.')) || (modalPage === "signin")
+        (modalPage === "signup" && window.confirm(t('modal_close_confirmation'))) || (modalPage === "signin")
         ? toggleAuthModal()
         : null;
     }

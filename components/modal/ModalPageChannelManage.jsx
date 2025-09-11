@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
@@ -33,6 +34,7 @@ import IconTiktok from "@/components/misc/IconTiktok";
  * @returns 
  */
 const ChannelElem = ({ id, name, platform, url, created_at, auto_renewal, onToggleAutoRenewal, onDelete, onEdit }) => {
+    const t = useTranslations('modal');
     const [allowAutoRenewalValue, setAllowAutoRenewalValue] = useState(auto_renewal)
     const [isToggling, setIsToggling] = useState(false)
 
@@ -82,10 +84,10 @@ const ChannelElem = ({ id, name, platform, url, created_at, auto_renewal, onTogg
             </div>
             <div className="flex flex-row justify-between items-baseline">
                 <div className="">
-                    Created on <span className="font-bold">{formatDate(created_at)}</span>
+                    {t('created_on')} <span className="font-bold">{formatDate(created_at)}</span>
                 </div>
                 <div className="flex flex-row gap-3 items-baseline justify-end">
-                    <span className="text-foreground/50">Auto renewal</span>
+                    <span className="text-foreground/50">{t('auto_renewal')}</span>
                     <ToggleRadio
                         state={allowAutoRenewalValue}
                         onClick={toggleAutoRenewal}
@@ -100,7 +102,7 @@ const ChannelElem = ({ id, name, platform, url, created_at, auto_renewal, onTogg
                             onClick={() => onEdit(id, name, url)}
                             className="text-blue-400 hover:text-blue-300 text-sm px-2 py-1 rounded hover:bg-blue-900/20"
                         >
-                            Edit
+                            {t('edit')}
                         </button>
                     )}
                     {onDelete && (
@@ -108,7 +110,7 @@ const ChannelElem = ({ id, name, platform, url, created_at, auto_renewal, onTogg
                             onClick={() => onDelete(id)}
                             className="text-red-400 hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-900/20"
                         >
-                            Delete
+                            {t('delete')}
                         </button>
                     )}
                 </div>
@@ -118,6 +120,8 @@ const ChannelElem = ({ id, name, platform, url, created_at, auto_renewal, onTogg
 }
 
 const ModalPageChannelManage = ({ }) => {
+    const t = useTranslations('modal');
+    const tError = useTranslations('errors');
 
     useToggle(() => {
         setDepth(2);
@@ -149,7 +153,7 @@ const ModalPageChannelManage = ({ }) => {
                 });
 
                 if (!res.ok) {
-                    console.error('Failed to fetch channels:', res.status);
+                    console.error(tError('failed_to_fetch_channels'), res.status);
                     return;
                 }
 
@@ -176,7 +180,7 @@ const ModalPageChannelManage = ({ }) => {
                     setData([]);
                 }
             } catch (error) {
-                console.error('Error fetching channels:', error);
+                console.error(tError('error_fetching_channels'), error);
                 setData([]); // Fallback to empty array
             }
         };
@@ -208,11 +212,11 @@ const ModalPageChannelManage = ({ }) => {
 
     const validateInputs = () => {
         if (!inputUrl.trim()) {
-            alert('Please enter a channel URL');
+            alert(t('enter_channel_url_validation'));
             return false;
         }
         if (!inputName.trim()) {
-            alert('Please enter a channel name');
+            alert(t('enter_channel_name_validation'));
             return false;
         }
         return true;
@@ -274,11 +278,11 @@ const ModalPageChannelManage = ({ }) => {
                 setPlatform("");
                 setPage(1);
             } else {
-                alert(responseData.message || 'Failed to add channel');
+                alert(responseData.message || tError('failed_to_add_channel'));
             }
         } catch (error) {
-            console.error('Error adding channel:', error);
-            alert('Failed to add channel. Please try again.');
+            console.error(tError('failed_to_add_channel'), error);
+            alert(tError('failed_to_add_channel_retry'));
         } finally {
             setLoading(false);
         }
@@ -307,18 +311,18 @@ const ModalPageChannelManage = ({ }) => {
                 );
                 return true;
             } else {
-                alert(responseData.message || 'Failed to toggle auto renewal');
+                alert(responseData.message || tError('failed_to_toggle_auto_renewal'));
                 return false;
             }
         } catch (error) {
-            console.error('Error toggling auto renewal:', error);
-            alert('Failed to toggle auto renewal. Please try again.');
+            console.error(tError('failed_to_toggle_auto_renewal'), error);
+            alert(tError('failed_to_toggle_auto_renewal_retry'));
             return false;
         }
     };
 
     const handleDeleteChannel = async (channelId) => {
-        if (!confirm('Are you sure you want to delete this channel?')) return;
+        if (!confirm(t('delete_channel_confirmation'))) return;
 
         setLoading(true);
         try {
@@ -336,11 +340,11 @@ const ModalPageChannelManage = ({ }) => {
                 // 성공적으로 삭제됨 - 로컬 상태에서 제거
                 setData(prevData => prevData.filter(channel => channel.id !== channelId));
             } else {
-                alert(responseData.message || 'Failed to delete channel');
+                alert(responseData.message || tError('failed_to_delete_channel'));
             }
         } catch (error) {
-            console.error('Error deleting channel:', error);
-            alert('Failed to delete channel. Please try again.');
+            console.error(tError('failed_to_delete_channel'), error);
+            alert(tError('failed_to_delete_channel_retry'));
         } finally {
             setLoading(false);
         }
@@ -399,11 +403,11 @@ const ModalPageChannelManage = ({ }) => {
                 setEditingChannel(null);
                 setPage(1);
             } else {
-                alert(responseData.message || 'Failed to update channel');
+                alert(responseData.message || tError('failed_to_update_channel'));
             }
         } catch (error) {
-            console.error('Error updating channel:', error);
-            alert('Failed to update channel. Please try again.');
+            console.error(tError('failed_to_update_channel'), error);
+            alert(tError('failed_to_update_channel_retry'));
         } finally {
             setLoading(false);
         }
@@ -411,7 +415,7 @@ const ModalPageChannelManage = ({ }) => {
 
     return (
         <>
-            <ModalCard title="Manage Channels" desc="Organize and manage your connected channels" />
+            <ModalCard title={t('manage_channels')} desc={t('organize_manage_channels')} />
             {page === 1 ? (
                 <>
                     {Array.isArray(data) && data.length > 0 ? (
@@ -431,40 +435,35 @@ const ModalPageChannelManage = ({ }) => {
                         ))
                     ) : (
                         <div className="mx-3 my-6 text-center text-foreground/50">
-                            <p>No channels found. Add your first channel to get started!</p>
+                            <p>{t('no_channels_found')}</p>
                         </div>
                     )}
 
-                    {/* <ChannelElem name={`공룡TV : 공룡의 세계`} platform={`youtube`} url={`https://youtube.com/channel/ABC12X3Y`} expire={`25 Aug. 2025`} allowAutoRenewal={false} />
-                    <ChannelElem name={`조류탐험 : 새들의 소리`} platform={`naver`} url={`https://youtube.com/channel/ABC12X31`} expire={`25 Aug. 2025`} allowAutoRenewal={true} />
-                    <ChannelElem name={`조류탐험 : 새들의 소리`} platform={`tiktok`} url={`https://youtube.com/channel/ABC12X31`} expire={`25 Aug. 2025`} allowAutoRenewal={true} />
-                    <ChannelElem name={`조류탐험 : 새들의 소리`} platform={`instagram`} url={`https://youtube.com/channel/ABC12X31`} expire={`25 Aug. 2025`} allowAutoRenewal={true} />
-                    <ChannelElem name={`조류탐험 : 새들의 소리`} platform={`facebook`} url={`https://youtube.com/channel/ABC12X31`} expire={`25 Aug. 2025`} allowAutoRenewal={true} /> */}
-                    <Button name="add channel" onClick={() => setPage(2)} />
+                    <Button name={t('add_channel_button')} onClick={() => setPage(2)} />
                 </>
             ) : page === 2 ? (
                 <>
                     <InputField
                         className="mx-3 rounded-lg my-3"
-                        placeholder="Please enter your channel URL"
+                        placeholder={t('enter_channel_url')}
                         value={inputUrl}
                         onChange={(e) => { setInputUrl(e.target.value) }}
                     />
                     <InputField
                         className="mx-3 rounded-lg my-3"
-                        placeholder="Please enter your channel Name"
+                        placeholder={t('enter_channel_name')}
                         value={inputName}
                         onChange={(e) => { setInputName(e.target.value) }}
                     />
                     <InputField
                         className="mx-3 rounded-lg"
-                        placeholder="Channel description (optional)"
+                        placeholder={t('channel_description_optional')}
                         value={inputDescription}
                         onChange={(e) => { setInputDescription(e.target.value) }}
                     />
                     {platform && inputName && (
                         <>
-                            <Divider name="preview" />
+                            <Divider name={t('preview')} />
                             <ChannelElem
                                 name={inputName}
                                 platform={platform}
@@ -474,14 +473,14 @@ const ModalPageChannelManage = ({ }) => {
                             />
                         </>
                     )}
-                    <Button name="next" onClick={() => addChannelHandler()} disabled={loading} />
-                    <Button name="cancel" onClick={() => setPage(1)} />
+                    <Button name={t('next')} onClick={() => addChannelHandler()} disabled={loading} />
+                    <Button name={t('cancel')} onClick={() => setPage(1)} />
                 </>
             ) : page === 3 ? (
                 <>
                     <div className="mx-3 my-3 text-center">
-                        <h3 className="text-lg font-semibold mb-2">Confirm Channel Addition</h3>
-                        <p className="text-sm text-foreground/70 mb-4">Please review the channel information before adding</p>
+                        <h3 className="text-lg font-semibold mb-2">{t('confirm_channel_addition')}</h3>
+                        <p className="text-sm text-foreground/70 mb-4">{t('review_channel_info')}</p>
                     </div>
                     <ChannelElem
                         name={inputName}
@@ -491,39 +490,39 @@ const ModalPageChannelManage = ({ }) => {
                         auto_renewal={true}
                     />
                     <Button
-                        name={loading ? "Adding..." : "confirm"}
+                        name={loading ? t('adding') : t('confirm')}
                         onClick={() => confirmChannelHandler()}
                         disabled={loading}
                     />
-                    <Button name="back" onClick={() => setPage(2)} disabled={loading} />
+                    <Button name={t('back')} onClick={() => setPage(2)} disabled={loading} />
                 </>
             ) : page === 4 ? (
                 <>
                     <div className="mx-3 my-3 text-center">
-                        <h3 className="text-lg font-semibold mb-2">Edit Channel</h3>
-                        <p className="text-sm text-foreground/70 mb-4">Update your channel information</p>
+                        <h3 className="text-lg font-semibold mb-2">{t('edit_channel')}</h3>
+                        <p className="text-sm text-foreground/70 mb-4">{t('update_channel_info')}</p>
                     </div>
                     <InputField
                         className="mx-3 rounded-lg my-3"
-                        placeholder="Please enter your channel URL"
+                        placeholder={t('enter_channel_url')}
                         value={inputUrl}
                         onChange={(e) => { setInputUrl(e.target.value) }}
                     />
                     <InputField
                         className="mx-3 rounded-lg my-3"
-                        placeholder="Please enter your channel Name"
+                        placeholder={t('enter_channel_name')}
                         value={inputName}
                         onChange={(e) => { setInputName(e.target.value) }}
                     />
                     <InputField
                         className="mx-3 rounded-lg"
-                        placeholder="Channel description (optional)"
+                        placeholder={t('channel_description_optional')}
                         value={inputDescription}
                         onChange={(e) => { setInputDescription(e.target.value) }}
                     />
                     {platform && inputName && (
                         <>
-                            <Divider name="preview" />
+                            <Divider name={t('preview')} />
                             <ChannelElem
                                 name={inputName}
                                 platform={platform}
@@ -534,12 +533,12 @@ const ModalPageChannelManage = ({ }) => {
                         </>
                     )}
                     <Button
-                        name={loading ? "Updating..." : "save changes"}
+                        name={loading ? t('updating') : t('save_changes')}
                         onClick={() => confirmEditHandler()}
                         disabled={loading}
                     />
                     <Button
-                        name="cancel"
+                        name={t('cancel')}
                         onClick={() => {
                             setInputName("");
                             setInputUrl("");

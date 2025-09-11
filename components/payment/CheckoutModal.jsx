@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from 'next-intl';
 import ModalUi from "@/components/modal/ModalUi";
 import usePaymentStore from "@/stores/paymentStore";
 import Button from "@/components/ui/Button2";
@@ -18,6 +19,7 @@ export function CheckoutDetails({ title, content }) {
 }
 
 const CheckoutModal = ({ }) => {
+    const t = useTranslations('payment');
     const {
         paymentStep,
         setPaymentStep
@@ -35,22 +37,22 @@ const CheckoutModal = ({ }) => {
                         <div className="flex flex-row gap-10 mb-20">
                             <div className="">
                                 <div className="inline-block mb-3 border-1 bg-foreground text-background font-bold uppercase p-1 text-xs rounded-sm">
-                                    subscription
+                                    {t('subscription')}
                                 </div>
                                 <div className="text-3xl">
-                                    Basic Plan
+                                    {t('basic_plan')}
                                 </div>
                             </div>
                             <div className="flex-1">
                                 <ul className="mt-22 flex flex-col gap-3">
-                                    <CheckoutDetails title="결제금액" content="30,000" />
-                                    <CheckoutDetails title="결제주기" content="1개월 (매월 10일)" />
-                                    <CheckoutDetails title="결제주기" content="1개월 (매월 10일)" />
+                                    <CheckoutDetails title={t('final_payment_amount')} content="30,000" />
+                                    <CheckoutDetails title={t('monthly_payment')} content="1개월 (매월 10일)" />
+                                    <CheckoutDetails title={t('monthly_payment')} content="1개월 (매월 10일)" />
                                 </ul>
                             </div>
                         </div>
 
-                        <Button name="결제하기" onClick={nextStepHandler} />
+                        <Button name={t('pay_now')} onClick={nextStepHandler} />
                     </div>
                 </div>
             ) : (<></>)}

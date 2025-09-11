@@ -1,10 +1,13 @@
 import { useState, useRef } from "react";
+import { useTranslations } from 'next-intl';
 
 import InputField from "@/components/ui/InputField";
 import Divider from "@/components/ui/Divider";
 import Button from "@/components/ui/Button2";
 
 const SignUpPage = () => {
+    const t = useTranslations('auth');
+    
     const [email, setEmail] = useState("");
     const [emailCheckColor, setEmailCheckColor] = useState("");
     const [emailError, setEmailError] = useState(""); // 이메일 관련 에러 메시지
@@ -45,8 +48,8 @@ const SignUpPage = () => {
                 : "green";
 
         setEmailCheckColor(color);
-        if (color === "red") setEmailError("Please enter your email");
-        else if (color === "orange") setEmailError("Invalid email address");
+        if (color === "red") setEmailError(t('email_required'));
+        else if (color === "orange") setEmailError(t('email_invalid'));
         else setEmailError("");
     };
 
@@ -54,7 +57,7 @@ const SignUpPage = () => {
     const sendEmailVerificationCode = () => {
         if (emailCheckColor !== "green") {
             setVerificationClick(false);
-            setVerificationError("Please enter a valid email before requesting code.");
+            setVerificationError(t('email_valid_required'));
             return;
         }
 
@@ -67,7 +70,7 @@ const SignUpPage = () => {
     const handleEmailVerifyRequest = () => {
         // TODO: 인증 코드 API 호출 후 성공/실패 여부에 따라 상태 변경
         if (verificationCode.trim() === "") {
-            setVerificationError("Please enter the verification code.");
+            setVerificationError(t('verification_code_required'));
             inputCode.current?.focus();
             setEmailValid(false);
             return;
@@ -79,7 +82,7 @@ const SignUpPage = () => {
             setVerificationError("");
         } else {
             setEmailValid(false);
-            setVerificationError("Verification code is not valid.");
+            setVerificationError(t('verification_code_invalid'));
             inputCode.current?.focus();
         }
     };
@@ -91,19 +94,19 @@ const SignUpPage = () => {
 
         if (password === "") {
             inputPass.current?.focus();
-            setPasswordError("Please enter your password");
+            setPasswordError(t('password_required'));
             return false;
         }
 
         if (password.length < 8) {
             inputPass.current?.focus();
-            setPasswordError("Password must be at least 8 characters");
+            setPasswordError(t('password_min_length'));
             return false;
         }
 
         if (passwordConfirm === "") {
             inputPassConfirm.current?.focus();
-            setPasswordError("Please confirm your password");
+            setPasswordError(t('password_confirm_required'));
             return false;
         }
 
@@ -112,7 +115,7 @@ const SignUpPage = () => {
 
         if (!isMatch) {
             inputPassConfirm.current?.focus();
-            setPasswordError("Passwords do not match");
+            setPasswordError(t('passwords_not_match'));
             return false;
         }
 
@@ -156,12 +159,12 @@ const SignUpPage = () => {
                         <div className="flex flex-col">
                             <div className="flex flex-row gap-10 p-10 relative">
                                 <div className="flex-1 flex flex-col gap-3">
-                                    <span className="text-3xl mb-10">Sign Up</span>
+                                    <span className="text-3xl mb-10">{t('sign_up')}</span>
 
-                                    <span>Email</span>
+                                    <span>{t('email')}</span>
                                     <InputField
                                         ref={inputEmail}
-                                        placeholder="E-mail Address"
+                                        placeholder={t('email_placeholder')}
                                         value={email}
                                         border={emailCheckColor}
                                         onChange={(e) => handleEmailValidate(e.target.value)}
@@ -181,7 +184,7 @@ const SignUpPage = () => {
                                     </span>
 
                                     <Button
-                                        name="Send verification code"
+                                        name={t('send_verification_code')}
                                         onClick={sendEmailVerificationCode}
                                         className={
                                             emailCheckColor !== "green"
@@ -192,10 +195,10 @@ const SignUpPage = () => {
 
                                     {verificationClick && (
                                         <>
-                                            <span>Verification code (dev:123456)</span>
+                                            <span>{t('verification_code')}</span>
                                             <InputField
                                                 ref={inputCode}
-                                                placeholder="Verification code"
+                                                placeholder={t('verification_code_placeholder')}
                                                 value={verificationCode}
                                                 onChange={(e) => setVerificationCode(e.target.value)}
                                                 border={verificationError ? "red" : ""}
@@ -205,20 +208,20 @@ const SignUpPage = () => {
                                             )}
                                             {emailValid === true && (
                                                 <span className="text-green-500 text-sm">
-                                                    Verification code is valid
+                                                    {t('verification_code_valid')}
                                                 </span>
                                             )}
-                                            <Button name="Verify" onClick={handleEmailVerifyRequest} />
+                                            <Button name={t('verify')} onClick={handleEmailVerifyRequest} />
                                         </>
                                     )}
 
                                     {emailValid && (
                                         <>
-                                            <span>Password</span>
+                                            <span>{t('password')}</span>
                                             <InputField
                                                 ref={inputPass}
                                                 type="password"
-                                                placeholder="Password"
+                                                placeholder={t('password_placeholder')}
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 border={passwordError ? "red" : ""}
@@ -226,7 +229,7 @@ const SignUpPage = () => {
                                             <InputField
                                                 ref={inputPassConfirm}
                                                 type="password"
-                                                placeholder="Confirm Password"
+                                                placeholder={t('confirm_password_placeholder')}
                                                 value={passwordConfirm}
                                                 onChange={(e) => setPasswordConfirm(e.target.value)}
                                                 border={passwordError ? "red" : ""}
@@ -234,7 +237,7 @@ const SignUpPage = () => {
                                             {passwordError && (
                                                 <span className="text-red-400 text-sm">{passwordError}</span>
                                             )}
-                                            <Button name="Sign Up" onClick={handleSignUp} />
+                                            <Button name={t('sign_up')} onClick={handleSignUp} />
                                         </>
                                     )}
                                 </div>
@@ -244,7 +247,7 @@ const SignUpPage = () => {
                         <div className="flex flex-col">
                             <div className="flex flex-row gap-10 p-10 relative">
                                 <div className="flex-1 flex flex-col gap-3 text-center">
-                                    Your Sign Up Request is Success!
+                                    {t('signup_success')}
                                 </div>
                             </div>
                         </div>
@@ -254,7 +257,7 @@ const SignUpPage = () => {
                 <div className="flex flex-col">
                     <div className="flex flex-row gap-10 p-10 relative">
                         <div className="flex-1 flex flex-col gap-3 text-center">
-                            Error - {signUpError}
+                            {t('signup_error', { error: signUpError })}
                         </div>
                     </div>
                 </div>

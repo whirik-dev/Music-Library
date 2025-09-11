@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { IconMenu2,IconScissors, IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconLoader2  } from "@tabler/icons-react"
+import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
 
@@ -16,6 +17,7 @@ import TailoredBtn from "@/components/player/TailoredBtn";
 // a.k.a. MI 
 const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
     const router = useRouter();
+    const t = useTranslations('player');
     const { status, playingTrackId, play, stop, playingFiles } = useMusicItemStore();
 
     // 이 아이템이 재생중인지 아닌지 따져봄
@@ -80,7 +82,7 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                                         <div className="rounded-sm overflow-hidden">
                                             <img
                                                 src={data.thumbnailUrl}
-                                                alt="albumart image"
+                                                alt={t('album_art')}
                                             />
                                         </div>
                                     ) : (

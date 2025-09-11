@@ -1,5 +1,6 @@
 import { IconScissors, IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconPlayerTrackNextFilled, IconLoader2 } from "@tabler/icons-react"
 import { useState, useEffect } from "react";
+import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
 import useMusicListStore from "@/stores/useMusicListStore";
@@ -13,6 +14,7 @@ import TailoredBtn from "@/components/player/TailoredBtn";
 import VolumeBar from "@/components/player/VolumeBar";
 
 const Player = ({ }) => {
+    const t = useTranslations('player');
     const { status, playingAlbumart, playingMetadata, playingTrackId, playingFiles, play, resume, pause, stop } = useMusicItemStore();
     const { musicList } = useMusicListStore();
     const [thumbnailError, setThumbnailError] = useState(false);
@@ -57,10 +59,10 @@ const Player = ({ }) => {
 
                 {/* 제목 */}
                 <div className="flex flex-col w-auto md:w-36 xl:w-48">
-                    <div className="font-bold">{status != null ? playingMetadata.find(item => item.type === "title")?.content : (<span className="text-white/30">Now Stanby</span>)}</div>
+                    <div className="font-bold">{status != null ? playingMetadata.find(item => item.type === "title")?.content : (<span className="text-white/30">{t('now_standby')}</span>)}</div>
                     <div className="hidden md:block text-foreground/40">
                         {status != null ? playingMetadata.find(item => item.type === "subtitle")?.content
-                            : (<span className="text-foreground/30">Sub Title</span>)}
+                            : (<span className="text-foreground/30">{t('subtitle_placeholder')}</span>)}
                     </div>
                 </div>
 

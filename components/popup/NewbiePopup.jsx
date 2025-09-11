@@ -1,6 +1,7 @@
 "use client"
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 import useAuthStore from "@/stores/authStore";
 import useConfetti from "@/hooks/useConfetti";
 import PopupBase from "./PopupBase";
@@ -13,6 +14,7 @@ const NewbiePopup = () => {
         setIsNewbie
     } = useAuthStore();
     const { fireConfetti } = useConfetti();
+    const t = useTranslations('errors');
 
 
     useEffect(() => {
@@ -42,10 +44,10 @@ const NewbiePopup = () => {
                 console.log('Newbie confirm success:', data);
                 setIsNewbie(false);
             } else {
-                console.error('Newbie confirm failed:', response.status);
+                console.error(t('newbie_confirm_failed'), response.status);
             }
         } catch (error) {
-            console.error('Error confirming newbie:', error);
+            console.error(t('error_confirming_newbie'), error);
         }
     }
 
@@ -54,12 +56,12 @@ const NewbiePopup = () => {
             {isNewbie && (
                 <PopupBase onClose={confirmDiscover}>
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                        <h2 className="text-3xl">Welcome to WhiRik Reference</h2>
+                        <h2 className="text-3xl">{t('welcome_title')}</h2>
                         <p className="mt-5 text-xl font-extralight">
-                            모달임
+                            {t('welcome_message')}
                         </p>
                     </div>
-                    <Button name="discover" bg="bg-neutral-500" onClick={confirmDiscover} />
+                    <Button name={t('discover_button')} bg="bg-neutral-500" onClick={confirmDiscover} />
                 </PopupBase>
             )}
         </>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 import useAuthStore from "@/stores/authStore";
@@ -8,14 +9,16 @@ import ModalCard from "@/components/modal/ModalCard";
 import DownloadBtn from "@/components/player/DownloadBtn";
 
 const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
+    const t = useTranslations('modal');
+    
     if (type === "head") {
         return (
             <div className="border-b-1 border-zinc-500/50">
                 <div className="flex flex-row w-full py-2 text-foreground">
-                    <div className="w-2/5 flex justify-start">Title</div>
-                    <div className="w-1/5 flex justify-start">Tags</div>
-                    <div className="w-1/5 flex justify-start">Duration</div>
-                    <div className="ml-auto">Action</div>
+                    <div className="w-2/5 flex justify-start">{t('title')}</div>
+                    <div className="w-1/5 flex justify-start">{t('tags')}</div>
+                    <div className="w-1/5 flex justify-start">{t('duration')}</div>
+                    <div className="ml-auto">{t('action')}</div>
                 </div>
             </div>
         );
@@ -25,7 +28,7 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
         return (
             <div className="border-b-1 border-zinc-500/50">
                 <div className="flex flex-row w-full py-2 text-foreground/50">
-                    <div className="w-2/5 flex justify-start">Loading...</div>
+                    <div className="w-2/5 flex justify-start">{t('loading')}</div>
                     <div className="w-1/5 flex justify-start">-</div>
                     <div className="w-1/5 flex justify-start">-</div>
                     <div className="ml-auto">-</div>
@@ -60,7 +63,7 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
             <div className="flex flex-row w-full py-2 text-foreground/50">
                 <div className="w-2/5 flex justify-start">
                     <div className="flex flex-col">
-                        <span className="text-foreground">{title || 'Untitled'}</span>
+                        <span className="text-foreground">{title || t('untitled')}</span>
                         {/* {subtitle && (
                             <span className="text-xs text-foreground/30">{subtitle}</span>
                         )} */}
@@ -75,7 +78,7 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
                                 </span>
                             ))
                         ) : (
-                            <span className="text-xs text-foreground/30">No tags</span>
+                            <span className="text-xs text-foreground/30">{t('no_tags')}</span>
                         )}
                     </div>
                 </div>
@@ -89,6 +92,8 @@ const ModalPageDownloadHistoryItem = ({ type, musicData }) => {
 };
 
 const ModalPageDownloadHistory = ({ }) => {
+    const t = useTranslations('modal');
+    const tError = useTranslations('errors');
     const { data: session } = useSession();
     const { downloadHistory } = useAuthStore();
     const { toggleExpand, setDepth } = modalStore();
@@ -143,7 +148,7 @@ const ModalPageDownloadHistory = ({ }) => {
             }
             return null;
         } catch (error) {
-            console.error(`Error fetching music data for ${musicId}:`, error);
+            console.error(tError('fetch_music_data_error', { musicId }), error);
             return null;
         }
     };
@@ -203,18 +208,18 @@ const ModalPageDownloadHistory = ({ }) => {
     return (
         <>
             <ModalCard
-                title="Download History"
-                desc={`You have downloaded ${uniqueMusicIds.length} songs`}
+                title={t('download_history')}
+                desc={t('you_have_downloaded', { count: uniqueMusicIds.length })}
             />
             <div className="mx-3">
                 <ModalPageDownloadHistoryItem type="head" />
                 {loading ? (
                     <div className="py-8 text-center text-foreground/50">
-                        Loading your download history...
+                        {t('loading_download_history')}
                     </div>
                 ) : uniqueMusicIds.length === 0 ? (
                     <div className="py-8 text-center text-foreground/50">
-                        No downloads yet
+                        {t('no_downloads')}
                     </div>
                 ) : (
                     uniqueMusicIds.map((musicId, index) => (

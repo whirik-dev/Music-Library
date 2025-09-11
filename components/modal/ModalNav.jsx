@@ -1,4 +1,5 @@
 import { IconX, IconChevronLeft} from "@tabler/icons-react";
+import { useTranslations } from 'next-intl';
 
 import ModalNavElem from "@/components/modal/ModalNavElem";
 import modalStore from "@/stores/modalStore";
@@ -19,6 +20,7 @@ const ModalNavList = [
 ]
 
 const ModalNav = ({}) => {
+    const t = useTranslations('modal');
     const hideNav = false;
     const { depth, toggleModal, init, path, setPath } = modalStore();
 
@@ -49,7 +51,7 @@ const ModalNav = ({}) => {
             {!hideNav && (
             <div className="mx-3 mt-3 mb-3 px-5 py-2 bg-zinc-800 rounded-full flex flex-row gap-3 selec-none">
                 {ModalNavList.map(({ name, href }) => (
-                    <ModalNavElem key={name} name={name} href={href}/>
+                    <ModalNavElem key={name} name={t(name)} href={href}/>
                 ))}
             </div>
             )}

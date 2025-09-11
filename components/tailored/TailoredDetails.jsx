@@ -1,5 +1,6 @@
 
 import { useEffect } from "react";
+import { useTranslations } from 'next-intl';
 import useTailoredStore from "@/stores/useTailoredStore";
 
 import Button from "@/components/ui/Button2";
@@ -8,6 +9,7 @@ import InputTextarea from "@/components/ui/InputTextarea";
 
 const TailoredDetails = () => {
     const { target, detail, setDetail, updateTailoredInfo, setTailoredInfoByPath, currentTailoredInfo } = useTailoredStore();
+    const t = useTranslations('tailored');
 
     // items 배열 가져오기
     const items = currentTailoredInfo?.data?.sow?.items || [];
@@ -161,9 +163,9 @@ const TailoredDetails = () => {
         // 현재 시간 + 3일
         const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
-        setTailoredInfoByPath("data.title", "REF 작업 테스트");
+        setTailoredInfoByPath("data.title", t('ref_work_test'));
         setTailoredInfoByPath("data.due-date", threeDaysLater.toISOString());
-        setTailoredInfoByPath("data.sow.comment2", `WhiRik Reference를 통해 발행된 작업입니다.`);
+        setTailoredInfoByPath("data.sow.comment2", t('whirik_reference_work'));
 
         // 마운트시 기본적으로 1개행 추가
         if (items.length === 0) {
@@ -174,7 +176,7 @@ const TailoredDetails = () => {
     return (
         <>
             <div className="">
-                수정 요청 구간
+                {t('modification_request_section')}
             </div>
 
             {/* 기존 아이템들 렌더링 */}
@@ -196,7 +198,7 @@ const TailoredDetails = () => {
                     />
                     <InputField
                         className="flex-1"
-                        placeholder="수정 요청 내용"
+                        placeholder={t('modification_request_content')}
                         value={item.comment || ''}
                         onChange={(e) => handleCommentInput(e, index)}
                     />
@@ -212,7 +214,7 @@ const TailoredDetails = () => {
             <Button className="py-1" name="+" onClick={addNewItem} />
 
             <div className="mt-4">
-                기타 요청 사항
+                {t('additional_requests')}
             </div>
             <InputTextarea onChange={setAdditionalRequestHandler} value={currentTailoredInfo?.data?.sow?.comment1 || ""} />
             {/* <div className="">

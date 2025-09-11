@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import Image from "next/image"
+import { useTranslations } from 'next-intl';
 import useMusicItemStore from "@/stores/useMusicItemStore";
 
 
@@ -20,6 +21,7 @@ function getTimeBySecond(second) {
 
 
 const WaveProgress = ({ id, metadata, albumart, file }) => {
+    const t = useTranslations('errors');
     const {
         status,
         play,
@@ -62,7 +64,7 @@ const WaveProgress = ({ id, metadata, albumart, file }) => {
                 await play(id, metadata, albumart, file.find(item => item.type === "preview")?.path);
                 seek(metadata.find(item => item.type === "duration").content / metadata.find(item => item.type === "sampleRate").content * ratio);
             } catch (error) {
-                console.error("트랙 재생 실패:", error);
+                console.error(t('track_play_failed'), error);
             }
         } else {
             if(status === "paused")
@@ -71,7 +73,7 @@ const WaveProgress = ({ id, metadata, albumart, file }) => {
                     await resume();
                     seek(targetTimeSelf);
                 } catch (e) {
-                    console.error("트랙 재생 실패:", error);
+                    console.error(t('track_play_failed'), error);
                 }
             }
             else

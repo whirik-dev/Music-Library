@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import usePaymentStore from "@/stores/paymentStore";
 
 export default function PaymentModal({ onClose, onSuccess }) {
     const [tossPayments, setTossPayments] = useState(null);
+    const t = useTranslations('payment');
+    const tError = useTranslations('errors');
 
     const {
         paymentStep,
@@ -39,14 +42,14 @@ export default function PaymentModal({ onClose, onSuccess }) {
         let mounted = true;
         (async () => {
             try {
-                if (!clientKey) throw new Error('Missing env: NEXT_PUBLIC_TOSS_CLIENT_TEST');
+                if (!clientKey) throw new Error(tError('missing_toss_client_key'));
                 const tossPaymentsInstance = await loadTossPayments(clientKey);
 
                 if (mounted) {
                     setTossPayments(tossPaymentsInstance);
                 }
             } catch (err) {
-                console.error('[TossPayments] load error:', err);
+                console.error(tError('toss_payments_load_error'), err);
             }
         })();
         return () => {
@@ -75,8 +78,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                 (selectedPaymentType === 'yearly' ? selectedPlan.pricing.krw.yearlyTotal : selectedPlan.pricing.krw.monthly)
                 : (checkout?.amount || 10000);
             const planName = typeof selectedMembershipPlan === 'object'
-                ? `${selectedMembershipPlan?.planName?.toUpperCase()} 플랜` || selectedMembershipPlan?.plan_id || '프리미엄 플랜'
-                : selectedMembershipPlan || '프리미엄 플랜';
+                ? `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('plan')}` || selectedMembershipPlan?.plan_id || t('basic_plan')
+                : selectedMembershipPlan || t('basic_plan');
             const customerInfo = checkout?.customer || {};
 
             const paymentData = {
@@ -89,9 +92,9 @@ export default function PaymentModal({ onClose, onSuccess }) {
                 orderName: planName,
                 successUrl: `${window.location.origin}/payment/success`,
                 failUrl: `${window.location.origin}/payment/fail`,
-                customerEmail: customerInfo.email || 'customer@example.com',
-                customerName: customerInfo.name || '고객',
-                customerMobilePhone: customerInfo.phone || '01012345678',
+                customerEmail: customerInfo.email || t('customer_email_placeholder'),
+                customerName: customerInfo.name || t('customer_name_placeholder'),
+                customerMobilePhone: customerInfo.phone || t('customer_phone_placeholder'),
             };
 
             // 해외 카드 결제인 경우 추가 옵션
@@ -105,7 +108,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
             if (method === 'VIRTUAL_ACCOUNT') {
                 paymentData.virtualAccount = {
                     cashReceipt: {
-                        type: '소득공제',
+                        type: t('income_deduction'),
                     },
                     useEscrow: false,
                     validHours: 24,
@@ -117,7 +120,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
             if (onSuccess) onSuccess();
         } catch (err) {
             setPaymentStep(null);
-            console.error('[TossPayments] requestPayment error:', err);
+            console.error(tError('toss_payments_request_error'), err);
         }
     }, [tossPayments, onSuccess, setPaymentStep, checkout, selectedMembershipPlan, selectedPaymentType, pricePlans]);
 
@@ -127,7 +130,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
                 <div className={`fixed inset-0 z-[100] bg-black/30 flex items-center justify-center`}>
                     <div className="w-[500px] bg-foreground rounded-xl p-6 space-y-5">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-background">결제하기</h2>
+                            <h2 className="text-xl font-bold text-background">{t('payment')}</h2>
                             <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer text-2xl">✕</button>
                         </div>
 
@@ -136,7 +139,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
                             {currentMembershipPlan && currentMembershipPlan !== 'free' && (
                                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div className="text-sm text-blue-700">
-                                        현재 플랜: <span className="font-medium">
+                                        {t('current_plan')}: <span className="font-medium">
                                             {typeof currentMembershipPlan === 'object'
                                                 ? currentMembershipPlan?.planName || currentMembershipPlan?.plan_id || currentMembershipPlan
                                                 : currentMembershipPlan
@@ -148,13 +151,13 @@ export default function PaymentModal({ onClose, onSuccess }) {
 
                             {/* 주문 정보 */}
                             <div className="p-4 bg-gray-50 rounded-lg">
-                                <h3 className="font-semibold mb-3 text-background">주문 정보</h3>
+                                <h3 className="font-semibold mb-3 text-background">{t('order_info')}</h3>
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-background">
                                         <span>
                                             {typeof selectedMembershipPlan === 'object'
-                                                ? `${selectedMembershipPlan?.planName?.toUpperCase()} 플랜` || selectedMembershipPlan?.plan_id || '프리미엄 플랜'
-                                                : selectedMembershipPlan || '프리미엄 플랜'
+                                                ? `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('plan')}` || selectedMembershipPlan?.plan_id || t('basic_plan')
+                                                : selectedMembershipPlan || t('basic_plan')
                                             }
                                         </span>
                                         <span className="font-bold">
@@ -167,19 +170,19 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                                         : selectedPlan.pricing.krw.monthly.toLocaleString();
                                                 }
                                                 return (checkout?.amount || 10000).toLocaleString();
-                                            })()}원
+                                            })()} {t('won')}
                                         </span>
                                     </div>
 
                                     <div className="text-sm text-gray-600">
                                         {selectedPaymentType === 'yearly' ? (
-                                            <>연간 결제 (월 {(() => {
+                                            <>{t('yearly_payment')} ({t('monthly')} {(() => {
                                                 const selectedPlan = selectedMembershipPlan && pricePlans.length > 0 ?
                                                     pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
                                                 return selectedPlan ? selectedPlan.pricing.krw.yearlyMonthly.toLocaleString() : '8,333';
-                                            })()} 원)</>
+                                            })()} {t('won')})</>
                                         ) : (
-                                            '월간 결제'
+                                            t('monthly_payment')
                                         )}
                                     </div>
 
@@ -188,8 +191,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                             pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
                                         return selectedPaymentType === 'yearly' && selectedPlan?.pricing?.krw?.savings > 0 && (
                                             <div className="flex justify-between text-sm text-green-600">
-                                                <span>연간 결제 할인</span>
-                                                <span>-{selectedPlan.pricing.krw.savings.toLocaleString()}원</span>
+                                                <span>{t('yearly_payment')} {t('discount')}</span>
+                                                <span>-{selectedPlan.pricing.krw.savings.toLocaleString()} {t('won')}</span>
                                             </div>
                                         );
                                     })()}
@@ -197,21 +200,21 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                     {/* checkout 객체가 있는 경우 추가 정보 표시 */}
                                     {checkout?.discount && (
                                         <div className="flex justify-between text-sm text-green-600">
-                                            <span>추가 할인</span>
-                                            <span>-{checkout.discount.toLocaleString()}원</span>
+                                            <span>{t('discount')}</span>
+                                            <span>-{checkout.discount.toLocaleString()} {t('won')}</span>
                                         </div>
                                     )}
 
                                     {checkout?.tax && (
                                         <div className="flex justify-between text-sm text-gray-500">
-                                            <span>세금</span>
-                                            <span>{checkout.tax.toLocaleString()}원</span>
+                                            <span>Tax</span>
+                                            <span>{checkout.tax.toLocaleString()} {t('won')}</span>
                                         </div>
                                     )}
 
                                     <hr className="my-2" />
                                     <div className="flex justify-between font-bold text-lg text-background">
-                                        <span>총 결제금액</span>
+                                        <span>{t('final_payment_amount')}</span>
                                         <span className="text-blue-600">
                                             {(() => {
                                                 const selectedPlan = selectedMembershipPlan && pricePlans.length > 0 ?
@@ -222,26 +225,26 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                                         : selectedPlan.pricing.krw.monthly.toLocaleString();
                                                 }
                                                 return (checkout?.amount || 10000).toLocaleString();
-                                            })()}원
+                                            })()} {t('won')}
                                         </span>
                                     </div>
-                                    <div className="text-xs text-gray-500">VAT 포함</div>
+                                    <div className="text-xs text-gray-500">{t('vat_included')}</div>
                                 </div>
                             </div>
 
                             {/* 고객 정보 */}
                             {checkout?.customer && (
                                 <div className="p-4 bg-gray-50 rounded-lg">
-                                    <h3 className="font-semibold mb-2">결제자 정보</h3>
+                                    <h3 className="font-semibold mb-2">{t('customer_info')}</h3>
                                     <div className="space-y-1 text-sm">
                                         {checkout.customer.name && (
-                                            <div>이름: {checkout.customer.name}</div>
+                                            <div>{t('name')}: {checkout.customer.name}</div>
                                         )}
                                         {checkout.customer.email && (
-                                            <div>이메일: {checkout.customer.email}</div>
+                                            <div>{t('email')}: {checkout.customer.email}</div>
                                         )}
                                         {checkout.customer.phone && (
-                                            <div>연락처: {checkout.customer.phone}</div>
+                                            <div>{t('phone')}: {checkout.customer.phone}</div>
                                         )}
                                     </div>
                                 </div>
@@ -249,7 +252,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
 
                             {/* 결제 수단 선택 */}
                             <div className="space-y-3">
-                                <h3 className="font-semibold">결제 수단 선택</h3>
+                                <h3 className="font-semibold">{t('select_payment_method')}</h3>
                                 <div className="grid grid-cols-1 gap-3">
                                     <button
                                         onClick={() => handlePayment('CARD', false)}
@@ -258,8 +261,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="font-medium">국내 카드</div>
-                                                <div className="text-sm text-gray-500">신용카드, 체크카드</div>
+                                                <div className="font-medium">{t('domestic_card')}</div>
+                                                <div className="text-sm text-gray-500">{t('credit_debit_card')}</div>
                                             </div>
                                             <div className="text-2xl">💳</div>
                                         </div>
@@ -272,8 +275,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="font-medium">해외 카드</div>
-                                                <div className="text-sm text-gray-500">VISA, Master, JCB, UnionPay</div>
+                                                <div className="font-medium">{t('foreign_card')}</div>
+                                                <div className="text-sm text-gray-500">{t('visa_master_jcb_unionpay')}</div>
                                             </div>
                                             <div className="text-2xl">🌍</div>
                                         </div>
@@ -286,8 +289,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="font-medium">가상계좌</div>
-                                                <div className="text-sm text-gray-500">계좌이체</div>
+                                                <div className="font-medium">{t('virtual_account')}</div>
+                                                <div className="text-sm text-gray-500">{t('account_transfer')}</div>
                                             </div>
                                             <div className="text-2xl">🏦</div>
                                         </div>
@@ -300,8 +303,8 @@ export default function PaymentModal({ onClose, onSuccess }) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="font-medium">계좌이체</div>
-                                                <div className="text-sm text-gray-500">실시간 계좌이체</div>
+                                                <div className="font-medium">{t('bank_transfer')}</div>
+                                                <div className="text-sm text-gray-500">{t('real_time_transfer')}</div>
                                             </div>
                                             <div className="text-2xl">💰</div>
                                         </div>
@@ -312,21 +315,21 @@ export default function PaymentModal({ onClose, onSuccess }) {
                             {/* 결제 안내 */}
                             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div className="text-sm text-yellow-800">
-                                    <div className="font-medium mb-1">결제 안내</div>
+                                    <div className="font-medium mb-1">{t('payment_guide')}</div>
                                     <ul className="text-xs space-y-1">
-                                        <li>• 결제 완료 후 즉시 서비스 이용이 가능합니다</li>
-                                        <li>• 결제 내역은 이메일로 발송됩니다</li>
-                                        <li>• 문의사항은 고객센터로 연락해주세요</li>
+                                        <li>{t('payment_guide_1')}</li>
+                                        <li>{t('payment_guide_2')}</li>
+                                        <li>{t('payment_guide_3')}</li>
                                     </ul>
                                 </div>
                             </div>
 
                             <div className="text-xs text-gray-400 text-center">
-                                {tossPayments ? '결제 수단을 선택해주세요' : '토스페이먼츠 로딩 중...'}
+                                {tossPayments ? t('select_payment_method') : t('toss_payments_loading')}
                             </div>
 
                             <div className="text-xs text-gray-400 text-center">
-                                안전한 결제를 위해 토스페이먼츠를 사용합니다
+                                {t('secure_payment')}
                             </div>
                         </div>
                     </div>

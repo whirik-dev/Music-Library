@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from 'next-intl';
 import useTailoredStore from "@/stores/useTailoredStore";
 
 import Button from "@/components/ui/Button2";
@@ -7,18 +8,19 @@ import InputTextarea from "@/components/ui/InputTextarea";
 
 const TailoredConfirm = () => {
     const { currentTailoredInfo, setTailoredInfoByPath } = useTailoredStore();
+    const t = useTranslations('tailored');
 
     const items = currentTailoredInfo?.data?.sow?.items || [];
 
     return (
         <>
             <div className="text-xl">
-                Request Details
+                {t('request_details')}
             </div>
 
             <div className="flex flex-col gap-5">
                 <div className="flex flex-row">
-                    <div className="w-[120px]">세부 요청 사항</div>
+                    <div className="w-[120px]">{t('detailed_requests')}</div>
                     <div>
                         {items.map((item, index) => (
                             <div key={index}>
@@ -30,7 +32,7 @@ const TailoredConfirm = () => {
                     </div>
                 </div>
                 <div className="flex flex-row">
-                    <div className="w-[120px]">추가 요청 사항</div>
+                    <div className="w-[120px]">{t('additional_requests')}</div>
                     <div className="bg-zinc-800/50 flex-1 p-3 text-sm border-1 border-zinc-800/50 rounded-lg min-h-48">
                         {currentTailoredInfo.data.sow.comment1}
                     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { IconCheck } from "@tabler/icons-react"
 import Button from "@/components/ui/Button2";
 import paymentStore from "@/stores/paymentStore";
@@ -49,6 +50,7 @@ const priceItems = [
 
 const PriceCardItem = ({ content }) => {
     const router = useRouter();
+    const t = useTranslations('pricing');
 
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
 
@@ -71,7 +73,7 @@ const PriceCardItem = ({ content }) => {
         `}
         >
             <div className="font-black uppercase text-lg">
-                {content.planName}
+                {t(content.planName)}
             </div>
             <div className="flex flex-col gap-5">
                 <div className="flex flex-row gap-4">
@@ -79,13 +81,13 @@ const PriceCardItem = ({ content }) => {
                         {formatNumberKR(pricePlans.filter((item) => item.id === content.planName)[0].pricing.krw.monthly)}
                     </div>
                     <div className="flex flex-col gap-0 text-base/4 justify-center">
-                        <div>KRW</div>
-                        <div>per month</div>
+                        <div>{t('krw')}</div>
+                        <div>{t('per_month')}</div>
                     </div>
                 </div>
                 <div className="w-2/3">
                     <Button
-                        name="Select Plan"
+                        name={t('select_plan')}
                         bg="bg-zinc-300"
                         color="text-zinc-800"
                         onClick={handleSelect}
@@ -93,7 +95,7 @@ const PriceCardItem = ({ content }) => {
                 </div>
             </div>
             <div className="flex flex-col gap-2">
-                <div className="font-bold">Features</div>
+                <div className="font-bold">{t('features')}</div>
                 {pricePlans.filter((item) => item.id === content.planName)[0].features.map((feature, index) => (
                     <div key={content.plan_id + index} className="flex flex-row gap-2">
                         <div className="size-5 bg-orange-400 flex items-center justify-center rounded-full">

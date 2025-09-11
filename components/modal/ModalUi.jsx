@@ -6,24 +6,6 @@ import { motion } from "motion/react"
 
 import modalStore from "@/stores/modalStore";
 
-const ModalNav = [
-    {
-        name : "preference",
-        href : "/(.)preference",
-        href_absolute : "/(.)preference"
-    },
-    {
-        name : "subscription",
-        href : "/(.)subscription",
-        href_absolute : "/(.)subscription"
-    },
-    {
-        name : "works",
-        href : "/(.)works",
-        href_absolute : "/(.)works"
-    },
-]
-
 /**
  * 모달 컴포넌트
  *

@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
+import { useTranslations } from 'next-intl';
 
 import usePaymentStore from "@/stores/paymentStore";
 
@@ -50,7 +51,7 @@ function CheckoutFeature({ children }) {
     )
 }
 
-function SelectPlan({ data, onClick, selected }) {
+function SelectPlan({ data, onClick, selected, t }) {
     return (
         <div className={`relative border-2 p-5 rounded-sm cursor-pointer transition-all
                         ${selected ? "border-purple-500 bg-purple-500/10" : "border-foreground/30"} 
@@ -71,22 +72,22 @@ function SelectPlan({ data, onClick, selected }) {
             </span>
             <br />
             <span className="text-xs">
-                {data.description}, VAT포함
+                {data.description}, {t('payment.vat_included')}
             </span>
         </div>
     )
 }
 
-// 애니메이션 숫자 컴포넌트 - 0에서 목표값까지 카운트업
+// Animated number component - count up from 0 to target value
 function AnimatedNumber({ value, prefix = "", suffix = "" }) {
     const [currentValue, setCurrentValue] = useState(0);
     const targetValue = Number(value) || 0;
 
     useEffect(() => {
-        setCurrentValue(0); // 항상 0에서 시작
+        setCurrentValue(0); // Always start from 0
 
-        const duration = 1000; // 1초 애니메이션
-        const steps = 60; // 60프레임
+        const duration = 1000; // 1 second animation
+        const steps = 60; // 60 frames
         const increment = targetValue / steps;
         let step = 0;
 
@@ -110,12 +111,12 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }) {
     );
 }
 
-function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false }) {
+function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false, t }) {
     function price2string(price) {
         return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    // content가 숫자인지 문자열인지 확인
+    // Check if content is numeric or string
     const isNumeric = typeof content === 'number' || (!isNaN(Number(content)) && content !== '' && content !== null && content !== undefined);
     const numericValue = isNumeric ? Number(content) : 0;
 
@@ -126,11 +127,11 @@ function CalculateDetail({ name, content, className, total = false, yearly = fal
             <div className={total ? "text-lg font-bold" : "font-medium"}>{name}</div>
             <div className="">
                 {animated ? (
-                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} suffix="원" />
+                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} suffix={t('payment.won')} />
                 ) : (
-                    `${isNumeric ? price2string(numericValue) + '원' : content}`
+                    `${isNumeric ? price2string(numericValue) + t('payment.won') : content}`
                 )}
-                {yearly && " × 12개월"}
+                {yearly && t('payment.months_12')}
             </div>
         </div>
     )
@@ -139,6 +140,7 @@ function CalculateDetail({ name, content, className, total = false, yearly = fal
 
 
 export default function Checkout() {
+    const t = useTranslations();
     const router = useRouter();
     const {
         paymentStep,
@@ -148,18 +150,19 @@ export default function Checkout() {
         selectedPaymentType,
         setSelectedPaymentType
     } = usePaymentStore();
-    // 이용약관 동의 상태
+    // Terms agreement state
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
-    // 선택된 결제 수단
+    // Selected payment method
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CARD');
-    // 토스페이먼츠 인스턴스
+
+    // TossPayments instance
     const [tossPayments, setTossPayments] = useState(null);
 
     const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_TEST;
 
     useEffect(() => {
-        // selectedMembershipPlan이 없거나 필수 속성이 없으면 가격 페이지로 리다이렉트
-        // 단, paymentStep이 'payment'일 때는 리다이렉트하지 않음 (결제 진행 중)
+        // Redirect to price page if selectedMembershipPlan is missing or lacks required properties
+        // However, do not redirect when paymentStep is 'payment' (payment in progress)
         if ((!selectedMembershipPlan ||
             !selectedMembershipPlan.planName ||
             !selectedMembershipPlan.plan_id) &&
@@ -168,12 +171,12 @@ export default function Checkout() {
         }
     }, [selectedMembershipPlan, router, paymentStep]);
 
-    // 토스페이먼츠 초기화
+    // Initialize TossPayments
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                if (!clientKey) throw new Error('Missing env: NEXT_PUBLIC_TOSS_CLIENT_TEST');
+                if (!clientKey) throw new Error(t('errors.missing_toss_client_key'));
                 const tossPaymentsInstance = await loadTossPayments(clientKey);
 
                 if (mounted) {
@@ -188,19 +191,19 @@ export default function Checkout() {
         };
     }, [clientKey]);
 
-    // 주문 ID 생성
+    // Generate order ID
     const generateOrderId = () => `order_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    // 고객 키 생성
+    // Generate customer key
     const generateCustomerKey = () => `customer_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
     const handlePayment = useCallback(async (method, isInternational = false) => {
         if (!tossPayments) {
-            alert('결제 시스템을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+            alert(t('payment.payment_system_loading'));
             return;
         }
 
         if (!isTermsAgreed) {
-            alert('이용약관에 동의해주세요.');
+            alert(t('payment.agree_to_terms'));
             return;
         }
 
@@ -208,12 +211,12 @@ export default function Checkout() {
             const orderId = generateOrderId();
             const customerKey = generateCustomerKey();
 
-            // 결제창 초기화
+            // Initialize payment window
             const payment = tossPayments.payment({
                 customerKey: customerKey
             });
 
-            // 결제 정보 계산
+            // Calculate payment information
             const selectedPlan = selectedMembershipPlan ?
                 pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
@@ -221,7 +224,7 @@ export default function Checkout() {
                 (selectedPaymentType === 'yearly' ? selectedPlan.pricing.krw.yearlyTotal : selectedPlan.pricing.krw.monthly)
                 : 10000;
 
-            const planName = `${selectedMembershipPlan?.planName?.toUpperCase()} 플랜 (${selectedPaymentType === 'yearly' ? '연간' : '월간'})`;
+            const planName = `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} (${selectedPaymentType === 'yearly' ? t('payment.yearly_payment') : t('payment.monthly_payment')})`;
 
             const paymentData = {
                 method: method,
@@ -233,23 +236,27 @@ export default function Checkout() {
                 orderName: planName,
                 successUrl: `${window.location.origin}/payment?r=success`,
                 failUrl: `${window.location.origin}/payment?r=fail`,
-                customerEmail: 'customer@example.com',
-                customerName: '고객',
-                customerMobilePhone: '01012345678',
+                customerEmail: t('payment.customer_email_placeholder'),
+                customerName: t('payment.customer_name_placeholder'),
+                customerMobilePhone: t('payment.customer_phone_placeholder'),
             };
 
-            // 해외 카드 결제인 경우 추가 옵션
+            // Additional options for international card payment
             if (method === 'CARD' && isInternational) {
                 paymentData.card = {
-                    useInternationalCardOnly: true
+                    useInternationalCardOnly: true,
+                    flowMode: "DEFAULT", // Explicitly set to integrated payment window
+                    useEscrow: false,
+                    useCardPoint: false,
+                    useAppCardOnly: false
                 };
             }
 
-            // 가상계좌인 경우 추가 옵션
+            // Additional options for virtual account
             if (method === 'VIRTUAL_ACCOUNT') {
                 paymentData.virtualAccount = {
                     cashReceipt: {
-                        type: '소득공제',
+                        type: t('payment.income_deduction'),
                     },
                     useEscrow: false,
                     validHours: 24,
@@ -260,7 +267,7 @@ export default function Checkout() {
 
         } catch (err) {
             console.error('[TossPayments] requestPayment error:', err);
-            alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
+            alert(t('payment.payment_error'));
         }
     }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType]);
 
@@ -268,87 +275,89 @@ export default function Checkout() {
         return Number(num).toLocaleString('ko-KR');
     }
 
-    // 안전한 가격 정보 가져오기
+    // Safely get price information
     const selectedPlan = selectedMembershipPlan ?
         pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
-    const priceYearlyMonthly = selectedPlan?.pricing.krw.yearlyMonthly || 0; // 연간 결제 시 월 단가
-    const priceMonthly = selectedPlan?.pricing.krw.monthly || 0; // 월간 결제 가격
-    const priceYearlyTotal = selectedPlan?.pricing.krw.yearlyTotal || 0; // 연간 총액
+    const priceYearlyMonthly = selectedPlan?.pricing.krw.yearlyMonthly || 0; // Monthly unit price for yearly payment
+    const priceMonthly = selectedPlan?.pricing.krw.monthly || 0; // Monthly payment price
+    const priceYearlyTotal = selectedPlan?.pricing.krw.yearlyTotal || 0; // Yearly total amount
     const monthlySavings = priceMonthly - priceYearlyMonthly;
-    const savings = selectedPlan?.pricing.krw.savings || 0; // 절약 금액 (총)
+    const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
 
     return (
         <CheckoutWrapper>
             <CheckoutPage className="bg-foreground/3">
                 <Logo className="mb-20" />
 
-                <CheckoutTicker name="subscription" />
+                <CheckoutTicker name={t('payment.subscription')} />
                 <div className="text-5xl uppercase">
-                    {selectedMembershipPlan?.planName || 'Unknown'} Plan
+                    {selectedMembershipPlan?.planName || t('payment.unknown_plan')} {t('payment.plan')}
                 </div>
                 <div className="">
                     {selectedPlan?.features?.map((feature, index) => (
-                        <CheckoutFeature key={(selectedMembershipPlan?.plan_id || 'unknown') + index}>{feature}</CheckoutFeature>
-                    )) || <div>플랜 정보를 불러올 수 없습니다.</div>}
+                        <CheckoutFeature key={(selectedMembershipPlan?.plan_id || t('payment.unknown_plan').toLowerCase()) + index}>{feature}</CheckoutFeature>
+                    )) || <div>{t('errors.price_plans_load_failed')}</div>}
                 </div>
 
                 <div className="mt-20" />
                 <div className="flex flex-row gap-5">
                     <SelectPlan
                         data={{
-                            price: `${formatNumberKR(priceYearlyMonthly)}원`,
+                            price: `${formatNumberKR(priceYearlyMonthly)}${t('payment.won')}`,
                             priceHighlight: true,
-                            interval: " / 월 (연간결제)",
-                            promotionRatio: savings > 0 ? `${formatNumberKR(savings)}원 절약` : '',
-                            description: `${selectedMembershipPlan?.planName?.toUpperCase()}플랜 - 연간 결제`
+                            interval: t('payment.monthly_yearly'),
+                            promotionRatio: savings > 0 ? `${formatNumberKR(savings)}${t('payment.won')} ${t('payment.savings')}` : '',
+                            description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_yearly')}`
                         }}
                         onClick={() => setSelectedPaymentType('yearly')}
                         selected={selectedPaymentType === 'yearly'}
+                        t={t}
                     />
                     <SelectPlan
                         data={{
-                            price: `${formatNumberKR(priceMonthly)}원`,
+                            price: `${formatNumberKR(priceMonthly)}${t('payment.won')}`,
                             priceHighlight: true,
-                            interval: " / 월",
-                            description: `${selectedMembershipPlan?.planName?.toUpperCase()}플랜 - 월간 결제`
+                            interval: t('payment.monthly'),
+                            description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_monthly')}`
                         }}
                         onClick={() => setSelectedPaymentType('monthly')}
                         selected={selectedPaymentType === 'monthly'}
+                        t={t}
                     />
                 </div>
                 <div className="text-2xl">
-                    {/* 39,000 KRW (VAT포함) */}
+                    {/* 39,000 KRW (VAT included) */}
                 </div>
 
                 <div className="text-xs opacity-30">
-                    주식회사 휘릭에이아이 <br />
-                    이용약관 l 개인정보처리방침
+                    {t('payment.company_info')} <br />
+                    {t('payment.terms_privacy_short')}
                 </div>
             </CheckoutPage>
             <CheckoutPage>
                 <div className="mt-0" />
                 <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
-                    <CalculateDetail name="" content={`${selectedMembershipPlan?.planName?.toUpperCase()} PLAN`} className="font-bold text-lg mb-3" />
+                    <CalculateDetail name="" content={t('payment.plan_name_format', { planName: selectedMembershipPlan?.planName?.toUpperCase() || 'UNKNOWN' })} className="font-bold text-lg mb-3" t={t} />
                     {selectedPaymentType === 'yearly' ? (
                         <div key="yearly-plan">
-                            <CalculateDetail name="월 단가" content={priceYearlyMonthly} animated />
-                            <CalculateDetail name="할인" content={-monthlySavings} animated />
-                            <CalculateDetail name="연간 총액" content={priceYearlyTotal + savings} className="mt-7" animated />
-                            <CalculateDetail name="할인 총액" content={-savings} animated />
-                            <CalculateDetail name="최종 결제 금액" content={priceYearlyTotal} total className="mt-5" animated />
+                            <CalculateDetail name={t('payment.monthly_unit_price')} content={priceYearlyMonthly} animated t={t} />
+                            <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} />
+                            <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} />
+                            <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} />
+                            <CalculateDetail name={t('payment.final_payment_amount')} content={priceYearlyTotal} total className="mt-5" animated t={t} />
                         </div>
                     ) : (
                         <div key="monthly-plan">
-                            <CalculateDetail name="월간 요금" content={priceMonthly} animated />
-                            <CalculateDetail name="할인 금액" content={0} animated />
-                            <CalculateDetail name="최종 결제 금액" content={priceMonthly} total className="mt-5" animated />
+                            <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} />
+                            <CalculateDetail name={t('payment.discount_amount')} content={0} animated t={t} />
+                            <CalculateDetail name={t('payment.final_payment_amount')} content={priceMonthly} total className="mt-5" animated t={t} />
                         </div>
                     )}
                 </div>
 
                 <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
-                    <div className="text-lg font-semibold">결제방법</div>
+                    <div className="text-lg font-semibold">{t('payment.payment_methods')}</div>
 
                     {/* Payment Options Grid */}
                     <div className="grid grid-cols-2 gap-3">
@@ -363,8 +372,8 @@ export default function Checkout() {
                             />
                             <div className="flex items-center justify-between w-full">
                                 <div>
-                                    <span className="font-medium text-sm">국내 카드</span>
-                                    <div className="text-xs text-gray-500">신용카드, 체크카드</div>
+                                    <span className="font-medium text-sm">{t('payment.domestic_card')}</span>
+                                    <div className="text-xs text-gray-500">{t('payment.credit_debit_card')}</div>
                                 </div>
                                 {/* <div className="text-2xl">💳</div> */}
                             </div>
@@ -380,70 +389,53 @@ export default function Checkout() {
                             />
                             <div className="flex items-center justify-between w-full">
                                 <div>
-                                    <span className="font-medium text-sm">해외 카드</span>
-                                    <div className="text-xs text-gray-500">VISA, Master, JCB, UnionPay</div>
+                                    <span className="font-medium text-sm">{t('payment.foreign_card')}</span>
+                                    <div className="text-xs text-gray-500">{t('payment.visa_master_description')}</div>
                                 </div>
                                 {/* <div className="text-2xl">🌍</div> */}
                             </div>
                         </label>
-
-                        {/* <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="VIRTUAL_ACCOUNT"
-                                className="mr-3 text-blue-600"
-                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                            />
-                            <div className="flex items-center justify-between w-full">
-                                <div>
-                                    <span className="font-medium text-sm">가상계좌</span>
-                                    <div className="text-xs text-gray-500">계좌이체</div>
-                                </div>
-                            </div>
-                        </label>
-
-                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="TRANSFER"
-                                className="mr-3 text-blue-600"
-                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                            />
-                            <div className="flex items-center justify-between w-full">
-                                <div>
-                                    <span className="font-medium text-sm">계좌이체</span>
-                                    <div className="text-xs text-gray-500">실시간 계좌이체</div>
-                                </div>
-                            </div>
-                        </label> */}
                     </div>
 
-                    {/* Security Notice */}
-                    <div className="flex flex-col gap-3 items-start space-x-2 text-sm text-zinc-600 dark:text-zinc-400 mt-4">
-                        {/* <div className="flex flex-row">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                            </svg>
-                            <span>SSL 보안 결제</span>
-                        </div> */}
-                        <div>
-                            <input
-                                type="checkbox"
-                                name="terms"
-                                checked={isTermsAgreed}
-                                onChange={(e) => setIsTermsAgreed(e.target.checked)}
-                                className="mr-1 text-blue-600"
-                            />
-                            <span className="font-medium text-sm">이용약관에 동의합니다.</span>
+                    {/* Guide message when foreign card is selected */}
+                    {selectedPaymentMethod === 'FOREIGN_CARD' && (
+                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <div className="flex items-start space-x-3">
+                                <div className="text-blue-600 dark:text-blue-400 mt-0.5">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">{t('payment.foreign_card_guide_title')}</h4>
+                                    <p className="mt-1 text-sm text-blue-700 dark:text-blue-200">
+                                        {t('payment.foreign_card_guide_description')}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
+                    {/* Additional payment methods can be added here */}
+                </div>
+
+                {/* Security Notice */}
+                <div className="flex flex-col gap-3 items-start space-x-2 text-sm text-zinc-600 dark:text-zinc-400 mt-4">
+                    {/* SSL security notice can be added here */}
+                    <div>
+                        <input
+                            type="checkbox"
+                            name="terms"
+                            checked={isTermsAgreed}
+                            onChange={(e) => setIsTermsAgreed(e.target.checked)}
+                            className="mr-1 text-blue-600"
+                        />
+                        <span className="font-medium text-sm">{t('payment.terms_agreement')}</span>
+                    </div>
                 </div>
 
                 <Button
-                    name={tossPayments ? "결제하기" : "결제 시스템 로딩 중..."}
+                    name={tossPayments ? t('payment.pay_button') : t('payment.payment_system_loading_button')}
                     className={`w-full ${(!isTermsAgreed || !tossPayments) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     bg={(isTermsAgreed && tossPayments) ? "bg-purple-600 font-bold" : "bg-gray-400 font-bold"}
                     onClick={() => {
@@ -455,11 +447,10 @@ export default function Checkout() {
                     }}
                 />
                 <Button
-                    name="(dev only) 결제성공or실패"
+                    name={t('payment.dev_payment_test')}
                     onClick={() => { router.push('/payment') }}
                 />
             </CheckoutPage>
-
         </CheckoutWrapper>
     );
 }

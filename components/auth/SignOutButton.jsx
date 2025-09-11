@@ -3,19 +3,21 @@
 import { IconLogout } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { toast } from 'react-toastify';
+import { useTranslations } from 'next-intl';
 
 import useAuthStore from "@/stores/authStore";
 
 const SignOutButton = () => {
     const { toggleIsLogged, clearUserInfo, initializing } = useAuthStore();
     const { data: session } = useSession();
+    const t = useTranslations('errors');
 
   const handleSignOut = async () => {
 
     try {
       const session_id = session.user.ssid; // 세션에서 ssid 추출
       if (!session_id) {
-        alert('로그인 정보가 없습니다.');
+        alert(t('no_login_info'));
         console.log(JSON.stringify(session.user));
         return;
       }
@@ -39,11 +41,11 @@ const SignOutButton = () => {
         // window.location.reload(); // 필요시
       } else {
         // alert(result.message || '로그아웃 실패');
-        toast.error('Signout Fail');
+        toast.error(t('signout_failed'));
       }
     } catch (error) {
       // toast.error('Server Error');
-      alert('서버 오류: ' + error.message);
+      alert(t('server_error_with_message', { message: error.message }));
     }
   };
 

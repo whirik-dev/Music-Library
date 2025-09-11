@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import useToggle from "@/utils/useToggle";
 
 import Button from "@/components/ui/Button";
@@ -7,6 +8,7 @@ import useModalStore from "@/stores/modalStore";
 import useUiStore from "@/stores/uiStore";
 
 const ModalPagePreference = ({}) => {
+    const t = useTranslations('modal');
 
     useToggle(
         () => {
@@ -19,20 +21,20 @@ const ModalPagePreference = ({}) => {
     const method = 'local account';
     return (
         <>
-            <ModalCard title="Signin Method" desc={`Sign in as ${method}`} />
-            {/* <ModalCard title="Change Signin Method" desc="Sign in as Google account" 
+            <ModalCard title={t('signin_method')} desc={t('sign_in_as', { method })} />
+            {/* <ModalCard title={t('change_signin_method')} desc={t('sign_in_as_google')} 
             type="action" action="change"/> */}
 
             <hr className={`mx-3 border-zinc-800`}/>
 
-            <ModalCard title="Add Channel" desc="You are currently registered for 3 platforms." 
+            <ModalCard title={t('add_channel')} desc={t('you_are_registered', { count: 3 })} 
                        type="action" action="add" onClick={()=>{setPath('preference/channelManage')}}/>
 
             <hr className={`mx-3 border-zinc-800`}/>
 
-            <ModalCard title="Favorite List" desc="amu seomyeong neo eot sumnidap" 
+            <ModalCard title={t('favorite_list')} desc={t('favorite_list')} 
                        type="action" action="view" onClick={()=>{setPath('preference/favoriteList')}}/>
-            <ModalCard title="Download History" desc="amu seomyeong neo eot sumnidap" 
+            <ModalCard title={t('download_history')} desc={t('download_history')} 
                        type="action" action="view" onClick={()=>{setPath('preference/downloadHistory')}}/>
             {/* <Button name="btn" href="/" /> */}
 
@@ -40,8 +42,8 @@ const ModalPagePreference = ({}) => {
 
 
             <ModalCard 
-                title="Change Theme" 
-                desc={`enable ${colorMode === 'dark' ? 'light mode' : 'dark mode'}`} 
+                title={t('change_theme')} 
+                desc={t('enable_mode', { mode: colorMode === 'dark' ? t('light_mode') : t('dark_mode') })} 
                 type="toggle" 
                 action={colorMode} 
                 onClick={()=>{
@@ -52,7 +54,7 @@ const ModalPagePreference = ({}) => {
             />
 
             <div className="px-3 text-zinc-600">
-                Terms
+                {t('terms')}
             </div>
         </>
     )

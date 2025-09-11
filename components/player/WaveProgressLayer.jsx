@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import useMusicItemStore from "@/stores/useMusicItemStore";
 
 function getTimeBySecond(second) {
@@ -17,6 +18,7 @@ function getTimeBySecond(second) {
 }
 
 const WaveProgressLayer = ({ id, metadata }) => {
+    const t = useTranslations('errors');
     const {
         status,
         play,
@@ -57,7 +59,7 @@ const WaveProgressLayer = ({ id, metadata }) => {
                 await play(id, metadata, `https://asset.probgm.com/${id}?r=preview`);
                 seek(metadata.find(item => item.type === "duration").content * ratio);
             } catch (error) {
-                console.error("트랙 재생 실패:", error);
+                console.error(t('track_play_failed'), error);
             }
         } else {
             if(status === "paused")
@@ -66,7 +68,7 @@ const WaveProgressLayer = ({ id, metadata }) => {
                     await resume();
                     seek(targetTimeSelf);
                 } catch (e) {
-                    console.error("트랙 재생 실패:", error);
+                    console.error(t('track_play_failed'), error);
                 }
             }
             else

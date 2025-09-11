@@ -15,11 +15,12 @@ const lato = Lato({
     variable: "--font-lato",
 });
 
-const HTMLProvider = ({ children }) => {
+const HTMLProvider = ({ children, locale = 'en' }) => {
     const { colorMode } = useUiStore();
+
     return (
         <html
-            lang="ko" // 한국어로 변경
+            lang={locale}
             className={`scroll-smooth ${colorMode} ${lato.variable} ${notoSansKR.variable}`}
         >
             {children}

@@ -2,8 +2,10 @@
 
 import Icon from "@/components/Icon"
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const FilterOptions = ({}) => {
+    const t = useTranslations('ui');
     const ref = useRef(null);
     const [isSticky, setIsSticky] = useState(false);
 
@@ -25,15 +27,15 @@ const FilterOptions = ({}) => {
             <div className="flex flex-row">
                 <div className="flex flex-row items-center gap-1">
                     <Icon name="AdjustmentsVerticalIcon" size="4"/>
-                    Tool Tab
+                    {t('tool_tab')}
                 </div>
                 <div className="flex flex-row gap-5 ml-auto">
                     <div className="flex flex-row items-center gap-1">
-                        Filter
+                        {t('filter')}
                         <Icon name="FunnelIcon" size="4"/>
                     </div>
                     <div className="flex flex-row items-center gap-1">
-                        Sort
+                        {t('sort')}
                         <Icon name="ArrowsUpDownIcon" size="4" />
                     </div>
                 </div>

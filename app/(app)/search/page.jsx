@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from 'next/navigation'; 
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl'; 
 
 import useMusicListStore from "@/stores/useMusicListStore"; // Adjust path as needed
 
@@ -13,6 +14,7 @@ import MusicItemSkeleton from "@/components/skeleton/MusicItemSkeleton";
 import EmptyContent from "@/components/page/EmptyContent";
 
 export default function Search() {
+    const t = useTranslations('pages.search');
     const [queryExists, setQueryExists] = useState(false);
     const { 
         musicList, 
@@ -54,14 +56,14 @@ export default function Search() {
 
         <MusicItemList>
             {!queryExists ? (
-                <EmptyContent content="No search term entered. Please enter a search term.">
+                <EmptyContent content={t('no_term_message')}>
                     
                 </EmptyContent>
             ) : (
                 <>
                     {listMode === 'empty' ? (
                     <EmptyContent>
-                        다른 검색어들이 나옴 (클릭가능)
+                        {t('empty_suggestions')}
                     </EmptyContent>
                     ) : (
                     <>

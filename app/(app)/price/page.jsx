@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import PageWrapper from "@/components/page/PageWrapper";
 import PriceCard from "@/components/page/PriceCard";
 import Heading from "@/components/ui/Heading";
@@ -8,16 +9,18 @@ import Checkout from "@/components/payment/CheckoutModal";
 
 export default function Price() 
 {
+    const t = useTranslations('pages.pricing');
+    
     return (
         <>
             <PageWrapper className="relative bg-[url('/bg_price.png')] bg-cover bg-bottom bg-no-repeat min-h-[920px]">
                 <div className="flex flex-col">
                     <div className="flex flex-col gap-5 mt-20">
                         <Heading align="lg:text-center">
-                            Unlock Unlimited Access to Our Music Library!
+                            {t('hero_title')}
                         </Heading>
                         <HeadingSub>
-                            Gain instant access to over 1 million tracks and start selling your music today!
+                            {t('hero_subtitle')}
                         </HeadingSub>
                     </div>
                     <PriceCard />

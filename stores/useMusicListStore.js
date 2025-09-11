@@ -65,7 +65,7 @@ const useMusicListStore = create((set, get) => ({
 
             if(data.data.count === 0)
             {
-                set({ error: "no data", isLoading: false, listMode:'empty' });
+                set({ error: "No data available", isLoading: false, listMode:'empty' });
                 return;
             }
             const items = data.data.items;
