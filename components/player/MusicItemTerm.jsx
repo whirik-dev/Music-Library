@@ -3,7 +3,7 @@ import useMusicListStore from "@/stores/useMusicListStore";
 import { toast } from 'react-toastify';
 
 const MusicItemTerm = ({ name }) => {
-    const { query, setQuery, queryMusicList } = useMusicListStore();
+    const { query, setQuery, queryMusicList, resetList } = useMusicListStore();
 
     const handleAddTagToQuery = (tag) => {
         const tags = query.trim().split(' ');
@@ -15,7 +15,8 @@ const MusicItemTerm = ({ name }) => {
 
         const newQuery = query === '' ? tag : `${query} ${tag}`;
         setQuery(newQuery);
-        queryMusicList();
+        resetList(); // 새로운 검색 시 리스트 초기화
+        queryMusicList(0, false); // 첫 페이지부터 시작
     }
 
     return (

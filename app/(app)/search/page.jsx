@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl'; 
 
 import useMusicListStore from "@/stores/useMusicListStore"; // Adjust path as needed
+import useInfiniteScroll from "@/hooks/useInfiniteScroll";
 
 import FilterOptions from "@/components/search/FilterOptions";
 import Footer from "@/components/ui/Footer";
@@ -19,12 +20,19 @@ export default function Search() {
     const { 
         musicList, 
         isLoading, 
+        isLoadingMore,
+        hasMore,
         query, 
         setQuery, 
         queryMusicList, 
         fetchMusicList, 
+        loadMore,
+        resetList,
         listMode 
     } = useMusicListStore();
+
+    // 무한스크롤 훅 사용
+    const triggerRef = useInfiniteScroll(loadMore, hasMore && queryExists, isLoadingMore);
 
     const searchParams = useSearchParams();
     const searchTerm = searchParams.getAll('q'); 
@@ -32,21 +40,25 @@ export default function Search() {
     useEffect(() => {
         const combinedSearchTerm = searchTerm.join(' '); 
         setQuery(combinedSearchTerm);
+        
+        // 새로운 검색 시 리스트 초기화
+        resetList();
+        
         if(searchTerm.length > 0 )
         {
             setQueryExists(true);
             console.log(combinedSearchTerm);
-            queryMusicList(query);
+            queryMusicList(0, false); // 첫 페이지부터 시작
         }
         else
         {
             setQueryExists(false);
-            // fetchMusicList();
         }
+        
         return () => {
             setQuery('');
         };
-    }, [searchParams, setQuery, queryMusicList, fetchMusicList]);
+    }, [searchParams, setQuery, queryMusicList, resetList]);
 
     return (
         <div className="min-h-screen relative">
@@ -67,21 +79,36 @@ export default function Search() {
                     </EmptyContent>
                     ) : (
                     <>
-                        {isLoading ? (
+                        {isLoading && musicList.length === 0 ? (
+                        // 첫 로딩
                         <>
                             {[...Array(20)].map((_, i) => (
                             <MusicItemSkeleton key={i} />
                             ))}
                         </>
                         ) : musicList.length > 0 ? (
-                        musicList.map((item) => (
-                            <MusicItem
-                            key={item.id}
-                            data={item}
-                            />
-                        ))
+                        <>
+                            {musicList.map((item) => (
+                                <MusicItem
+                                key={item.id}
+                                data={item}
+                                />
+                            ))}
+                            {/* 무한스크롤 트리거 요소 */}
+                            {hasMore && queryExists && (
+                                <div ref={triggerRef} className="h-1" />
+                            )}
+                            {/* 더 로딩 중일 때 스켈레톤 추가 */}
+                            {isLoadingMore && (
+                                <>
+                                    {[...Array(8)].map((_, i) => (
+                                        <MusicItemSkeleton key={`loading-${i}`} />
+                                    ))}
+                                </>
+                            )}
+                        </>
                         ) : (
-                        // No music items available. // Optional: Handle empty state
+                        // No music items available
                         <>
                             {[...Array(20)].map((_, i) => (
                             <MusicItemSkeleton key={i} />

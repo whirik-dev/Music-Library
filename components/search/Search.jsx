@@ -12,7 +12,7 @@ const Search = () => {
     const t = useTranslations('search');
 
     const [ familyClicked, setFamilyClicked ] = useState(false);
-    const { query, setQuery, searchTab, toggleSearchTab, queryMusicList, fetchMusicList, listMode, error, relatedKeywords, relSelected, setRelSelected } = useMusicListStore();
+    const { query, setQuery, searchTab, toggleSearchTab, queryMusicList, fetchMusicList, resetList, listMode, error, relatedKeywords, relSelected, setRelSelected } = useMusicListStore();
     const inputRef = useRef(null);
     const router = useRouter();
 
