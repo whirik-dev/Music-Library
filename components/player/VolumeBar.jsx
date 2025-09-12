@@ -4,6 +4,7 @@ import { useRef, useCallback } from "react";
 
 // Volume constants to match store configuration
 const VOLUME_DIVISOR = 4;
+const DEFAULT_VOLUME = 0.8; // Match store's DEFAULT_VOLUME
 const MAX_UI_VOLUME = 1.0;
 const MAX_STORE_VOLUME = MAX_UI_VOLUME / VOLUME_DIVISOR; // 0.25
 
@@ -50,7 +51,7 @@ const VolumeBar = () => {
     return (
         <div className="relative group cursor-pointer">
             {/* 볼륨 아이콘 클릭 시 음소거 토글 */}
-            <div onClick={() => setVolume(volume === 0 ? MAX_UI_VOLUME : 0)}>
+            <div onClick={() => setVolume(volume === 0 ? DEFAULT_VOLUME : 0)}>
                 {volume === 0 ? <IconVolumeOff /> : <IconVolume />}
             </div>
 
