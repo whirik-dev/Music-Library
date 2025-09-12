@@ -971,7 +971,7 @@ const useMusicItemStore = create((set, get) => {
      */
     const createAudioUrl = (trackId, baseUrl) => {
         // Currently returns base URL, can be enhanced for adaptive quality
-        return baseUrl || `https://asset.mimiu.me/${trackId}?r=preview`;
+        return baseUrl || `https://asset.probgm.com/${trackId}?r=preview`;
     };
 
     /**
