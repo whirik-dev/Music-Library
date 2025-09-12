@@ -2,13 +2,18 @@ import { IconVolume, IconVolumeOff } from "@tabler/icons-react"
 import useMusicItemStore from "@/stores/useMusicItemStore";
 import { useRef, useCallback } from "react";
 
+// Volume constants to match store configuration
+const VOLUME_DIVISOR = 4;
+const MAX_UI_VOLUME = 1.0;
+const MAX_STORE_VOLUME = MAX_UI_VOLUME / VOLUME_DIVISOR; // 0.25
+
 const VolumeBar = () => {
     const { volume, setVolume } = useMusicItemStore();
     const barRef = useRef(null);
     const isDraggingRef = useRef(false);
 
-    // 스토어에서 volume은 실제로는 /4 된 값이므로, 0.2가 최대값
-    const volPercent = Math.min(100, Math.max(0, (volume / 0.2) * 100));
+    // Convert store volume (0-0.25) to UI percentage (0-100%)
+    const volPercent = Math.min(100, Math.max(0, (volume / MAX_STORE_VOLUME) * 100));
     const barHeight = `${volPercent}%`;
 
     const updateVolume = useCallback((e) => {
@@ -18,8 +23,8 @@ const VolumeBar = () => {
         const y = e.clientY - rect.top;
         const ratio = Math.max(0, Math.min(1, 1 - y / rect.height));
 
-        // 드래그 비율(0~1)을 볼륨값으로 변환 (스토어에서 /4 하므로 0.8 전달)
-        const newVol = ratio * 0.8;
+        // Convert UI ratio (0-1) to store volume using consistent calculation
+        const newVol = ratio * MAX_UI_VOLUME;
         setVolume(newVol);
     }, [setVolume]);
 
@@ -45,7 +50,7 @@ const VolumeBar = () => {
     return (
         <div className="relative group cursor-pointer">
             {/* 볼륨 아이콘 클릭 시 음소거 토글 */}
-            <div onClick={() => setVolume(volume === 0 ? 0.8 : 0)}>
+            <div onClick={() => setVolume(volume === 0 ? MAX_UI_VOLUME : 0)}>
                 {volume === 0 ? <IconVolumeOff /> : <IconVolume />}
             </div>
 
