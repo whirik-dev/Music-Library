@@ -106,9 +106,9 @@ const SignInPage = () => {
                                         >
                                             {t('change_signin_method_to_social')}
                                         </div>
-                                        <div className="text-foreground/20 hover:underline cursor-pointer hover:text-foreground/40 text-center">
+                                        {/* <div className="text-foreground/20 hover:underline cursor-pointer hover:text-foreground/40 text-center">
                                             sign up?
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             </div>
