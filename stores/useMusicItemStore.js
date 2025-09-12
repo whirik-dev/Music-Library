@@ -52,7 +52,7 @@ const useMusicItemStore = create((set, get) => {
         currentTime: 0,
         duration: 1,
         player: null,
-        volume: 0.20,
+        volume: 0.8,
 
         play: async (trackId) => {
             // 이미 같은 트랙이 재생 중이면 무시
