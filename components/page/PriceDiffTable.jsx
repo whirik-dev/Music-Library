@@ -1,66 +1,72 @@
 import { IconX, IconCircle } from "@tabler/icons-react"
 
 const PriceDiffTable = () => {
+    // 플랜 정보
+    const plans = ['Free', 'Basic', 'Pro', 'Master'];
 
-    const priceDiffTable = [
-
-    ]
+    // 테이블 데이터 구조화
+    const tableData = [
+        {
+            feature: 'Download Music',
+            values: ['10 music per month', 'unlimited', 'unlimited', 'unlimited']
+        },
+        {
+            feature: 'Download Music Quality',
+            values: ['192kbps mp3', 'WAV 24bit', 'WAV 24bit', 'WAV 24bit']
+        },
+        {
+            feature: 'Credits',
+            values: ['20 Credits', '70 Credits', '150 Credits', '500 Credits']
+        },
+        {
+            feature: 'Commercial Use',
+            values: [false, true, true, true],
+            isBoolean: true
+        },
+        {
+            feature: 'Preview',
+            values: [true, true, true, true],
+            isBoolean: true
+        }
+    ];
 
     const thClass = "border-b-1 border-white/10 py-5 text-xl font-black";
     const tdClass = "border-b-1 border-r-1 last:border-r-0 border-white/10 text-center first:text-left py-5";
-    const iconClass = "inline"
+    const iconClass = "inline";
+
+    const renderCellContent = (value, isBoolean) => {
+        if (isBoolean) {
+            return value ?
+                <IconCircle size="18" className={iconClass} /> :
+                <IconX size="18" className={iconClass} />;
+        }
+        return value;
+    };
 
     return (
-        <div className="w-full">  
+        <div className="w-full">
             <table className="table-fixed w-full">
                 <thead>
                     <tr>
-                        <th className={`${thClass}`}></th>
-                        <th className={`${thClass}`}>Free</th>
-                        <th className={`${thClass}`}>Basic</th>
-                        <th className={`${thClass}`}>Pro</th>
-                        <th className={`${thClass}`}>Master</th>
+                        <th className={thClass}></th>
+                        {plans.map((plan) => (
+                            <th key={plan} className={thClass}>{plan}</th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td className={`${tdClass}`}>Download Music</td>
-                        <td className={`${tdClass}`}>10 music per month</td>
-                        <td className={`${tdClass}`}>unlimited</td>
-                        <td className={`${tdClass}`}>unlimited</td>
-                        <td className={`${tdClass}`}>unlimited</td>
-                    </tr>
-                    <tr>
-                        <td className={`${tdClass}`}>Download Music Quality</td>
-                        <td className={`${tdClass}`}>192kbps mp3</td>
-                        <td className={`${tdClass}`}>WAV 24bit</td>
-                        <td className={`${tdClass}`}>WAV 24bit</td>
-                        <td className={`${tdClass}`}>WAV 24bit</td>
-                    </tr>
-                    <tr>
-                        <td className={`${tdClass}`}>Credits</td>
-                        <td className={`${tdClass}`}>20 Credits</td>
-                        <td className={`${tdClass}`}>70 Credits</td>
-                        <td className={`${tdClass}`}>150 Credits</td>
-                        <td className={`${tdClass}`}>500 Credits</td>
-                    </tr>
-                    <tr>
-                        <td className={`${tdClass}`}>Commercial Use</td>
-                        <td className={`${tdClass}`}><IconX size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                    </tr>
-                    <tr>
-                        <td className={`${tdClass}`}>Preview</td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                        <td className={`${tdClass}`}><IconCircle size="18" className={`${iconClass}`}/></td>
-                    </tr>
+                    {tableData.map((row, index) => (
+                        <tr key={index}>
+                            <td className={tdClass}>{row.feature}</td>
+                            {row.values.map((value, valueIndex) => (
+                                <td key={valueIndex} className={tdClass}>
+                                    {renderCellContent(value, row.isBoolean)}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
-            이하 더 비교할점을 찾아보면 좋ㄹ겠음
         </div>
     )
 }
