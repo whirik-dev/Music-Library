@@ -1,5 +1,4 @@
-import { IconScissors, IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconPlayerTrackNextFilled, IconLoader2 } from "@tabler/icons-react"
-import { useState, useEffect } from "react";
+import { IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconPlayerTrackNextFilled, IconLoader2 } from "@tabler/icons-react"
 import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
@@ -12,17 +11,12 @@ import FavoriteHeart from "@/components/player/FavoriteHeart";
 import DownloadBtn from "@/components/player/DownloadBtn";
 import TailoredBtn from "@/components/player/TailoredBtn";
 import VolumeBar from "@/components/player/VolumeBar";
+import PlayerThumbnail from "@/components/player/PlayerThumbnail";
 
 const Player = ({ }) => {
     const t = useTranslations('player');
-    const { status, playingAlbumart, playingMetadata, playingTrackId, playingFiles, play, resume, pause, stop } = useMusicItemStore();
+    const { status, playingMetadata, playingTrackId, playingFiles, play, resume, pause, stop } = useMusicItemStore();
     const { musicList } = useMusicListStore();
-    const [thumbnailError, setThumbnailError] = useState(false);
-
-    // 트랙이 바뀔 때마다 썸네일 에러 상태 리셋
-    useEffect(() => {
-        setThumbnailError(false);
-    }, [playingTrackId]);
 
     const nextMusic = () => {
         if (musicList.length > 0 && playingTrackId) {
@@ -37,25 +31,10 @@ const Player = ({ }) => {
         >
             <div className="flex flex-row h-20 items-center gap-5 text-sm">
                 {/* 앨범커버 */}
-                <div className="size-12">
-                    {
-                        // 썸네일이 있을 경우
-                        playingFiles?.includes('thumbnail') && !thumbnailError ? (
-                            <div className="rounded-sm overflow-hidden">
-                                <img
-                                    src={`https://asset.probgm.com/${playingTrackId}?r=thumbnail`}
-                                    alt="albumart image"
-                                    onError={() => {
-                                        console.warn(`Thumbnail not found for ID: ${playingTrackId}`);
-                                        setThumbnailError(true);
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <div className="w-full h-full bg-foreground/10 rounded-sm" />
-                        )
-                    }
-                </div>
+                <PlayerThumbnail 
+                    playingTrackId={playingTrackId} 
+                    playingFiles={playingFiles} 
+                />
 
                 {/* 제목 */}
                 <div className="flex flex-col w-auto md:w-36 xl:w-48">

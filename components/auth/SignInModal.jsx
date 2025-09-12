@@ -30,7 +30,7 @@ const SignInModal = () => {
     return (
         <div className="flex items-center justify-center z-50 fixed top-0 left-0 w-full h-screen">
             <div className="absolute top-0 left-0 w-full h-full bg-zinc-900/50" onClick={()=>closeAuthModalHelper()} />
-            <div className={`w-[813px] bg-background/50 backdrop-blur-md rounded-md shadow-md ${colorMode === 'dark' && 'border border-foreground/10'}`}>
+            <div className={`w-full lg:w-[813px] h-full lg:h-auto bg-background/50 backdrop-blur-md rounded-md shadow-md ${colorMode === 'dark' && 'border border-foreground/10'}`}>
                 {modalPage === "signin" ? <SignInPage />
                 :modalPage === "signup" ? <SignUpPage /> : ""}
             </div>

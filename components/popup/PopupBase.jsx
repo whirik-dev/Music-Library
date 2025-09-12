@@ -3,7 +3,7 @@ import { useState } from "react";
 import useUiStore from "@/stores/uiStore";
 import { IconX } from "@tabler/icons-react"
 
-const PopupBase = ({ children, bg, onClose }) => {
+const PopupBase = ({ children, bg, onClose, className }) => {
     const { colorMode } =useUiStore(); 
     const [ isHide, setIsHide ] = useState(false);
 
@@ -26,6 +26,7 @@ const PopupBase = ({ children, bg, onClose }) => {
                     <div className={`relative w-full md:w-2xl h-full md:h-[380px] rounded-lg 
                                      flex flex-col justify-between
                                     ${colorMode === "dark" ? "bg-neutral-800"  : "bg-background border-1 border-neutral-200"}
+                                    ${className}
                                     `}
                     >
                         {/* Close Button */}

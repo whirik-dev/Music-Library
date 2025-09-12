@@ -1,49 +1,57 @@
 import { IconVolume, IconVolumeOff } from "@tabler/icons-react"
 import useMusicItemStore from "@/stores/useMusicItemStore";
-import { useRef, useState } from "react";
+import { useRef, useCallback } from "react";
+
+// Volume constants to match store configuration
+const VOLUME_DIVISOR = 4;
+const DEFAULT_VOLUME = 0.8; // Match store's DEFAULT_VOLUME
+const MAX_UI_VOLUME = 1.0;
+const MAX_STORE_VOLUME = MAX_UI_VOLUME / VOLUME_DIVISOR; // 0.25
 
 const VolumeBar = () => {
     const { volume, setVolume } = useMusicItemStore();
-    const [isDragging, setIsDragging] = useState(false);
     const barRef = useRef(null);
+    const isDraggingRef = useRef(false);
 
-    const volPercent = volume * 100;
-    const barHeight = `${volPercent*4}%`;
+    // Convert store volume (0-0.25) to UI percentage (0-100%)
+    const volPercent = Math.min(100, Math.max(0, (volume / MAX_STORE_VOLUME) * 100));
+    const barHeight = `${volPercent}%`;
 
-    const updateVolume = (e) => {
+    const updateVolume = useCallback((e) => {
         if (!barRef.current) return;
 
         const rect = barRef.current.getBoundingClientRect();
         const y = e.clientY - rect.top;
-        const ratio = 1 - y / rect.height;
+        const ratio = Math.max(0, Math.min(1, 1 - y / rect.height));
 
-        const newVol = Math.max(0, Math.min(1, ratio));
+        // Convert UI ratio (0-1) to store volume using consistent calculation
+        const newVol = ratio * MAX_UI_VOLUME;
         setVolume(newVol);
-    };
+    }, [setVolume]);
 
-    const handleVolumeClick = (e) => {
-        e.stopPropagation(); // 아이콘 클릭 방지
-        updateVolume(e); // 클릭 시 볼륨 즉시 업데이트
-        setIsDragging(true); // 드래그 시작
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
-    };
+    const handleMouseMove = useCallback((e) => {
+        if (!isDraggingRef.current) return;
+        updateVolume(e);
+    }, [updateVolume]);
 
-    const handleMouseMove = (e) => {
-        if (!isDragging || !barRef.current) return;
-        updateVolume(e); // 드래그 중 볼륨 실시간 업데이트
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
+    const handleMouseUp = useCallback(() => {
+        isDraggingRef.current = false;
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
-    };
+    }, [handleMouseMove]);
+
+    const startDragging = useCallback((e) => {
+        e.stopPropagation();
+        updateVolume(e);
+        isDraggingRef.current = true;
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+    }, [updateVolume, handleMouseMove, handleMouseUp]);
 
     return (
         <div className="relative group cursor-pointer">
             {/* 볼륨 아이콘 클릭 시 음소거 토글 */}
-            <div onClick={() => setVolume(volume === 0 ? 1 : 0)}>
+            <div onClick={() => setVolume(volume === 0 ? DEFAULT_VOLUME : 0)}>
                 {volume === 0 ? <IconVolumeOff /> : <IconVolume />}
             </div>
 
@@ -52,25 +60,18 @@ const VolumeBar = () => {
                             bg-zinc-800 flex items-center justify-center border-1 border-zinc-700 shadow-md
                             opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div
-                    className="relative w-2 h-20 bg-zinc-900 rounded-md"
+                    className="relative w-2 h-20 bg-zinc-900 rounded-md cursor-pointer"
                     ref={barRef}
-                    onClick={handleVolumeClick}
+                    onMouseDown={startDragging}
                 >
                     {/* 채워지는 바 */}
                     <div
-                        className="absolute bottom-0 left-0 w-2 bg-white rounded-full"
+                        className="absolute bottom-0 left-0 w-2 bg-white rounded-full pointer-events-none"
                         style={{ height: barHeight }}
                     >
                         {/* 노브 */}
                         <div
-                            className="absolute left-1/2 top-0 size-4 rounded-full bg-zinc-700 -translate-x-1/2 -translate-y-1/2"
-                            onMouseDown={(e) => {
-                                e.stopPropagation(); // 클릭 전파 방지
-                                updateVolume(e); // 노브 클릭 시 즉시 볼륨 업데이트
-                                setIsDragging(true); // 드래그 시작
-                                window.addEventListener("mousemove", handleMouseMove);
-                                window.addEventListener("mouseup", handleMouseUp);
-                            }}
+                            className="absolute left-1/2 top-0 size-4 rounded-full bg-zinc-700 -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
                         />
                     </div>
                 </div>

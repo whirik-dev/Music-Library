@@ -54,14 +54,14 @@ const NewbiePopup = () => {
     return (
         <>
             {isNewbie && (
-                <PopupBase onClose={confirmDiscover}>
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                        <h2 className="text-3xl">{t('welcome_title')}</h2>
-                        <p className="mt-5 text-xl font-extralight">
+                <PopupBase onClose={confirmDiscover} className="bg-gradient-to-br from-purple-500 to-blue-900">
+                    <div className="w-full h-full flex flex-col items-center justify-center ">
+                        <h2 className="text-3xl lg:text-4xl font-bold">{t('welcome_title')}</h2>
+                        <p className="mt-5 text-xl font-extralight text-center w-3/4">
                             {t('welcome_message')}
                         </p>
                     </div>
-                    <Button name={t('discover_button')} bg="bg-neutral-500" onClick={confirmDiscover} />
+                    <Button name={t('discover_button')} bg="bg-foreground/10" onClick={confirmDiscover} />
                 </PopupBase>
             )}
         </>

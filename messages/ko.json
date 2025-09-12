@@ -143,7 +143,9 @@
         "password_confirm_required": "Please confirm your password",
         "passwords_not_match": "Passwords do not match",
         "signup_success": "Your Sign Up Request is Success!",
-        "signup_error": "Error - {error}"
+        "signup_error": "Error - {error}",
+        "change_signin_method_to_credentials": "sign in with credentials",
+        "change_signin_method_to_social": "sign in with social account"
     },
     "payment": {
         "subscription": "Subscription",
@@ -168,8 +170,8 @@
         "final_payment_amount": "Final Payment Amount",
         "monthly_fee": "Monthly Fee",
         "discount_amount": "Discount Amount",
-        "vat_included": "VAT Included",
-        "monthly_yearly": "/ month (yearly payment)",
+        "vat_included": "VAT Excluded",
+        "monthly_yearly": "/ month",
         "monthly": "/ month",
         "yearly_payment": "Yearly Payment",
         "monthly_payment": "Monthly Payment",
@@ -419,8 +421,8 @@
         "invalid_input_format": "Invalid input format",
         "input_too_short": "Input is too short",
         "input_too_long": "Input is too long",
-        "welcome_title": "Welcome to WhiRik Reference",
-        "welcome_message": "Start exploring our music library",
+        "welcome_title": " 🎉 Welcome to PROBGM",
+        "welcome_message": "Explore our vast library of 100,000+ background music tracks.\nDiscover the perfect soundtrack for every moment.",
         "discover_button": "Discover"
     },
     "time": {

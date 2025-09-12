@@ -1,38 +1,28 @@
 "use client";
 
-import { useRouter, usePathname } from 'next/navigation';
-import { IconMenu2,IconScissors, IconPlayerPlayFilled, IconPlayerPauseFilled, IconPlayerStopFilled, IconLoader2  } from "@tabler/icons-react"
+import { IconPlayerPlayFilled, IconPlayerStopFilled, IconLoader2 } from "@tabler/icons-react"
 import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
 
 import Term from "@/components/player/MusicItemTerm"
-import BG from "@/components/player/DynamicAlbumart";
 import DurationMeter from "@/components/player/DurationMeter";
 import WaveProgress from "@/components/player/WaveProgress";
 import FavoriteHeart from "@/components/player/FavoriteHeart";
 import DownloadBtn from "@/components/player/DownloadBtn";
 import TailoredBtn from "@/components/player/TailoredBtn";
+import PlayerThumbnail from "@/components/player/PlayerThumbnail";
 
 // a.k.a. MI 
 const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
-    const router = useRouter();
     const t = useTranslations('player');
-    const { status, playingTrackId, play, stop, playingFiles } = useMusicItemStore();
+    const { status, playingTrackId, play, stop } = useMusicItemStore();
 
     // 이 아이템이 재생중인지 아닌지 따져봄
     const isActive = playingTrackId === data.id && status != null;
 
     const title = data.metadata.find(item => item.type === "title")?.content;
     const subtitle = data.metadata.find(item => item.type === "subtitle")?.content;
-    const durationRaw = data.metadata.find(item => item.type === "duration")?.content;
-    const sampleRate = data.metadata.find(item => item.type === "sampleRate")?.content;
-
-    const durationInSeconds = durationRaw / sampleRate;
-    const durationMinutes = Math.floor(durationInSeconds / 60); 
-    const durationSeconds = Math.round(durationInSeconds % 60); 
-
-    const duration = `${durationMinutes}:${durationSeconds < 10 ? '0' : ''}${durationSeconds}`;
 
     // const waveform = file.find(item => item.type === "waveform")?.path;
 
@@ -48,20 +38,20 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                     <div className="cursor-pointer">
                         {status === 'loading' && isActive ? (
                             <>
-                                <IconLoader2 size="18" className="animate-spin"/>
+                                <IconLoader2 size="18" className="animate-spin" />
                             </>
-                        ) : ( 
+                        ) : (
                             <>
                                 {status === "playing" && isActive ? (
                                     // 재생상태
-                                    <IconPlayerStopFilled size="18" onClick={() => {stop()}} />
+                                    <IconPlayerStopFilled size="18" onClick={() => { stop() }} />
                                 ) : status === "pause" ? (
                                     // 일시정지상태
-                                    <IconPlayerPlayFilled size="18" onClick={() => {play(fid)}} />
+                                    <IconPlayerPlayFilled size="18" onClick={() => { play(fid) }} />
                                 ) : (
                                     // 정지상태
-                                    <IconPlayerPlayFilled size="18" 
-                                            onClick={() => {play(data.id)}} 
+                                    <IconPlayerPlayFilled size="18"
+                                        onClick={() => { play(data.id) }}
                                     />
                                 )}
                             </>
@@ -76,22 +66,12 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
 
                         {/* 커버사진 */}
                         <div className="">
-                            <div className="size-12">
-                                {
-                                    data.files?.includes('thumbnail') ? (
-                                        <div className="rounded-sm overflow-hidden">
-                                            <img
-                                                src={data.thumbnailUrl}
-                                                alt={t('album_art')}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-full bg-foreground/10 rounded-sm" />
-                                    )
-                                }
-                            </div>
+                            <PlayerThumbnail
+                                playingTrackId={data.id}
+                                playingFiles={data.files}
+                            />
                         </div>
-                        
+
                         {/* 제목과 부제목 */}
                         <div className={`flex flex-col w-auto md:w-48 xl:w-48 2xl:w-72 select-none`}>
                             <div className="font-bold text-foreground">{title}</div>
@@ -99,15 +79,15 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                                 {subtitle}
                             </div>
                         </div>
-                        
+
                         {/* 태그 */}
                         <div className="hidden md:flex flex-row gap-1 flex-wrap w-auto xl:w-48 2xl:w-72">
                             {data.keywords.map((item, index) => {
-                                if(item.type != 'tag') return;
+                                if (item.type != 'tag') return;
                                 return <Term key={index} name={item.content} />
                             })}
                         </div>
-                        
+
                         {/* 시간 */}
                         <div className="min-w-18 text-center ml-auto text-white/40">
                             <DurationMeter id={data.id} metadata={data.metadata} />
@@ -123,7 +103,7 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                         {/* <DownloadBtn href={file.find(item => item.type === "origin")?.path}/> */}
                         <DownloadBtn asset_id={data.id} />
                         <FavoriteHeart asset_id={data.id} />
-                        <TailoredBtn id={data.id}/>
+                        <TailoredBtn id={data.id} />
                     </div>
                 </div>
             </div>
