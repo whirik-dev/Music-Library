@@ -143,7 +143,9 @@
         "password_confirm_required": "Please confirm your password",
         "passwords_not_match": "Passwords do not match",
         "signup_success": "Your Sign Up Request is Success!",
-        "signup_error": "Error - {error}"
+        "signup_error": "Error - {error}",
+        "change_signin_method_to_credentials": "sign in with credentials",
+        "change_signin_method_to_social": "sign in with social account"
     },
     "payment": {
         "subscription": "Subscription",
