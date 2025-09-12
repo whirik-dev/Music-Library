@@ -1,3 +1,9 @@
+"use client"
+import { useState } from "react"
+import { IconLoader2 } from "@tabler/icons-react";
+
+
+
 const SocialLoginButton = ({ method, onClick }) => {
 
     const GoogleLogo = () => {
@@ -41,21 +47,36 @@ const SocialLoginButton = ({ method, onClick }) => {
         }
     }
 
+    const [ isLoad, setIsLoad ] = useState(false);
+
+    const onClickHandler = () => {
+        setIsLoad(true);
+        onClick();
+    }
+
     return (
         <div className={`rounded-sm ${methodList[method].border && `border-1 border-white/15`} shadow-md hover:opacity-70 transition-opacity duration-300 cursor-pointer`}
              style={{
                 background : methodList[method] ? methodList[method].colorBack : "white",
                 color : methodList[method] ? methodList[method].colorFore : "black",
              }}
-             onClick={onClick}
+             onClick={onClickHandler}
         >
             <div className="flex flex-row gap-3 items-center p-3">
-                <div className="">
-                    {methodList[method] ? methodList[method].logo : "n/a"}
-                </div>
-                <div className="">
-                    {methodList[method] ? methodList[method].head : "n/a"}
-                </div>
+                {isLoad ? (
+                    <div className="w-full h-full py-1 flex items-center justify-center">
+                        <IconLoader2 className="animate-spin" />
+                    </div>
+                ) : (
+                    <>
+                        <div className="">
+                            {methodList[method] ? methodList[method].logo : "n/a"}
+                        </div>
+                        <div className="">
+                            {methodList[method] ? methodList[method].head : "n/a"}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     )
