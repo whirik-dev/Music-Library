@@ -17,6 +17,7 @@ const SignInPage = () => {
     const [error, setError] = useState("");
 
     const [socialSignIn, setSocialSignIn] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
 
     // Login with Credential
@@ -45,13 +46,16 @@ const SignInPage = () => {
         window.location.reload();
     };
 
-    // Sign Up
-    const handleSignUp = async () => {
+    const socialSignInHandler = async () => {
+        setIsLoading(true);
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        await wait(1000);
 
-    };
+        signIn('google');
+    }
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full justify-center">
             <div className="flex flex-row gap-10 p-10 relative">
                 {/* Sign Up Area */}
                 {/* <div className="flex-1 flex flex-col gap-3">
@@ -66,8 +70,8 @@ const SignInPage = () => {
                     {socialSignIn ? (
                         <>
                             <div className="flex flex-row justify-center">
-                                <div className="w-1/2 flex flex-col gap-3">
-                                    <SocialLoginButton method="google" onClick={() => signIn('google')}/>
+                                <div className={`w-full ${isLoading ? 'lg:w-1/2' : 'lg:w-2/3'} transition-normal duration-300 ease-out flex flex-col gap-3`}>
+                                    <SocialLoginButton method="google" onClick={socialSignInHandler}/>
                                     {/* <SocialLoginButton method="x" /> */}
 
                                     <Divider name={t('divider_or')} />
@@ -84,7 +88,7 @@ const SignInPage = () => {
                     ) : (
                         <>
                             <div className="flex flex-row justify-center">
-                                <div className="w-1/2 flex flex-col gap-3">
+                                <div className="w-full lg:w-2/3 flex flex-col gap-3">
                                     <InputField
                                         placeholder={t('username_email_placeholder')}
                                         value={email}
