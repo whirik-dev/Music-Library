@@ -21,7 +21,7 @@ const useInfiniteScroll = (loadMore, hasMore, isLoading) => {
         if (currentTriggerRef && !observerRef.current) {
             observerRef.current = new IntersectionObserver(handleIntersection, {
                 root: null,
-                rootMargin: '0px 0px -95% 0px', // 뷰포트 하단 5% 지점에서 트리거
+                rootMargin: '0px 0px 50px 0px', // 뷰포트 하단 5% 지점에서 트리거
                 threshold: 0
             });
 
