@@ -92,6 +92,8 @@ const ModalPageSubscription = ({}) => {
                        type="action" action="Upgrade" onClick={()=>{setPath('subscription/upgradePlan')}}/>
             <ModalCard title={t('payment_history')} desc={t('you_are_registered', { count: 3 })} 
                        type="action" action="view" onClick={()=>{setPath('subscription/paymentHistory')}}/>
+            <ModalCard title={`Reedem`} desc={`Enter your code to redeem`} 
+                       type="action" action="register" onClick={()=>{setPath('subscription/reedem')}}/>
         </>
     )
 }

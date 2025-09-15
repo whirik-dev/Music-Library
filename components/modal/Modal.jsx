@@ -9,6 +9,7 @@ import ModalPageChannelManage from "@/components/modal/ModalPageChannelManage";
 import ModalPageUpgradePlan from "@/components/modal/ModalPageUpgradePlan";
 import ModalPagePaymentHistory from "@/components/modal/ModalPagePaymentHistory";
 import ModalPageSubscription from "@/components/modal/ModalPageSubscription";
+import ModalPageReedem from "@/components/modal/ModalPageReedem";
 import ModalPageTailored from "@/components/modal/ModalPageTailored";
 import modalStore from "@/stores/modalStore";
 
@@ -21,6 +22,7 @@ const modalComponents = {
     "subscription": ModalPageSubscription,
     "subscription/upgradePlan": ModalPageUpgradePlan,
     "subscription/paymentHistory": ModalPagePaymentHistory,
+    "subscription/reedem": ModalPageReedem,
     "tailored": ModalPageTailored,
 };
 
