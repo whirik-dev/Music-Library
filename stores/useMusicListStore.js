@@ -31,11 +31,20 @@ const useMusicListStore = create((set, get) => ({
         set({ [loadingKey]: true, error: null });
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/list?p=${pageNum}`);
+            const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/music/list?p=${pageNum}`;
+            const response = await fetch(url);
             const data = await response.json();
             const items = data.data.items;
             const count = data.data.count;
             const currentPage = data.data.current_page;
+
+            // 디버깅: 마지막 페이지 체크 (항상 출력)
+            const currentMusicList = get().musicList;
+            const totalLoadedItems = append ? currentMusicList.length + items.length : items.length;
+            // count는 현재 페이지 아이템 수이므로, items.length가 0일 때만 마지막 페이지로 판단
+            const isLastPage = items.length === 0;
+
+
 
             if (append) {
                 // 무한스크롤: 기존 리스트에 추가
@@ -47,14 +56,19 @@ const useMusicListStore = create((set, get) => ({
 
             set({
                 listMode: 'fetch',
-                currentPage: currentPage,
+                currentPage: pageNum, // 실제 요청한 페이지 번호 사용
                 totalCount: count,
-                hasMore: items.length > 0, // 아이템이 있으면 더 있을 수 있음
+                hasMore: !isLastPage, // 이미 계산된 isLastPage 사용
                 [loadingKey]: false
             });
 
         } catch (error) {
-            set({ error: error.message, [loadingKey]: false });
+            console.log('❌ Fetch error, setting hasMore to false:', error.message);
+            set({
+                error: error.message,
+                [loadingKey]: false,
+                hasMore: false // 에러 발생 시 더 이상 로드하지 않음
+            });
             console.error(error);
         }
     },
@@ -96,6 +110,17 @@ const useMusicListStore = create((set, get) => ({
             const count = data.data.count;
             const currentPage = data.data.current_page;
 
+            // 디버깅: 마지막 페이지 체크
+            const currentMusicList = get().musicList;
+            const totalLoadedItems = append ? currentMusicList.length + items.length : items.length;
+            // count는 현재 페이지 아이템 수이므로, items.length가 0일 때만 마지막 페이지로 판단
+            const isLastPage = items.length === 0;
+
+            if (append) {
+
+
+            }
+
             if (append) {
                 // 무한스크롤: 기존 리스트에 추가
                 await get().appendMusicList(items);
@@ -106,14 +131,18 @@ const useMusicListStore = create((set, get) => ({
 
             set({
                 listMode: 'query',
-                currentPage: currentPage,
+                currentPage: pageNum, // 실제 요청한 페이지 번호 사용
                 totalCount: count,
-                hasMore: items.length > 0, // 아이템이 있으면 더 있을 수 있음
+                hasMore: !isLastPage, // 이미 계산된 isLastPage 사용
                 [loadingKey]: false
             });
 
         } catch (error) {
-            set({ error: error.message, [loadingKey]: false });
+            set({ 
+                error: error.message, 
+                [loadingKey]: false,
+                hasMore: false // 에러 발생 시 더 이상 로드하지 않음
+            });
             console.error(error);
         }
     },
@@ -213,10 +242,18 @@ const useMusicListStore = create((set, get) => ({
             })
         );
 
-        set((state) => ({
-            musicList: [...state.musicList, ...preloadWithImage],
-            isLoadingMore: false
-        }));
+        set((state) => {
+            // 중복 제거: 기존 리스트에 없는 아이템만 추가
+            const existingIds = new Set(state.musicList.map(item => item.id));
+            const newItems = preloadWithImage.filter(item => !existingIds.has(item.id));
+
+
+
+            return {
+                musicList: [...state.musicList, ...newItems],
+                isLoadingMore: false
+            };
+        });
     },
 
     /**
