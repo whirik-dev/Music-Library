@@ -34,8 +34,8 @@ export default function AuthProvider() {
                     // console.log(`세션검증단계 ${session.user.ssid}`);
                     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/isLogged`, {
                         method: 'GET',
-                        headers: { 
-                            'Content-Type': 'application/json', 
+                        headers: {
+                            'Content-Type': 'application/json',
                             'Authorization': `Bearer ${session.user.ssid}`
                         }
                     });
@@ -45,19 +45,18 @@ export default function AuthProvider() {
 
                     // 세션 검증 성공
                     // init....
-                    if (result.success) 
-                    {
+                    if (result.success) {
                         // 유저 정보 생성 (클라이언트)
                         setUserInfo(session.user);
 
                         // 처음유저인지 아닌지
                         result.data.isNewbie && setIsNewbie(true);
-                        
+
                         // 멤버십정보 받아오기 (접속당 초기1회)
                         const userMembership = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/membership`, {
                             method: 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json', 
+                            headers: {
+                                'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${session.user.ssid}`
                             }
                         });
@@ -67,8 +66,8 @@ export default function AuthProvider() {
                         // 크레딧정보 받아오기 (접속당 초기1회)
                         const userCredits = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/credits`, {
                             method: 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json', 
+                            headers: {
+                                'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${session.user.ssid}`
                             }
                         });
@@ -79,8 +78,8 @@ export default function AuthProvider() {
                         // const downloadPoints = await fetch();
                         const downloadPoint = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/downloadPoint`, {
                             method: 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json', 
+                            headers: {
+                                'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${session.user.ssid}`
                             }
                         })
@@ -90,15 +89,14 @@ export default function AuthProvider() {
 
                         // 다운로드한거 목록 받아오기
                         const downloaded = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/list`, {
-                            method : 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json', 
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${session.user.ssid}`
                             },
-                        }) 
+                        })
                         const userDownloaded = await downloaded.json();
-                        if(userDownloaded.data && userDownloaded.data.length > 0)
-                        {
+                        if (userDownloaded.data && userDownloaded.data.length > 0) {
                             userDownloaded.data.forEach(data => {
                                 addDownloadHistory(data.id);
                             });
@@ -106,12 +104,12 @@ export default function AuthProvider() {
 
                         // favorite 아이디 가져오기 
                         const userFavoriteId = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/favoriteId`, {
-                            method : 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json', 
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${session.user.ssid}`
                             },
-                        }) 
+                        })
                         const userFavoriteIdData = await userFavoriteId.json();
                         if (userFavoriteIdData.data) {
                             const favoriteId = userFavoriteIdData.data.id;
@@ -140,22 +138,19 @@ export default function AuthProvider() {
 
                         // 로그인처리 (스토어)
                         toggleIsLogged(true);
-                    } 
-                    else 
-                    {
+                    }
+                    else {
                         clearUserInfo();
                         toggleIsLogged(false);
                     }
-                } 
-                catch (err) 
-                {
+                }
+                catch (err) {
                     console.log(err);
                     clearUserInfo();
                     toggleIsLogged(false);
                 }
-            } 
-            else 
-            {
+            }
+            else {
                 clearUserInfo();
                 toggleIsLogged(false);
             }

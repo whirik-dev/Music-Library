@@ -11,6 +11,11 @@ const usePaymentStore = create(
         selectedPaymentType: "yearly", // 'yearly' or 'monthly'
         checkout: null,
         paymentStep: null,
+        
+        // 결제 결과 관련 상태
+        paymentResult: null, // 결제 완료 후 토스페이먼츠 응답 데이터
+        paymentStatus: 'idle', // 'idle', 'processing', 'success', 'failed'
+        paymentError: null,
 
         // setters
         setCurrentMembershipPlan: (plan) =>
@@ -39,6 +44,22 @@ const usePaymentStore = create(
                 state.paymentStep = stepname;
             }),
 
+        // 결제 결과 관련 setters
+        setPaymentResult: (result) =>
+            set((state) => {
+                state.paymentResult = result;
+            }),
+
+        setPaymentStatus: (status) =>
+            set((state) => {
+                state.paymentStatus = status;
+            }),
+
+        setPaymentError: (error) =>
+            set((state) => {
+                state.paymentError = error;
+            }),
+
         // reset all values
         resetPaymentStore: () =>
             set((state) => {
@@ -46,6 +67,9 @@ const usePaymentStore = create(
                 state.selectedMembershipPlan = null;
                 state.selectedPaymentType = "yearly";
                 state.checkout = null;
+                state.paymentResult = null;
+                state.paymentStatus = 'idle';
+                state.paymentError = null;
             }),
     }))
 );
