@@ -446,10 +446,6 @@ export default function Checkout() {
                         }
                     }}
                 />
-                <Button
-                    name={t('payment.dev_payment_test')}
-                    onClick={() => { router.push('/payment') }}
-                />
             </CheckoutPage>
         </CheckoutWrapper>
     );
