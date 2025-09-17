@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import useMusicListStore from "@/stores/useMusicListStore";
 import RelatedSuggestItem from "@/components/search/RelatedSuggestItem";
 
-import Terms from "./searchTermTest";
+// import Terms from "./searchTermTest";
+import Terms from "@/data/keywords";
 
 const RelatedSuggest = ({ onClick }) => {
     const { searchTab, query, relatedKeywords, setRelatedKeywords } = useMusicListStore();
