@@ -73,6 +73,12 @@ const useModalStore = create((set, get) => ({
             depth: depth,
         })),
 
+    modalParameter: {},
+    setModalParameter: (parameter) =>
+        set(()=>({
+            modalParameter: parameter,
+        })),
+
     /*----------------------*
      *      Initialize      *
      *----------------------*/
@@ -81,7 +87,8 @@ const useModalStore = create((set, get) => ({
         set(()=>({
             previousPath: "/",
             path : '',
-            depth : 0
+            depth : 0,
+            modalParameter : {}
         })),
 }));
 

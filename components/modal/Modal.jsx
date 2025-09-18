@@ -11,6 +11,7 @@ import ModalPagePaymentHistory from "@/components/modal/ModalPagePaymentHistory"
 import ModalPageSubscription from "@/components/modal/ModalPageSubscription";
 import ModalPageRedeem from "@/components/modal/ModalPageRedeem";
 import ModalPageTailored from "@/components/modal/ModalPageTailored";
+import ModalPageTailoredDetail from "@/components/modal/ModalPageTailoredDetail";
 import modalStore from "@/stores/modalStore";
 
 // Map paths to components
@@ -24,6 +25,7 @@ const modalComponents = {
     "subscription/paymentHistory": ModalPagePaymentHistory,
     "subscription/reedem": ModalPageRedeem,
     "tailored": ModalPageTailored,
+    "tailored/detail": ModalPageTailoredDetail,
 };
 
 const Modal = () => {
