@@ -8,6 +8,8 @@ import useAuthStore from "@/stores/authStore";
 const FavoriteHeart = ({ asset_id }) => {
     const { data: session, status } = useSession();
     const {
+        isLogged,
+        toggleAuthModal,
         favoriteId,
         favoriteList,
         addFavoriteList,
@@ -21,6 +23,12 @@ const FavoriteHeart = ({ asset_id }) => {
     }, [favoriteList, asset_id]); // 의존성 중요!
 
     const HandleFavoriteHeart = async () => {
+        if (!isLogged) 
+        {
+            toggleAuthModal();
+            return;
+        }
+
         const newHeart = !heart;
         // 스토어 업데이트도 같이
         if (newHeart) {
