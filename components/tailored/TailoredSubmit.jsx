@@ -67,6 +67,34 @@ const ErrorJobs = ({ status }) => {
     )
 }
 
+const CommingSoon = ({}) => {
+    const { initTailoredState } = useTailoredStore();
+    const { toggleModal, setPath, setDepth } = useModalStore();
+    const t = useTranslations('tailored');
+
+    const jobsListHandler = () => {
+        initTailoredState();
+        setPath('tailored');
+        setDepth(1);
+        toggleModal();
+    };
+    return (
+        <div className="aspect-square flex flex-col items-center justify-center gap-5">
+            <IconCheck size="72" className="text-green-500" />
+            <div className="text-sm mt-8 text-center">
+                {t('tailored_work_completed')} <br />
+                <div className="opacity-50">
+                    (preview mode)
+                </div>
+                <div className="flex flex-row gap-3 mt-10 justify-center">
+                    <Button name={t('view_job_list')} onClick={jobsListHandler} className="min-w-34" />
+                    <Button name={t('close')} onClick={initTailoredState} className="min-w-34" />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const TailoredSubmit = () => {
     const { currentTailoredInfo } = useTailoredStore();
     const { userInfo } = useAuthStore();
@@ -147,7 +175,8 @@ const TailoredSubmit = () => {
     return (
         <>
             {jobState === "success" && (
-                <SuccessJobs status={currentStatus} />
+                // <SuccessJobs status={currentStatus} />
+                <CommingSoon />
             )}
             {jobState === "error" && (
                 <ErrorJobs status={currentStatus} />

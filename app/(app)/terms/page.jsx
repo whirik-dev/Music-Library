@@ -1,5 +1,6 @@
 import DocWrapper from "@/components/ui/DocWrapper";
 import Typography from "@/components/ui/Typography";
+import Footer from "@/components/ui/Footer";
 
 const { H1, H2, H3, Paragraph, Caption } = Typography;
 
@@ -346,6 +347,7 @@ export default function Terms()
                     이 약관은 2025년 7월 23일부터 시행합니다.
                 </Paragraph>
             </DocWrapper>
+            <Footer />
         </div>
     );
 }

@@ -4,6 +4,7 @@ import PriceCard from "@/components/page/PriceCard";
 import Heading from "@/components/ui/Heading";
 import HeadingSub from "@/components/ui/HeadingSub";
 import PriceDiffTable from "@/components/page/PriceDiffTable"
+import Footer from "@/components/ui/Footer";
 
 import Checkout from "@/components/payment/CheckoutModal";
 
@@ -32,6 +33,7 @@ export default function Price()
             </PageWrapper>
             
             <Checkout />
+            <Footer />
         </>
     );
 }

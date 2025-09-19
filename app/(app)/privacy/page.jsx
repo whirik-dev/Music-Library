@@ -1,5 +1,6 @@
 import DocWrapper from "@/components/ui/DocWrapper";
 import Typography from "@/components/ui/Typography";
+import Footer from "@/components/ui/Footer";
 const { H1, H2, H3, Paragraph, Caption } = Typography;
 
 export const metadata = {
@@ -30,7 +31,7 @@ export default function PrivacyPolicy() {
                 <Paragraph>For the purposes of this Privacy Policy:</Paragraph>
                 <ul className="list-disc pl-6 space-y-1">
                     <li><Paragraph><strong>Account</strong> means a unique account created for You to access our Service or parts of our Service.</Paragraph></li>
-                    <li><Paragraph><strong>Company</strong> refers to Whirik.</Paragraph></li>
+                    <li><Paragraph><strong>Company</strong> refers to Whirik AI Inc.</Paragraph></li>
                     <li><Paragraph><strong>Cookies</strong> are small files placed on Your device that store browsing details among other uses.</Paragraph></li>
                     <li><Paragraph><strong>Country</strong> refers to: South Korea</Paragraph></li>
                     <li><Paragraph><strong>Device</strong> means any device that can access the Service such as a computer, a cellphone, or a digital tablet.</Paragraph></li>
@@ -38,7 +39,7 @@ export default function PrivacyPolicy() {
                     <li><Paragraph><strong>Service</strong> refers to the Website.</Paragraph></li>
                     <li><Paragraph><strong>Service Provider</strong> refers to any third-party who processes data on behalf of the Company.</Paragraph></li>
                     <li><Paragraph><strong>Usage Data</strong> refers to data collected automatically, like page visit duration.</Paragraph></li>
-                    <li><Paragraph><strong>Website</strong> refers to Orchestra de Arte, accessible from <a href="https://ref.whirik.com" className="underline text-teal-600">https://ref.whirik.com</a></Paragraph></li>
+                    <li><Paragraph><strong>Website</strong> refers to PROBGM, accessible from <a href="https://probgm.com" className="underline text-teal-600">https://probgm.com</a></Paragraph></li>
                     <li><Paragraph><strong>You</strong> means the individual accessing or using the Service.</Paragraph></li>
                 </ul>
 
@@ -90,9 +91,10 @@ export default function PrivacyPolicy() {
                     If you have any questions about this Privacy Policy, You can contact us:
                 </Paragraph>
                 <ul className="list-disc pl-6">
-                    <li><Paragraph>By email: changhyun.me@gmail.com</Paragraph></li>
+                    <li><Paragraph>By email: mimiu@whirik.com</Paragraph></li>
                 </ul>
             </DocWrapper>
+        <Footer />
         </div>
     );
 }

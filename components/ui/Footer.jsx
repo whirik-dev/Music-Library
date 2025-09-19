@@ -16,11 +16,11 @@ const Footer = ({ }) => {
             label: tUi('privacy'),
             href: '/privacy'
         },
-        {
-            id: 'support',
-            label: tUi('support'),
-            href: '/support'
-        }
+    //     {
+    //         id: 'support',
+    //         label: tUi('support'),
+    //         href: '/support'
+        // }
     ];
 
     return (

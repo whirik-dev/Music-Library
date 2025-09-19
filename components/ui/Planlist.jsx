@@ -25,7 +25,7 @@ const Planlist = () => {
                             <div className="flex flex-row items-center">
                                 <div className="flex-1">
                                     <div className="text-2xl font-bold">
-                                        {plan.pricing.usd.monthly} USD
+                                        {plan.pricing.krw.monthly} USD
                                         <span className="text-sm">/mo.</span>
                                     </div>
                                 </div>
