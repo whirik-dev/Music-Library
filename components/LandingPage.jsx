@@ -68,12 +68,9 @@ const Landing = ({ }) => {
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <button className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+                                <a href="https://tally.so/r/wQa7D1" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 text-center">
                                     웨잇리스트 등록하기
-                                </button>
-                                <button className="px-8 py-4 border border-zinc-600 text-white font-semibold rounded-lg hover:bg-zinc-800 transition-all duration-300">
-                                    데모 보기
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -142,9 +139,9 @@ const Landing = ({ }) => {
                     <p className="text-xl text-zinc-300 mb-8">
                         PROBGM 출시 소식을 가장 먼저 받아보세요
                     </p>
-                    <button className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+                    <a href="https://tally.so/r/wQa7D1" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
                         웨잇리스트 등록하기
-                    </button>
+                    </a>
                 </div>
             </section>
 
@@ -165,41 +162,8 @@ const Landing = ({ }) => {
                             <p className="text-zinc-400 mb-4">
                                 창작자를 위한 최고의 배경음악 라이브러리
                             </p>
-                            <div className="flex space-x-4">
-                                <a href="#" className="text-zinc-400 hover:text-white transition-colors">
-                                    <span className="sr-only">Facebook</span>
-                                    📘
-                                </a>
-                                <a href="#" className="text-zinc-400 hover:text-white transition-colors">
-                                    <span className="sr-only">Instagram</span>
-                                    📷
-                                </a>
-                                <a href="#" className="text-zinc-400 hover:text-white transition-colors">
-                                    <span className="sr-only">YouTube</span>
-                                    📺
-                                </a>
-                            </div>
                         </div>
 
-                        <div>
-                            <h3 className="text-white font-semibold mb-4">서비스</h3>
-                            <ul className="space-y-2 text-zinc-400">
-                                <li><a href="#" className="hover:text-white transition-colors">음원 라이브러리</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">AI 추천</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">플레이리스트</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">다운로드</a></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="text-white font-semibold mb-4">지원</h3>
-                            <ul className="space-y-2 text-zinc-400">
-                                <li><a href="#" className="hover:text-white transition-colors">고객센터</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">이용약관</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">개인정보처리방침</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">문의하기</a></li>
-                            </ul>
-                        </div>
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-zinc-800 text-center text-zinc-400">
