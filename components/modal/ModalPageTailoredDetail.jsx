@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from 'next-intl';
+import { IconLoader2 } from "@tabler/icons-react";
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 
@@ -113,7 +114,7 @@ const ModalPageTailoredDetail = ({ }) => {
             <div className="px-3">
                 {error && <div>error: {error}</div>}
                 {jobDetail ? (
-                    <div className="flex flex-row">
+                    <div className="flex flex-row gap-3">
                         <div className="flex-1 w-1/2 flex flex-col gap-2">
                             <ModalBox title="Name">
                                 {jobDetail.requestData?.title || 'N/A'}
@@ -127,8 +128,12 @@ const ModalPageTailoredDetail = ({ }) => {
                                 </span>
                             </ModalBox>
                         </div>
-                        <div className="flex-1 w-1/2 flex flex-col text-xs">
+                        {/* <div className="flex-1 w-1/2 flex flex-col text-xs">
                             <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
+                        </div> */}
+                        <div className="flex-1 flex flex-col items-center justify-center bg-foreground/3 p-3 rounded-lg">
+                            <IconLoader2 size="64" className="animate-spin" />
+                            now processing....
                         </div>
                     </div>
                 ) : (
