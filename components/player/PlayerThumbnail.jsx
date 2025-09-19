@@ -14,7 +14,7 @@ const PlayerThumbnail = ({ playingTrackId, playingFiles }) => {
 
             // 이미지 존재 여부 미리 검사
             const img = new Image();
-            const imageUrl = `https://asset.probgm.com/${playingTrackId}?r=thumbnail`;
+            const imageUrl = `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${playingTrackId}?r=thumbnail`;
 
             img.onload = () => {
                 setIsLoading(false);
@@ -43,7 +43,7 @@ const PlayerThumbnail = ({ playingTrackId, playingFiles }) => {
                     // 썸네일이 있고 로딩 완료된 경우
                     <div className="rounded-sm overflow-hidden">
                         <img
-                            src={`https://asset.probgm.com/${playingTrackId}?r=thumbnail`}
+                            src={`https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${playingTrackId}?r=thumbnail`}
                             alt="albumart image"
                         />
                     </div>

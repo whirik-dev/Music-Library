@@ -154,7 +154,7 @@ const useMusicListStore = create((set, get) => ({
             items.map(async (item) => {
                 const hasThumbnail = item.files.includes('thumbnail');
                 const imageUrl = hasThumbnail
-                    ? `https://asset.probgm.com/${item.id}?r=thumbnail`
+                    ? `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${item.id}?r=thumbnail`
                     : null;
 
                 if (imageUrl) {
@@ -171,7 +171,7 @@ const useMusicListStore = create((set, get) => ({
 
                 const hasWaveimage = item.files.includes('waveimg');
                 const waveUrl = hasWaveimage
-                    ? `https://asset.probgm.com/${item.id}?r=waveimage`
+                    ? `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${item.id}?r=waveimage`
                     : null;
 
                 if (waveUrl) {
@@ -202,7 +202,7 @@ const useMusicListStore = create((set, get) => ({
             items.map(async (item) => {
                 const hasThumbnail = item.files.includes('thumbnail');
                 const imageUrl = hasThumbnail
-                    ? `https://asset.probgm.com/${item.id}?r=thumbnail`
+                    ? `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${item.id}?r=thumbnail`
                     : null;
 
                 if (imageUrl) {
@@ -219,7 +219,7 @@ const useMusicListStore = create((set, get) => ({
 
                 const hasWaveimage = item.files.includes('waveimg');
                 const waveUrl = hasWaveimage
-                    ? `https://asset.probgm.com/${item.id}?r=waveimage`
+                    ? `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${item.id}?r=waveimage`
                     : null;
 
                 if (waveUrl) {

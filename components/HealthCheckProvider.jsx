@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ServerDown from "@/components/ServerDown";
+import LandingPage from "@/components/LandingPage";
 
 const HealthCheckProvider = ({ children }) => {
     const [isHealthy, setIsHealthy] = useState(null);
@@ -22,7 +23,7 @@ const HealthCheckProvider = ({ children }) => {
         return <></>;
     }
 
-    return isHealthy ? <>{children}</> : <ServerDown />;
+    return isHealthy ? <>{children}</> : <LandingPage />; //<ServerDown />;
 };
 
 export default HealthCheckProvider;

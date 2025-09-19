@@ -63,7 +63,7 @@ const WaveProgress = ({ id, metadata }) => {
                     {/* TODO: 나중에 Next image로 바꾸는 거 고려 */}
                     {id != null && !waveImageError && (
                         <img className="w-full h-full object-fill" 
-                            src={`https://asset.probgm.com/${id}?r=waveimage`}
+                            src={`https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${id}?r=waveimage`}
                             width="800"
                             height="50"
                             alt="wave graph"
@@ -87,7 +87,7 @@ const WaveProgress = ({ id, metadata }) => {
                         >
                             {!waveImageError && (
                                 <img className={`w-full h-full absolute top-0 opacity-50 ${colorMode === "light" ? "brightness-50" : "brightness-75"}`}
-                                    src={`https://asset.probgm.com/${id}?r=waveimage`}
+                                    src={`https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${id}?r=waveimage`}
                                     style={{left:"0%"}}
                                     width="800"
                                     height="50"

@@ -81,7 +81,7 @@ const DownloadBtn = ({ asset_id }) => {
     
             setDownloaded(true);
     
-            const fileUrl = `https://asset.probgm.com/${result.data.id}`;
+            const fileUrl = `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${result.data.id}`;
     
             const response = await fetch(fileUrl, {
                 method: 'GET',

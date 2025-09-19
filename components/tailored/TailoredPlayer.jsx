@@ -51,7 +51,7 @@ const TailoredPlayer = ({ id }) => {
                     musicList.data.files?.includes('thumbnail') ? (
                         <div className="rounded-sm overflow-hidden">
                             <img
-                                src={`https://asset.probgm.com/${id}?r=thumbnail`}
+                                src={`https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${id}?r=thumbnail`}
                                 alt="albumart image"
                             />
                         </div>

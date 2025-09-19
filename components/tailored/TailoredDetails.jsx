@@ -166,7 +166,7 @@ const TailoredDetails = ({id}) => {
         setTailoredInfoByPath("data.title", `Tailored Jobs - ${id.slice(-6)}`);
         setTailoredInfoByPath("data.due-date", threeDaysLater.toISOString());
         setTailoredInfoByPath("data.sow.comment2", t('whirik_reference_work'));
-        setTailoredInfoByPath("data.ref-music", `https://asset.probgm.com/${id}?r=preview`);
+        setTailoredInfoByPath("data.ref-music", `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${id}?r=preview`);
 
         // 마운트시 기본적으로 1개행 추가
         if (items.length === 0) {

@@ -4,7 +4,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ['asset.probgm.com'],
+    domains: [process.env.NEXT_PUBLIC_ASSET_SERVER || 'asset.probgm.com'],
   },
   reactStrictMode: false
 };
