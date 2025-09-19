@@ -6,6 +6,19 @@ import modalStore from "@/stores/modalStore";
 
 import ModalCard from "@/components/modal/ModalCard";
 
+const ModalBox = ({ children, title }) => {
+    return (
+        <div className="bg-foreground/3 p-3 rounded-lg">
+            <div className="capitalize font-bold">
+                {title}
+            </div>
+            <div className="asd text-xs">
+                {children}
+            </div>
+        </div>
+    )
+}
+
 const ModalPageTailoredDetail = ({ }) => {
     const t = useTranslations('modal');
     const { data: session } = useSession();
@@ -96,11 +109,31 @@ const ModalPageTailoredDetail = ({ }) => {
 
     return (
         <>
-            <ModalCard title={t('tailored_service')} desc="작업 상세 정보" />
+            <ModalCard title={t('tailored_service')} desc="tailored service detail page" />
             <div className="px-3">
-                {loading && <div>로딩 중...</div>}
-                {error && <div>오류: {error}</div>}
-                {jobDetail && <pre>{JSON.stringify(jobDetail, null, 2)}</pre>}
+                {error && <div>error: {error}</div>}
+                {jobDetail ? (
+                    <div className="flex flex-row">
+                        <div className="flex-1 w-1/2 flex flex-col gap-2">
+                            <ModalBox title="Name">
+                                {jobDetail.requestData?.title || 'N/A'}
+                            </ModalBox>
+                            <ModalBox title="created date">
+                                {formatDate(jobDetail.created_at)}
+                            </ModalBox>
+                            <ModalBox title="current state">
+                                <span className={`indicator ${getStatusIndicator(jobDetail.status)}`}>
+                                    {getStatusText(jobDetail.status)}
+                                </span>
+                            </ModalBox>
+                        </div>
+                        <div className="flex-1 w-1/2 flex flex-col text-xs">
+                            <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
+                        </div>
+                    </div>
+                ) : (
+                    <div>loading....</div>
+                )}
             </div>
         </>
     )

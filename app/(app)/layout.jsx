@@ -16,8 +16,12 @@ import NewbiePopup from "@/components/popup/NewbiePopup";
 import PopupProvider from '@/components/PopupProvider';
 
 export const metadata = {
-  title: "Prototype",
-  // description: "",
+    title: {
+    default: "PROBGM",
+    template: "%s | PROBGM"
+    },
+    description: `Audio Library for Professional`,
+    copyright: `WhiRik AI Inc.`,
 };
 
 export default function AppLayout({ children }) {

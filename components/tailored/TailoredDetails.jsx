@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button2";
 import InputField from "@/components/ui/InputField";
 import InputTextarea from "@/components/ui/InputTextarea";
 
-const TailoredDetails = () => {
+const TailoredDetails = ({id}) => {
     const { target, detail, setDetail, updateTailoredInfo, setTailoredInfoByPath, currentTailoredInfo } = useTailoredStore();
     const t = useTranslations('tailored');
 
@@ -163,9 +163,10 @@ const TailoredDetails = () => {
         // 현재 시간 + 3일
         const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
-        setTailoredInfoByPath("data.title", t('ref_work_test'));
+        setTailoredInfoByPath("data.title", `Tailored Jobs - ${id.slice(-6)}`);
         setTailoredInfoByPath("data.due-date", threeDaysLater.toISOString());
         setTailoredInfoByPath("data.sow.comment2", t('whirik_reference_work'));
+        setTailoredInfoByPath("data.ref-music", `https://asset.probgm.com/${id}?r=preview`);
 
         // 마운트시 기본적으로 1개행 추가
         if (items.length === 0) {
@@ -175,10 +176,21 @@ const TailoredDetails = () => {
 
     return (
         <>
-            <div className="">
+            <div className="bg-purple-600 p-2 rounded-md font-bold">
                 {t('modification_request_section')}
             </div>
-
+            <div className="flex flex-row gap-3 items-center">
+                <div className="w-1/5 text-xs text-center">
+                    from
+                </div>
+                <div className="w-1/5 text-xs text-center">
+                    to
+                </div>
+                <div className="flex-1 text-sm text-center">
+                    modification request content
+                </div>
+                <div className="w-10 bg-transparent"/>
+            </div>
             {/* 기존 아이템들 렌더링 */}
             {items.map((item, index) => (
                 <div key={index} className="flex flex-row gap-3 mb-2">
@@ -213,7 +225,7 @@ const TailoredDetails = () => {
             {/* 새 아이템 추가 버튼 */}
             <Button className="py-1" name="+" onClick={addNewItem} />
 
-            <div className="mt-4">
+            <div className="mt-4 bg-purple-600 p-2 rounded-md font-bold">
                 {t('additional_requests')}
             </div>
             <InputTextarea onChange={setAdditionalRequestHandler} value={currentTailoredInfo?.data?.sow?.comment1 || ""} />
@@ -221,10 +233,10 @@ const TailoredDetails = () => {
                 참고해야 할 사항
             </div>
             <InputTextarea onChange={setDetailRequestHandler} value={currentTailoredInfo?.data?.sow?.comment2 || ""} /> */}
-            <div className="">
+            {/* <div className="">
                 dev
             </div>
-            <InputTextarea onChange={() => { }} value={JSON.stringify(currentTailoredInfo)} readOnly />
+            <InputTextarea onChange={() => { }} value={JSON.stringify(currentTailoredInfo)} readOnly /> */}
         </>
     )
 }

@@ -14,7 +14,7 @@ const TailoredConfirm = () => {
 
     return (
         <>
-            <div className="text-xl">
+            <div className="bg-purple-600 p-2 rounded-md font-bold">
                 {t('request_details')}
             </div>
 

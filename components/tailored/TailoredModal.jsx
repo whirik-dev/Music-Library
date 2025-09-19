@@ -137,7 +137,7 @@ const TailoredModal = ({}) => {
                                 <TailoredWorksView />
                                 {/* <Divider name="" /> */}
                                 
-                                <TailoredDetails />
+                                <TailoredDetails id={target} />
                                 {/* <Button name="prev step" onClick={()=>setStep(1)}/> */}
                                 <Button name={t('request')} onClick={()=>step2to3Handler()}/>
                             </div>
