@@ -47,11 +47,11 @@ const ModalPageDownloadHistory = ({}) => {
 
     return (
         <>
-            <ModalCard title={t('payment_history')} desc={t('desc')}/>
-            <div className="mx-3">
+            <ModalCard title={t('payment_history')}/>
+            {/* <div className="mx-3">
                 <ModalPageDownloadHistoryItem type="head" data={{ name:`asd`, timestamp:`2025-01-04` }}/>
                 <ModalPageDownloadHistoryItem data={{ date:`2025-01-04`,plan:`basic`, amount:`7.99 USD`, status:`success` }}/>
-            </div>
+            </div> */}
         </>
     )
 }

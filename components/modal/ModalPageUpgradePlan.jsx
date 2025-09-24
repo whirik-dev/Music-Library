@@ -16,7 +16,7 @@ const ModalPageUpgradePlan = ({}) => {
 
     return (
         <>
-            <ModalCard title={t('upgrade_plans')} desc={t('channel')}/>
+            <ModalCard title={t('upgrade_plans')}/>
             <Planlist />
         </>
     )
