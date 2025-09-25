@@ -277,10 +277,10 @@ const ModalPageTailoredDetail = ({ }) => {
                         </div>
                         <div className="flex flex-col gap-3">
                             {jobDetail.status === 'estimated' && (
-                                <TailoredDetailEstimate id={jobDetail.id} />
+                                <TailoredDetailEstimate id={jobDetail.jobId} />
                             )}
                             {jobDetail.status === 'confirm' && (
-                                <TailoredDetailResult id={jobDetail.id} />
+                                <TailoredDetailResult id={jobDetail.jobId} />
                             )}
                             {jobDetail.status === 'cancelled' && (
                                 <TailoredDetailCancelled />
