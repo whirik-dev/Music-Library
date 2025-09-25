@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import useTailoredStore from "@/stores/useTailoredStore";
 import useUiStore from "@/stores/uiStore";
 
+import TailoredNotice from "@/components/tailored/TailoredNotice";
 import TailoredList from "@/components/tailored/TailoredList";
 import TailoredPlayer from "@/components/tailored/TailoredPlayer";
 import TailoredWorksView from "@/components/tailored/TailoredWorksView";
@@ -97,10 +98,10 @@ const TailoredModal = ({}) => {
                             }}
                 >
                     {/* id : {target} */}
-                    <div className="z-50 sticky top-0 left-0 p-0 pt-1 bg-zinc-900 shadow-2xl">
+                    <div className={`z-50 sticky top-0 left-0 p-0 pt-1 bg-zinc-900 shadow-2xl`}>
                         <div className="pt-2">
                             <div className="px-3 py-0 flex flex-row justify-between items-center text-sm">
-
+                                
                                 <div className="w-10 text-white/50 hover:text-white transition-colors duration-300 cursor-pointer">
                                 {step != 1 && (
                                     <IconChevronLeft onClick={()=>setStep(step-1)}/>
@@ -118,15 +119,20 @@ const TailoredModal = ({}) => {
                                 </div>
                             </div>
                         </div>
-                        <TailoredPlayer id={target}/>
+                        {step != 1 && (
+                            <TailoredPlayer id={target}/>
+                        )}
                     </div>
                     
                     {/* 스텝1 - 리스트 표시  */}
                     {step === 1 && (
-                        <div className="m-2">
-                            <TailoredList />
+                        <div className="m-2 flex flex-col justify-center">
+                            <TailoredNotice />
+                            {/* <TailoredList /> */}
                              {/* TODO: 현상황에서 리스트가 길어지면 스크롤 내려야 버튼이 보임 이거 좀 아닌거같음 해결해야함 */}
-                            <Button name={t('next_step')} onClick={()=>step1to2Handler()}/>
+                            <Button name={`make tailored offer`} onClick={()=>step1to2Handler()}
+                                    bg="bg-gradient-to-r from-purple-500 to-blue-400 text-white font-bold"
+                            />
                         </div>
                     )}
 
