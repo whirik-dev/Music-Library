@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from 'next-intl';
-import { IconLoader2 } from "@tabler/icons-react";
+import {
+    IconLoader2,
+    IconHandClick,
+    IconCalculator,
+    IconSettings,
+    IconCheck,
+    IconCircleCheck
+} from "@tabler/icons-react";
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 
 import ModalCard from "@/components/modal/ModalCard";
+
+import TailoredDetailEstimate from "@/components/modal/partials/TailoredDetailEstimate";
+import TailoredDetailResult from "@/components/modal/partials/TailoredDetailResult";
 
 const ModalBox = ({ children, title }) => {
     return (
@@ -26,6 +36,44 @@ const ModalPageTailoredDetail = ({ }) => {
     const [jobDetail, setJobDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const timelineSteps = [
+        {
+            id: 'offer',
+            label: 'offer',
+            icon: IconHandClick,
+            bgColor: 'bg-purple-500',
+            rounded: 'rounded-l-full'
+        },
+        {
+            id: 'estimate',
+            label: 'estimate',
+            icon: IconCalculator,
+            bgColor: 'bg-purple-500',
+            rounded: ''
+        },
+        {
+            id: 'processing',
+            label: 'processing',
+            icon: IconSettings,
+            bgColor: 'bg-foreground/10',
+            rounded: ''
+        },
+        {
+            id: 'confirm',
+            label: 'confirm',
+            icon: IconCheck,
+            bgColor: 'bg-foreground/10',
+            rounded: ''
+        },
+        {
+            id: 'done',
+            label: 'done',
+            icon: IconCircleCheck,
+            bgColor: 'bg-foreground/10',
+            rounded: 'rounded-r-full'
+        }
+    ];
 
     useToggle(
         () => {
@@ -81,7 +129,7 @@ const ModalPageTailoredDetail = ({ }) => {
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('ko-KR', {
+        return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -101,10 +149,66 @@ const ModalPageTailoredDetail = ({ }) => {
 
     const getStatusText = (status) => {
         switch (status) {
-            case 'completed': return '완료';
-            case 'processing': return '진행중';
-            case 'failed': return '실패';
+            case 'completed': return 'Done';
+            case 'processing': return 'in Progress';
+            case 'failed': return 'closed';
             default: return status;
+        }
+    };
+
+    const getCurrentStepIndex = (status) => {
+        switch (status) {
+            case 'pending': return 0;        // offer 단계
+            case 'estimated': return 1;      // estimate 단계  
+            case 'processing': return 2;     // processing 단계
+            case 'confirm': return 3;        // confirm 단계
+            case 'completed': return 4;      // done 단계
+            case 'failed': return 2;         // processing에서 실패
+            case 'cancelled': return 0;      // 취소된 경우
+            default: return 0;
+        }
+    };
+
+    const getStepStatus = (stepIndex, currentStepIndex, jobStatus) => {
+        if (jobStatus === 'failed' || jobStatus === 'cancelled') {
+            return stepIndex <= currentStepIndex ? 'failed' : 'inactive';
+        }
+
+        if (stepIndex < currentStepIndex) {
+            return 'completed';
+        } else if (stepIndex === currentStepIndex) {
+            return 'current';
+        } else {
+            return 'inactive';
+        }
+    };
+
+    const getStepStyles = (status) => {
+        switch (status) {
+            case 'completed':
+                return {
+                    bgColor: 'bg-purple-400',
+                    iconColor: 'text-purple-500',
+                    textColor: 'text-foreground'
+                };
+            case 'current':
+                return {
+                    bgColor: 'bg-yellow-500',
+                    iconColor: 'text-yellow-500',
+                    textColor: 'text-foreground'
+                };
+            case 'failed':
+                return {
+                    bgColor: 'bg-red-500',
+                    iconColor: 'text-red-500',
+                    textColor: 'text-red-500'
+                };
+            default:
+                return {
+                    bgColor: 'bg-foreground/10',
+                    iconColor: 'text-foreground/30',
+                    textColor: 'text-foreground/30'
+                };
         }
     };
 
@@ -114,26 +218,58 @@ const ModalPageTailoredDetail = ({ }) => {
             <div className="px-3">
                 {error && <div>error: {error}</div>}
                 {jobDetail ? (
-                    <div className="flex flex-row gap-3">
-                        <div className="flex-1 w-1/2 flex flex-col gap-2">
-                            <ModalBox title="Name">
-                                {jobDetail.requestData?.title || 'N/A'}
-                            </ModalBox>
-                            <ModalBox title="created date">
-                                {formatDate(jobDetail.created_at)}
-                            </ModalBox>
-                            <ModalBox title="current state">
-                                <span className={`indicator ${getStatusIndicator(jobDetail.status)}`}>
-                                    {getStatusText(jobDetail.status)}
-                                </span>
-                            </ModalBox>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex flex-col">
+                            <div className="bg-foreground/3 p-3 flex flex-row">
+                                {timelineSteps.map((step, index) => {
+                                    const IconComponent = step.icon;
+                                    const currentStepIndex = getCurrentStepIndex(jobDetail.status);
+                                    const stepStatus = getStepStatus(index, currentStepIndex, jobDetail.status);
+                                    const styles = getStepStyles(stepStatus);
+
+                                    return (
+                                        <div key={step.id} className="flex-1">
+                                            <div className="flex flex-col gap-3 items-center justify-center">
+                                                {jobDetail.status === 'processing' && step.id === 'processing' ? (
+                                                    <IconLoader2 className={`animate-spin ${styles.iconColor}`} size="24" />
+                                                ) : (
+                                                    <IconComponent className={styles.iconColor} />
+                                                )}
+                                                <div className={`text-sm capitalize ${styles.textColor}`}>
+                                                    {step.label}
+                                                </div>
+                                                <div className={`w-full h-1 ${styles.bgColor} ${step.rounded}`} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        {/* <div className="flex-1 w-1/2 flex flex-col text-xs">
-                            <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
-                        </div> */}
-                        <div className="flex-1 flex flex-col items-center justify-center bg-foreground/3 p-3 rounded-lg">
-                            <IconLoader2 size="64" className="animate-spin" />
-                            now processing....
+                        <div className="flex flex-row gap-3">
+                            <div className="flex-1 w-1/2 flex flex-col gap-2">
+                                <ModalBox title="Name">
+                                    {jobDetail.requestData?.title || 'N/A'}
+                                </ModalBox>
+                                <ModalBox title="created date">
+                                    {formatDate(jobDetail.created_at)}
+                                </ModalBox>
+                            </div>
+                            {/* <div className="flex-1 w-1/2 flex flex-col text-xs">
+                                <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
+                            </div> */}
+                            <div className="flex-1 flex flex-col bg-foreground/3 p-3 rounded-lg">
+                                {/* <IconLoader2 size="64" className="animate-spin" /> */}
+                                Request Details
+                                <textarea value="asdasd" className="bg-foreground/3 py-1 px-2 text-sm text-foreground/50 rounded-md h-full mt-2" disabled />
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {jobDetail.status === 'estimated' && (
+                                <TailoredDetailEstimate id={jobDetail.id} />
+                            )}
+                            {jobDetail.status === 'completed' && (
+                                <TailoredDetailResult id={jobDetail.id} />
+                            )}
                         </div>
                     </div>
                 ) : (
