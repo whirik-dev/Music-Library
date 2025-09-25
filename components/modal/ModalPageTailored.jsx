@@ -23,7 +23,7 @@ const ModaTailoredListItem = ({ type, data, action }) => {
     return (
         <div className="border-b-1 border-zinc-500/50">
             <div className={`flex flex-row w-full py-2 ${type === "head" ? "text-foreground" : "text-foreground/50"}`}>
-                <div className="w-1/5 flex justify-start">
+                <div className="w-3/5 flex justify-start">
                     {type === "head" ? t('work_name') : data.name}
                 </div>
                 <div className="w-1/5 flex flex-row gap-2 items-center justify-start capitalize">
@@ -41,7 +41,7 @@ const ModaTailoredListItem = ({ type, data, action }) => {
                 </div>
                 <div className="ml-auto">
                     {action != null && type != "head" ? (
-                        <div className="cursor-pointer hover:opacity-70 bg-foreground/90 text-background px-2 py-1 rounded-sm text-sm uppercase"
+                        <div className="cursor-pointer hover:opacity-70 bg-foreground/30 text-foreground text-xs font-bold px-1.5 py-1 rounded-sm uppercase"
                             onClick={() => tailoredDetailHandler(action.param)}>
                             {action.name}
                         </div>

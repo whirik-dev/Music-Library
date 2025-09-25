@@ -16,6 +16,7 @@ import ModalCard from "@/components/modal/ModalCard";
 
 import TailoredDetailEstimate from "@/components/modal/partials/TailoredDetailEstimate";
 import TailoredDetailResult from "@/components/modal/partials/TailoredDetailResult";
+import TailoredDetailCancelled from "@/components/modal/partials/TailoredDetailCancelled";
 
 const ModalBox = ({ children, title }) => {
     return (
@@ -212,6 +213,17 @@ const ModalPageTailoredDetail = ({ }) => {
         }
     };
 
+    function formatSowText(jobDetail) {
+        if (!jobDetail?.requestData?.sow) return '';
+
+        const sow = jobDetail.requestData.sow;
+        const itemsText = sow.items?.map(item =>
+            `<${item.pos1} - ${item.pos2}> ${item.comment}`
+        ).join('\n') || '';
+
+        return `${itemsText}\n\n${sow.comment1 || ''}`;
+    }
+
     return (
         <>
             <ModalCard title={t('tailored_service')} desc="tailored service detail page" />
@@ -260,15 +272,18 @@ const ModalPageTailoredDetail = ({ }) => {
                             <div className="flex-1 flex flex-col bg-foreground/3 p-3 rounded-lg">
                                 {/* <IconLoader2 size="64" className="animate-spin" /> */}
                                 Request Details
-                                <textarea value="asdasd" className="bg-foreground/3 py-1 px-2 text-sm text-foreground/50 rounded-md h-full mt-2" disabled />
+                                <textarea value={formatSowText(jobDetail)} className="bg-foreground/3 py-1 px-2 text-sm text-foreground/50 rounded-md h-full mt-2" disabled />
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
                             {jobDetail.status === 'estimated' && (
                                 <TailoredDetailEstimate id={jobDetail.id} />
                             )}
-                            {jobDetail.status === 'completed' && (
+                            {jobDetail.status === 'confirm' && (
                                 <TailoredDetailResult id={jobDetail.id} />
+                            )}
+                            {jobDetail.status === 'cancelled' && (
+                                <TailoredDetailCancelled />
                             )}
                         </div>
                     </div>
