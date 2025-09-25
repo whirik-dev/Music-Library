@@ -4,7 +4,7 @@ import useTailoredStore from "@/stores/useTailoredStore";
 import useAuthStore from "@/stores/authStore";
 
 const DownloadBtn = ({ id }) => {
-    const { target, setTarget, setStep, addWorks } = useTailoredStore();
+    const { target, setTarget, setStep, addWorks, works } = useTailoredStore();
     const { toggleAuthModal, isLogged } = useAuthStore();
 
     const handleTailoredToggle = (id) => {
@@ -17,9 +17,9 @@ const DownloadBtn = ({ id }) => {
         }
     
         TailoredHandler(id);
-        setStep(2);
+        setStep(1);
         addWorks("work-d-1");
-
+        console.log(works);
     }
 
     function TailoredHandler(id){

@@ -176,7 +176,7 @@ const TailoredDetails = ({id}) => {
 
     return (
         <>
-            <div className="bg-purple-600 p-2 rounded-md font-bold">
+            <div className="bg-gradient-to-r from-purple-500 to-blue-400 px-2 py-1 rounded-md font-bold">
                 {t('modification_request_section')}
             </div>
             <div className="flex flex-row gap-3 items-center">
@@ -225,7 +225,7 @@ const TailoredDetails = ({id}) => {
             {/* 새 아이템 추가 버튼 */}
             <Button className="py-1" name="+" onClick={addNewItem} />
 
-            <div className="mt-4 bg-purple-600 p-2 rounded-md font-bold">
+            <div className="bg-gradient-to-r from-purple-500 to-blue-400 px-2 py-1 rounded-md font-bold mt-4">
                 {t('additional_requests')}
             </div>
             <InputTextarea onChange={setAdditionalRequestHandler} value={currentTailoredInfo?.data?.sow?.comment1 || ""} />

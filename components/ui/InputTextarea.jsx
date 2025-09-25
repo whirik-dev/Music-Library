@@ -20,7 +20,7 @@ const InputTextarea = ({ type="text", placeholder, translationKey, namespace = '
                          transition-all duration-300`}
         >
             <textarea type={type} placeholder={displayPlaceholder}
-                   className="focus:outline-0 w-full p-3 min-h-58 rounded-sm text-sm"
+                   className="focus:outline-0 w-full p-3 min-h-44 rounded-sm text-sm"
                    onFocus={()=>setFocus(true)}
                    onBlur={()=>setFocus(false)}
                    onChange={onChange}       
