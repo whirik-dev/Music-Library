@@ -17,6 +17,10 @@ import ModalCard from "@/components/modal/ModalCard";
 import TailoredDetailEstimate from "@/components/modal/partials/TailoredDetailEstimate";
 import TailoredDetailResult from "@/components/modal/partials/TailoredDetailResult";
 import TailoredDetailCancelled from "@/components/modal/partials/TailoredDetailCancelled";
+import TailoredDetailPending from "@/components/modal/partials/TailoredDetailPending";
+import TailoredDetailProcessing from "@/components/modal/partials/TailoredDetailProcessing";
+import TailoredDetailCompleted from "@/components/modal/partials/TailoredDetailCompleted";
+import TailoredDetailFail from "@/components/modal/partials/TailoredDetailFail";
 
 const ModalBox = ({ children, title }) => {
     return (
@@ -230,63 +234,78 @@ const ModalPageTailoredDetail = ({ }) => {
             <div className="px-3">
                 {error && <div>error: {error}</div>}
                 {jobDetail ? (
-                    <div className="flex flex-col gap-3">
-                        <div className="flex flex-col">
-                            <div className="bg-foreground/3 p-3 flex flex-row">
-                                {timelineSteps.map((step, index) => {
-                                    const IconComponent = step.icon;
-                                    const currentStepIndex = getCurrentStepIndex(jobDetail.status);
-                                    const stepStatus = getStepStatus(index, currentStepIndex, jobDetail.status);
-                                    const styles = getStepStyles(stepStatus);
+                    <>
+                        {jobDetail.status === 'failed' ? (
+                            <TailoredDetailFail id={jobDetail.jobId}/>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-col">
+                                    <div className="bg-foreground/3 p-3 flex flex-row">
+                                        {timelineSteps.map((step, index) => {
+                                            const IconComponent = step.icon;
+                                            const currentStepIndex = getCurrentStepIndex(jobDetail.status);
+                                            const stepStatus = getStepStatus(index, currentStepIndex, jobDetail.status);
+                                            const styles = getStepStyles(stepStatus);
 
-                                    return (
-                                        <div key={step.id} className="flex-1">
-                                            <div className="flex flex-col gap-3 items-center justify-center">
-                                                {jobDetail.status === 'processing' && step.id === 'processing' ? (
-                                                    <IconLoader2 className={`animate-spin ${styles.iconColor}`} size="24" />
-                                                ) : (
-                                                    <IconComponent className={styles.iconColor} />
-                                                )}
-                                                <div className={`text-sm capitalize ${styles.textColor}`}>
-                                                    {step.label}
+                                            return (
+                                                <div key={step.id} className="flex-1">
+                                                    <div className="flex flex-col gap-3 items-center justify-center">
+                                                        {jobDetail.status === 'processing' && step.id === 'processing' ? (
+                                                            <IconLoader2 className={`animate-spin ${styles.iconColor}`} size="24" />
+                                                        ) : (
+                                                            <IconComponent className={styles.iconColor} />
+                                                        )}
+                                                        <div className={`text-sm capitalize ${styles.textColor}`}>
+                                                            {step.label}
+                                                        </div>
+                                                        <div className={`w-full h-1 ${styles.bgColor} ${step.rounded}`} />
+                                                    </div>
                                                 </div>
-                                                <div className={`w-full h-1 ${styles.bgColor} ${step.rounded}`} />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="flex flex-row gap-3">
+                                    <div className="flex-1 w-1/2 flex flex-col gap-2">
+                                        <ModalBox title="Name">
+                                            {jobDetail.requestData?.title || 'N/A'}
+                                        </ModalBox>
+                                        <ModalBox title="created date">
+                                            {formatDate(jobDetail.created_at)}
+                                        </ModalBox>
+                                    </div>
+                                    {/* <div className="flex-1 w-1/2 flex flex-col text-xs">
+                                        <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
+                                    </div> */}
+                                    <div className="flex-1 flex flex-col bg-foreground/3 p-3 rounded-lg">
+                                        {/* <IconLoader2 size="64" className="animate-spin" /> */}
+                                        Request Details
+                                        <textarea value={formatSowText(jobDetail)} className="bg-foreground/3 py-1 px-2 text-sm text-foreground/50 rounded-md h-full mt-2" disabled />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {jobDetail.status === 'estimated' && (
+                                        <TailoredDetailEstimate id={jobDetail.jobId} />
+                                    )}
+                                    {jobDetail.status === 'confirm' && (
+                                        <TailoredDetailResult id={jobDetail.jobId} />
+                                    )}
+                                    {jobDetail.status === 'cancelled' && (
+                                        <TailoredDetailCancelled />
+                                    )}
+                                    {jobDetail.status === 'pending' && (
+                                        <TailoredDetailPending id={jobDetail.jobId} />
+                                    )}
+                                    {jobDetail.status === 'processing' && (
+                                        <TailoredDetailProcessing id={jobDetail.jobId} />
+                                    )}
+                                    {jobDetail.status === 'completed' && (
+                                        <TailoredDetailCompleted id={jobDetail.jobId} />
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex flex-row gap-3">
-                            <div className="flex-1 w-1/2 flex flex-col gap-2">
-                                <ModalBox title="Name">
-                                    {jobDetail.requestData?.title || 'N/A'}
-                                </ModalBox>
-                                <ModalBox title="created date">
-                                    {formatDate(jobDetail.created_at)}
-                                </ModalBox>
-                            </div>
-                            {/* <div className="flex-1 w-1/2 flex flex-col text-xs">
-                                <pre>{JSON.stringify(jobDetail, null, 2)}</pre>
-                            </div> */}
-                            <div className="flex-1 flex flex-col bg-foreground/3 p-3 rounded-lg">
-                                {/* <IconLoader2 size="64" className="animate-spin" /> */}
-                                Request Details
-                                <textarea value={formatSowText(jobDetail)} className="bg-foreground/3 py-1 px-2 text-sm text-foreground/50 rounded-md h-full mt-2" disabled />
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            {jobDetail.status === 'estimated' && (
-                                <TailoredDetailEstimate id={jobDetail.jobId} />
-                            )}
-                            {jobDetail.status === 'confirm' && (
-                                <TailoredDetailResult id={jobDetail.jobId} />
-                            )}
-                            {jobDetail.status === 'cancelled' && (
-                                <TailoredDetailCancelled />
-                            )}
-                        </div>
-                    </div>
+                        )}
+                    </>
                 ) : (
                     <div>loading....</div>
                 )}
