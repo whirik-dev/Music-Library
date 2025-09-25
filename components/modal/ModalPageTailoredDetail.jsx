@@ -194,12 +194,12 @@ const ModalPageTailoredDetail = ({ }) => {
                 return {
                     bgColor: 'bg-purple-400',
                     iconColor: 'text-purple-500',
-                    textColor: 'text-foreground'
+                    textColor: 'text-foreground/50'
                 };
             case 'current':
                 return {
-                    bgColor: 'bg-yellow-500',
-                    iconColor: 'text-yellow-500',
+                    bgColor: 'bg-gradient-to-r from-purple-400 via-red-400 to-orange-500',
+                    iconColor: 'text-orange-500',
                     textColor: 'text-foreground'
                 };
             case 'failed':
