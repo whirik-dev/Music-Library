@@ -77,7 +77,7 @@ const ModalPageTailored = ({ }) => {
         setError(null);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/jobs/list`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/list`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -166,9 +166,9 @@ const ModalPageTailored = ({ }) => {
 
                 {jobs.length > 0 && jobs.map((job) => (
                     <ModaTailoredListItem
-                        key={job.jobId}
+                        key={job.job_id}
                         data={{
-                            name: job.requestInfo?.title || 'an untitled jobs',
+                            name: job.title || 'an untitled jobs',
                             last_updated: formatDate(job.updated_at),
                             status: mapJobStatus(job.status),
                             rawStatus: job.status,
@@ -177,7 +177,7 @@ const ModalPageTailored = ({ }) => {
                         }}
                         action={{
                             name: `detail`,
-                            param: job.jobId
+                            param: job.job_id
                         }}
                     />
                 ))}

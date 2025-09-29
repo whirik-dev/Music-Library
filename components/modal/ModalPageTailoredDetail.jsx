@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
+import useAuthStore from "@/stores/authStore";
 
 import ModalCard from "@/components/modal/ModalCard";
 
@@ -38,6 +39,7 @@ const ModalBox = ({ children, title }) => {
 const ModalPageTailoredDetail = ({ }) => {
     const t = useTranslations('modal');
     const { data: session } = useSession();
+    const { credits } = useAuthStore();
     const [jobDetail, setJobDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -99,7 +101,7 @@ const ModalPageTailoredDetail = ({ }) => {
         setError(null);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/jobs/${jobId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/detail/${jobId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -217,10 +219,17 @@ const ModalPageTailoredDetail = ({ }) => {
         }
     };
 
-    function formatSowText(jobDetail) {
-        if (!jobDetail?.requestData?.sow) return '';
+    const handleJobUpdate = () => {
+        // 잡 상태가 변경되었을 때 다시 데이터를 가져옴
+        if (modalParameter) {
+            fetchJobDetail(modalParameter);
+        }
+    };
 
-        const sow = jobDetail.requestData.sow;
+    function formatSowText(jobDetail) {
+        if (!jobDetail?.requirements?.sow) return '';
+
+        const sow = jobDetail.requirements.sow;
         const itemsText = sow.items?.map(item =>
             `<${item.pos1} - ${item.pos2}> ${item.comment}`
         ).join('\n') || '';
@@ -236,7 +245,7 @@ const ModalPageTailoredDetail = ({ }) => {
                 {jobDetail ? (
                     <>
                         {jobDetail.status === 'failed' ? (
-                            <TailoredDetailFail id={jobDetail.jobId}/>
+                            <TailoredDetailFail id={jobDetail.job_id} />
                         ) : (
                             <div className="flex flex-col gap-3">
                                 <div className="flex flex-col">
@@ -268,7 +277,7 @@ const ModalPageTailoredDetail = ({ }) => {
                                 <div className="flex flex-row gap-3">
                                     <div className="flex-1 w-1/2 flex flex-col gap-2">
                                         <ModalBox title="Name">
-                                            {jobDetail.requestData?.title || 'N/A'}
+                                            {jobDetail.title || 'N/A'}
                                         </ModalBox>
                                         <ModalBox title="created date">
                                             {formatDate(jobDetail.created_at)}
@@ -285,22 +294,27 @@ const ModalPageTailoredDetail = ({ }) => {
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     {jobDetail.status === 'estimated' && (
-                                        <TailoredDetailEstimate id={jobDetail.jobId} />
+                                        <TailoredDetailEstimate
+                                            id={jobDetail.job_id}
+                                            onJobUpdate={handleJobUpdate}
+                                            jobDetail={jobDetail}
+                                            userBalance={credits || 0}
+                                        />
                                     )}
                                     {jobDetail.status === 'confirm' && (
-                                        <TailoredDetailResult id={jobDetail.jobId} />
+                                        <TailoredDetailResult id={jobDetail.job_id} />
                                     )}
                                     {jobDetail.status === 'cancelled' && (
                                         <TailoredDetailCancelled />
                                     )}
                                     {jobDetail.status === 'pending' && (
-                                        <TailoredDetailPending id={jobDetail.jobId} />
+                                        <TailoredDetailPending id={jobDetail.job_id} />
                                     )}
                                     {jobDetail.status === 'processing' && (
-                                        <TailoredDetailProcessing id={jobDetail.jobId} />
+                                        <TailoredDetailProcessing id={jobDetail.job_id} />
                                     )}
                                     {jobDetail.status === 'completed' && (
-                                        <TailoredDetailCompleted id={jobDetail.jobId} />
+                                        <TailoredDetailCompleted id={jobDetail.job_id} />
                                     )}
                                 </div>
                             </div>

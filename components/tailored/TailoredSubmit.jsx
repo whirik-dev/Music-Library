@@ -123,7 +123,7 @@ const TailoredSubmit = () => {
                 // currentTailoredInfo.data의 내용만 body로 전송
                 const requestBody = currentTailoredInfo?.data || {};
 
-                const response = await fetch('http://localhost:3030/jobs/create', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
