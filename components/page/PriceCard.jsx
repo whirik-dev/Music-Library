@@ -1,124 +1,188 @@
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { IconCheck } from "@tabler/icons-react"
+import { IconCheck, IconStar } from "@tabler/icons-react"
 import Button from "@/components/ui/Button2";
 import paymentStore from "@/stores/paymentStore";
 import pricePlans from "@/data/pricePlans";
 
-const priceItems = [
-    {
-        plan_id: "basic-01",
-        planName: "basic",
-        price: "7.99",
-        feature: [
-            "Unlimited downloads",
-            "2 music distribution channels",
-            "3 normal revision services per month"
-        ],
-        customStyle: "shadow-xl",
-    },
-    {
-        plan_id: "pro-01",
-        planName: "pro",
-        price: "14.99",
-        feature: [
-            "Unlimited downloads",
-            "Add 10 music distribution channels",
-            "5 normal revision services per month",
-            "1 advanced revision service per month",
-        ],
-        customStyle: "shadow-xl",
-        accent: "bg-purple-700",
-        primary: true,
-    },
-    {
-        plan_id: "master-01",
-        planName: "master",
-        price: "35.99",
-        feature: [
-            "Customizable distribution channels",
-            "Unlimited downloads",
-            "Tailored revision services",
-            "Priority support and dedicated",
-        ],
-        accent: "bg-orange-500/50 backdrop-blur-sm",
-        customStyle: "shadow-xl shadow-orange-900/50",
-    }
-]
-
-const PriceCardItem = ({ content }) => {
+const PriceCardItem = ({ plan, isYearly, isPopular }) => {
     const router = useRouter();
     const t = useTranslations('pricing');
-
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
-
 
     const handleSelect = () => {
         setSelectedMembershipPlan({
-            plan_id: content.plan_id,
-            planName: content.planName,
+            plan_id: `${plan.id}-${isYearly ? 'yearly' : 'monthly'}`,
+            planName: plan.id,
+            billing: isYearly ? 'yearly' : 'monthly'
         });
-
         router.push('/checkout');
     };
 
     function formatNumberKR(num) {
         return Number(num).toLocaleString('ko-KR');
     }
+
+    const currentPrice = isYearly ? plan.pricing.krw.yearlyMonthly : plan.pricing.krw.monthly;
+    const originalPrice = plan.pricing.krw.monthly;
+    const savings = isYearly ? plan.pricing.krw.savings : 0;
+    const discount = isYearly ? Math.round(((originalPrice - plan.pricing.krw.yearlyMonthly) / originalPrice) * 100) : 0;
+
     return (
-        <div className={`${content.primary && "z-20 scale-110"} flex-1 ${content.accent ? content.accent : "bg-zinc-800/50 backdrop-blur-sm"} 
-                         flex flex-col gap-20 px-10 py-8 first:rounded-l-xl last:rounded-r-xl ${content.accent && "rounded-xl"} ${content.customStyle}
-        `}
-        >
-            <div className="font-black uppercase text-lg">
-                {t(content.planName)}
-            </div>
-            <div className="flex flex-col gap-5">
-                <div className="flex flex-row gap-4">
-                    <div className="text-5xl font-black">
-                        {formatNumberKR(pricePlans.filter((item) => item.id === content.planName)[0].pricing.krw.monthly)}
-                    </div>
-                    <div className="flex flex-col gap-0 text-base/4 justify-center">
-                        <div>{t('krw')}</div>
-                        <div>{t('per_month')}</div>
+        <div className={`
+            relative flex-1 bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/50
+            flex flex-col gap-6 p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl
+            ${isPopular ? 'ring-2 ring-purple-500 bg-gradient-to-b from-purple-900/20 to-zinc-800/50' : ''}
+            sm:p-8 lg:gap-8
+        `}>
+            {isPopular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                        <IconStar size={16} />
+                        {t('most_popular')}
                     </div>
                 </div>
-                <div className="w-2/3">
-                    <Button
-                        name={t('select_plan')}
-                        bg="bg-zinc-300"
-                        color="text-zinc-800"
-                        onClick={handleSelect}
-                    />
-                </div>
-            </div>
+            )}
+            
             <div className="flex flex-col gap-2">
-                <div className="font-bold">{t('features')}</div>
-                {pricePlans.filter((item) => item.id === content.planName)[0].features.map((feature, index) => (
-                    <div key={content.plan_id + index} className="flex flex-row gap-2">
-                        <div className="size-5 bg-orange-400 flex items-center justify-center rounded-full">
-                            <IconCheck size="16" className="inline" />
+                <h3 className="font-black uppercase text-xl lg:text-2xl text-white">
+                    {t(plan.id)}
+                </h3>
+                <p className="text-zinc-400 text-sm">
+                    {t(`${plan.id}_description`)}
+                </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-4xl lg:text-5xl font-black text-white">
+                            ₩{formatNumberKR(currentPrice)}
+                        </span>
+                        <span className="text-zinc-400 text-sm">
+                            / {t('per_month')}
+                        </span>
+                    </div>
+                    <p className="text-zinc-500 text-xs">
+                        {t('vat_separate')}
+                    </p>
+                </div>
+                
+                {isYearly && (
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-zinc-400 line-through text-sm">
+                                ₩{formatNumberKR(originalPrice)}
+                            </span>
+                            <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
+                                {discount}% OFF
+                            </span>
                         </div>
-                        <div className="text-sm">
-                            {feature}
+                        <p className="text-green-400 text-sm">
+                            {t('yearly_savings', { amount: formatNumberKR(savings) })}
+                        </p>
+                    </div>
+                )}
+                
+                <Button
+                    name={t('select_plan')}
+                    bg={isPopular ? "bg-purple-600 hover:bg-purple-700" : "bg-zinc-300 hover:bg-zinc-200"}
+                    color={isPopular ? "text-white" : "text-zinc-800"}
+                    onClick={handleSelect}
+                    className="w-full transition-colors duration-200"
+                />
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <h4 className="font-bold text-white">{t('features')}</h4>
+                <div className="space-y-2">
+                    {plan.features.map((feature, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                            <div className="size-5 bg-green-500 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">
+                                <IconCheck size="14" className="text-white" />
+                            </div>
+                            <span className="text-sm text-zinc-300 leading-relaxed">
+                                {feature}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="mt-4 p-3 bg-zinc-700/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-zinc-400">
+                            {t('monthly_credits')}: <span className="text-white font-bold">{plan.monthlyCredits}</span>
+                        </div>
+                        <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">
+                            {t('bonus')}
                         </div>
                     </div>
-                ))}
+                </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 const PriceCard = () => {
+    const [isYearly, setIsYearly] = useState(true);
+    const t = useTranslations('pricing');
+
     return (
-        <div className="w-5xl flex flex-row mx-auto mt-20">
-            {priceItems.map((item) => (
-                <PriceCardItem key={item.plan_id} content={item} />
-            ))}
+        <div className="w-full max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
+            {/* Billing Toggle */}
+            <div className="flex justify-center mb-12">
+                <div className="bg-zinc-800/50 backdrop-blur-sm p-1 rounded-xl border border-zinc-700/50">
+                    <div className="flex">
+                        <button
+                            onClick={() => setIsYearly(false)}
+                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                !isYearly 
+                                    ? 'bg-white text-zinc-900 shadow-lg' 
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            {t('monthly_payment')}
+                        </button>
+                        <button
+                            onClick={() => setIsYearly(true)}
+                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                                isYearly 
+                                    ? 'bg-white text-zinc-900 shadow-lg' 
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            {t('yearly_payment')}
+                            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                {t('max_discount')}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Price Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {pricePlans.map((plan, index) => (
+                    <PriceCardItem 
+                        key={plan.id} 
+                        plan={plan} 
+                        isYearly={isYearly}
+                        isPopular={index === 1} // PRO 플랜을 인기 플랜으로 설정
+                    />
+                ))}
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-12 text-center">
+                <p className="text-zinc-400 text-sm">
+                    {t('cancel_anytime')}
+                </p>
+            </div>
         </div>
-    )
-}
+    );
+};
 
 export default PriceCard;

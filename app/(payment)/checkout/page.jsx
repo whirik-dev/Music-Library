@@ -72,7 +72,7 @@ function SelectPlan({ data, onClick, selected, t }) {
             </span>
             <br />
             <span className="text-xs">
-                {data.description}, {t('payment.vat_included')}
+                {data.description}, {t('payment.vat_excluded')}
             </span>
         </div>
     )
@@ -220,9 +220,12 @@ export default function Checkout() {
             const selectedPlan = selectedMembershipPlan ?
                 pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
-            const paymentAmount = selectedPlan ?
+            const baseAmount = selectedPlan ?
                 (selectedPaymentType === 'yearly' ? selectedPlan.pricing.krw.yearlyTotal : selectedPlan.pricing.krw.monthly)
                 : 10000;
+            
+            // Add 10% VAT
+            const paymentAmount = Math.round(baseAmount * 1.1);
 
             const planName = `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} (${selectedPaymentType === 'yearly' ? t('payment.yearly_payment') : t('payment.monthly_payment')})`;
 
@@ -285,6 +288,11 @@ export default function Checkout() {
     const monthlySavings = priceMonthly - priceYearlyMonthly;
     const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
 
+    // Calculate VAT (10%)
+    const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
+    const vatAmount = Math.round(baseAmount * 0.1);
+    const totalWithVat = baseAmount + vatAmount;
+
     return (
         <CheckoutWrapper>
             <CheckoutPage className="bg-foreground/3">
@@ -345,13 +353,16 @@ export default function Checkout() {
                             <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} />
                             <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} />
                             <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} />
-                            <CalculateDetail name={t('payment.final_payment_amount')} content={priceYearlyTotal} total className="mt-5" animated t={t} />
+                            <CalculateDetail name={t('payment.final_payment_amount')} content={priceYearlyTotal} animated t={t} />
+                            <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
+                            <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
                         </div>
                     ) : (
                         <div key="monthly-plan">
                             <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} />
                             <CalculateDetail name={t('payment.discount_amount')} content={0} animated t={t} />
-                            <CalculateDetail name={t('payment.final_payment_amount')} content={priceMonthly} total className="mt-5" animated t={t} />
+                            <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
+                            <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
                         </div>
                     )}
                 </div>
