@@ -12,13 +12,26 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
     const router = useRouter();
     const t = useTranslations('pricing');
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
+    const setSelectedPaymentType = paymentStore(state => state.setSelectedPaymentType);
 
     const handleSelect = () => {
+        // 플랜 정보 설정
         setSelectedMembershipPlan({
             plan_id: `${plan.id}-${isYearly ? 'yearly' : 'monthly'}`,
             planName: plan.id,
             billing: isYearly ? 'yearly' : 'monthly'
         });
+        
+        // 결제 타입 설정
+        setSelectedPaymentType(isYearly ? 'yearly' : 'monthly');
+        
+        console.log('Selected Plan:', {
+            plan_id: `${plan.id}-${isYearly ? 'yearly' : 'monthly'}`,
+            planName: plan.id,
+            billing: isYearly ? 'yearly' : 'monthly',
+            paymentType: isYearly ? 'yearly' : 'monthly'
+        });
+        
         router.push('/checkout');
     };
 

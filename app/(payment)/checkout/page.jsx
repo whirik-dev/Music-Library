@@ -163,15 +163,20 @@ export default function Checkout() {
     const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT;
 
     useEffect(() => {
+        console.log('Checkout - selectedMembershipPlan:', selectedMembershipPlan);
+        console.log('Checkout - selectedPaymentType:', selectedPaymentType);
+        console.log('Checkout - paymentStep:', paymentStep);
+
         // Redirect to price page if selectedMembershipPlan is missing or lacks required properties
         // However, do not redirect when paymentStep is 'payment' (payment in progress)
         if ((!selectedMembershipPlan ||
             !selectedMembershipPlan.planName ||
             !selectedMembershipPlan.plan_id) &&
             paymentStep !== 'payment') {
+            console.log('Redirecting to price page - missing plan data');
             router.push('/price');
         }
-    }, [selectedMembershipPlan, router, paymentStep]);
+    }, [selectedMembershipPlan, selectedPaymentType, router, paymentStep]);
 
     // Initialize TossPayments
     useEffect(() => {
@@ -186,9 +191,14 @@ export default function Checkout() {
 
                 // 클라이언트 키 형식 검증 (test_ 또는 live_로 시작해야 함)
                 if (!clientKey.startsWith('test_') && !clientKey.startsWith('live_')) {
-                    console.error('[TossPayments] Invalid client key format');
+                    console.error('[TossPayments] Invalid client key format:', clientKey?.substring(0, 10));
                     alert(t('errors.invalid_toss_client_key'));
                     return;
+                }
+
+                // 라이브 키 사용 시 경고
+                if (clientKey.startsWith('live_')) {
+                    console.warn('[TossPayments] Using LIVE key - make sure this is intended for production');
                 }
 
                 const tossPaymentsInstance = await loadTossPayments(clientKey);
@@ -289,6 +299,10 @@ export default function Checkout() {
                 }
             }
 
+            // 디버깅을 위한 로그 추가
+            console.log('Payment Data:', paymentData);
+            console.log('Client Key:', clientKey?.substring(0, 10) + '...');
+
             // Additional options for international card payment
             if (method === 'CARD' && isInternational) {
                 paymentData.card = {
@@ -315,15 +329,26 @@ export default function Checkout() {
 
         } catch (err) {
             console.error('[TossPayments] requestPayment error:', err);
+            console.error('Error details:', {
+                code: err.code,
+                message: err.message,
+                stack: err.stack
+            });
 
             // 에러 타입별 처리
             if (err.code === 'USER_CANCEL') {
                 // 사용자가 결제를 취소한 경우
                 return;
+            } else if (err.code === 'COMMON_ERROR') {
+                alert('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
             } else if (err.code === 'INVALID_CARD_COMPANY') {
                 alert(t('payment.invalid_card_error'));
             } else if (err.code === 'EXCEED_MAX_DAILY_PAYMENT_COUNT') {
                 alert(t('payment.daily_limit_exceeded'));
+            } else if (err.code === 'FORBIDDEN_REQUEST') {
+                alert('결제 요청이 거부되었습니다. API 키를 확인해주세요.');
+            } else if (err.code === 'UNAUTHORIZED_KEY') {
+                alert('인증되지 않은 API 키입니다. 설정을 확인해주세요.');
             } else {
                 alert(t('payment.payment_error') + ': ' + (err.message || err.code || 'Unknown error'));
             }
@@ -338,6 +363,13 @@ export default function Checkout() {
     const selectedPlan = selectedMembershipPlan ?
         pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
+    console.log('Price calculation debug:', {
+        selectedMembershipPlan,
+        selectedPlan,
+        selectedPaymentType,
+        pricePlansAvailable: pricePlans.map(p => p.id)
+    });
+
     const priceYearlyMonthly = selectedPlan?.pricing.krw.yearlyMonthly || 0; // Monthly unit price for yearly payment
     const priceMonthly = selectedPlan?.pricing.krw.monthly || 0; // Monthly payment price
     const priceYearlyTotal = selectedPlan?.pricing.krw.yearlyTotal || 0; // Yearly total amount
@@ -348,6 +380,15 @@ export default function Checkout() {
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
     const vatAmount = Math.round(baseAmount * 0.1);
     const totalWithVat = baseAmount + vatAmount;
+
+    console.log('Calculated prices:', {
+        priceYearlyMonthly,
+        priceMonthly,
+        priceYearlyTotal,
+        baseAmount,
+        vatAmount,
+        totalWithVat
+    });
 
     return (
         <CheckoutWrapper>
