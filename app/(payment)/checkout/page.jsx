@@ -297,15 +297,22 @@ export default function Checkout() {
                 successUrl: `${window.location.origin}/payment?r=success`,
                 failUrl: `${window.location.origin}/payment?r=fail`,
                 foreignEasyPay: {
-                    country: 'US', // PayPal은 US 설정
-                    // products 정보 추가 (PayPal 판매자 보호를 위해 권장)
-                    products: [{
-                        name: planName,
-                        quantity: 1,
-                        unitAmount: paymentAmount,
-                        currency: 'USD',
-                        description: `${selectedMembershipPlan?.planName} subscription plan`
-                    }]
+                    provider: 'PAYPAL', // 필수: PayPal 제공자 지정
+                    country: 'KR', // 구매자 위치 국가 (한국)
+                    // PayPal 추가 옵션 (선택사항)
+                    paymentMethodOptions: {
+                        paypal: {
+                            setTransactionContext: {
+                                // PayPal STC 파라미터 (구매자 정보)
+                                sender_account_id: userInfo?.email?.split('@')[0] || 'user',
+                                sender_first_name: userInfo?.name?.split(' ')[0] || 'User',
+                                sender_last_name: userInfo?.name?.split(' ')[1] || 'Name',
+                                sender_email: userInfo?.email || 'user@example.com',
+                                sender_country_code: 'KR',
+                                sender_create_date: new Date().toISOString(),
+                            }
+                        }
+                    }
                 }
             };
 
@@ -371,7 +378,9 @@ export default function Checkout() {
                     method: paymentData.method,
                     currency: paymentData.amount.currency,
                     amount: paymentData.amount.value,
-                    country: paymentData.foreignEasyPay?.country
+                    provider: paymentData.foreignEasyPay?.provider,
+                    country: paymentData.foreignEasyPay?.country,
+                    hasPaymentMethodOptions: !!paymentData.foreignEasyPay?.paymentMethodOptions
                 });
             }
 
@@ -411,12 +420,7 @@ export default function Checkout() {
                 stack: err.stack,
                 // 추가 디버깅 정보
                 clientKeyUsed: clientKey?.substring(0, 15) + '...',
-                paymentDataSent: {
-                    method: paymentData.method,
-                    amount: paymentData.amount,
-                    orderId: paymentData.orderId,
-                    orderName: paymentData.orderName?.substring(0, 50) + '...'
-                }
+                errorContext: 'PayPal payment request failed'
             });
 
             // 에러 타입별 처리
@@ -429,7 +433,11 @@ export default function Checkout() {
                 console.error('2. 해외간편결제 MID 미설정');
                 console.error('3. PayPal 결제수단 비활성화');
                 console.error('4. API 키 불일치 (해외간편결제용 키 필요)');
+                console.error('5. provider 파라미터 누락 또는 잘못된 값');
                 alert('PayPal 결제 처리 중 오류가 발생했습니다.\nPayPal 계약 상태를 확인하거나 고객센터(1544-7772)로 문의해주세요.');
+            } else if (err.message && err.message.includes('provider')) {
+                console.error('[TossPayments] Provider parameter error');
+                alert('PayPal 결제 설정에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
             } else if (err.code === 'INVALID_CARD_COMPANY') {
                 alert(t('payment.invalid_card_error'));
             } else if (err.code === 'EXCEED_MAX_DAILY_PAYMENT_COUNT') {
