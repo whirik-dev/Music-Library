@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 
 const PricingNotice = () => {
     const t = useTranslations('pricing');
-    
+
     const notices = [
         {
             icon: <IconCreditCard size={24} />,
@@ -51,7 +51,7 @@ const PricingNotice = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {notices.map((notice, index) => (
-                    <div 
+                    <div
                         key={index}
                         className="bg-zinc-800/30 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-6 hover:bg-zinc-800/40 transition-colors"
                     >
@@ -63,7 +63,7 @@ const PricingNotice = () => {
                                 {notice.title}
                             </h3>
                         </div>
-                        
+
                         <ul className="space-y-3">
                             {notice.items.map((item, itemIndex) => (
                                 <li key={itemIndex} className="flex items-start gap-3">
@@ -78,7 +78,7 @@ const PricingNotice = () => {
                 ))}
             </div>
 
-            <div className="mt-12 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6">
+            {/* <div className="mt-12 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6">
                 <div className="flex items-start gap-4">
                     <IconInfoCircle size={24} className="text-purple-400 flex-shrink-0 mt-1" />
                     <div>
@@ -89,14 +89,14 @@ const PricingNotice = () => {
                             {t('contact_description')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <a 
-                                href="mailto:support@probgm.com" 
+                            <a
+                                href="mailto:support@probgm.com"
                                 className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
                             >
                                 {t('email_inquiry')}
                             </a>
-                            <a 
-                                href="/support" 
+                            <a
+                                href="/support"
                                 className="inline-flex items-center justify-center px-6 py-3 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white rounded-lg font-medium transition-colors"
                             >
                                 {t('customer_center')}
@@ -104,7 +104,7 @@ const PricingNotice = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };
