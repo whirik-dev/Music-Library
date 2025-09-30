@@ -301,7 +301,7 @@ const ModalPageTailoredDetail = ({ }) => {
                                             userBalance={credits || 0}
                                         />
                                     )}
-                                    {jobDetail.status === 'confirm' && (
+                                    {jobDetail.status === 'confirming' && (
                                         <TailoredDetailResult 
                                             id={jobDetail.job_id} 
                                             onJobUpdate={handleJobUpdate}
