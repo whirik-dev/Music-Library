@@ -155,7 +155,7 @@ export default function Checkout() {
     // Terms agreement state
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
     // Selected payment method
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CARD');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('PAYPAL');
 
     // TossPayments instance
     const [tossPayments, setTossPayments] = useState(null);
@@ -196,9 +196,14 @@ export default function Checkout() {
                     return;
                 }
 
-                // 라이브 키 사용 시 경고
+                // 라이브 키 사용 시 경고 및 상점 상태 확인 안내
                 if (clientKey.startsWith('live_')) {
                     console.warn('[TossPayments] Using LIVE key - make sure this is intended for production');
+                    console.warn('[TossPayments] If getting 500 errors, check:');
+                    console.warn('1. 토스페이먼츠 개발자센터에서 상점 심사 상태 확인');
+                    console.warn('2. 카드사 심사 완료 여부 확인');
+                    console.warn('3. 결제수단별 활성화 상태 확인');
+                    console.warn('4. API 버전 설정 확인 (권장: 2022-11-16)');
                 }
 
                 const tossPaymentsInstance = await loadTossPayments(clientKey);
@@ -272,21 +277,36 @@ export default function Checkout() {
                 return;
             }
 
-            // Add 10% VAT
-            const paymentAmount = Math.round(baseAmount * 1.1);
+            // PayPal은 USD로 결제 (KRW를 USD로 환산)
+            // 임시 환율: 1 USD = 1300 KRW (실제로는 실시간 환율 API 사용 권장)
+            const exchangeRate = 1300;
+            const baseAmountUSD = Math.round((baseAmount / exchangeRate) * 100) / 100; // 소수점 2자리
+            const paymentAmount = baseAmountUSD;
 
             const planName = `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} (${selectedPaymentType === 'yearly' ? t('payment.yearly_payment') : t('payment.monthly_payment')})`;
 
+            // PayPal 해외간편결제 데이터
             const paymentData = {
-                method: method,
+                method: 'FOREIGN_EASY_PAY', // PayPal은 해외간편결제 방식
                 amount: {
-                    currency: 'KRW',
+                    currency: 'USD', // PayPal은 USD 필수
                     value: paymentAmount,
                 },
                 orderId: orderId,
-                orderName: planName,
+                orderName: planName.length > 100 ? planName.substring(0, 100) : planName,
                 successUrl: `${window.location.origin}/payment?r=success`,
                 failUrl: `${window.location.origin}/payment?r=fail`,
+                foreignEasyPay: {
+                    country: 'US', // PayPal은 US 설정
+                    // products 정보 추가 (PayPal 판매자 보호를 위해 권장)
+                    products: [{
+                        name: planName,
+                        quantity: 1,
+                        unitAmount: paymentAmount,
+                        currency: 'USD',
+                        description: `${selectedMembershipPlan?.planName} subscription plan`
+                    }]
+                }
             };
 
             // 사용자 정보가 있으면 추가
@@ -303,15 +323,56 @@ export default function Checkout() {
             console.log('Payment Data:', paymentData);
             console.log('Client Key:', clientKey?.substring(0, 10) + '...');
 
-            // Additional options for international card payment
-            if (method === 'CARD' && isInternational) {
-                paymentData.card = {
-                    useInternationalCardOnly: true,
-                    flowMode: "DEFAULT", // Explicitly set to integrated payment window
-                    useEscrow: false,
-                    useCardPoint: false,
-                    useAppCardOnly: false
-                };
+            // 파라미터 검증
+            const validation = {
+                orderId: {
+                    value: paymentData.orderId,
+                    valid: /^[A-Za-z0-9_=-]{6,64}$/.test(paymentData.orderId),
+                    length: paymentData.orderId?.length
+                },
+                orderName: {
+                    value: paymentData.orderName,
+                    valid: paymentData.orderName && paymentData.orderName.length <= 100,
+                    length: paymentData.orderName?.length
+                },
+                amount: {
+                    value: paymentData.amount.value,
+                    valid: paymentData.amount.value >= 100,
+                    currency: paymentData.amount.currency
+                },
+                urls: {
+                    successUrl: paymentData.successUrl,
+                    failUrl: paymentData.failUrl,
+                    validSuccess: paymentData.successUrl?.startsWith('https://'),
+                    validFail: paymentData.failUrl?.startsWith('https://')
+                }
+            };
+
+            console.log('Parameter Validation:', validation);
+
+            // 검증 실패 시 경고
+            if (!validation.orderId.valid) {
+                console.error('Invalid orderId format. Must be 6-64 chars, alphanumeric + _=-');
+            }
+            if (!validation.orderName.valid) {
+                console.error('Invalid orderName. Must be <= 100 chars and not empty');
+            }
+            if (!validation.amount.valid) {
+                console.error('Invalid amount. Must be >= 100');
+            }
+            if (!validation.urls.validSuccess || !validation.urls.validFail) {
+                console.error('Invalid URLs. Must start with https://');
+            }
+
+            // PayPal 해외간편결제 설정 확인
+            if (method === 'FOREIGN_EASY_PAY') {
+                console.log('�  Setting up PayPal payment');
+                console.log('PayPal payment data:', {
+                    method: paymentData.method,
+                    currency: paymentData.amount.currency,
+                    amount: paymentData.amount.value,
+                    country: paymentData.foreignEasyPay?.country
+                });
             }
 
             // Additional options for virtual account
@@ -325,6 +386,21 @@ export default function Checkout() {
                 };
             }
 
+            console.log('Requesting payment with TossPayments SDK...');
+            console.log('Environment check:', {
+                origin: window.location.origin,
+                protocol: window.location.protocol,
+                hostname: window.location.hostname,
+                userAgent: navigator.userAgent.substring(0, 100)
+            });
+
+            // 현재 연결된 MID 확인을 위한 임시 테스트
+            console.log('Testing TossPayments instance:', {
+                hasInstance: !!tossPayments,
+                clientKeyPrefix: clientKey?.substring(0, 15),
+                // MID는 결제 완료 후 응답에서 확인 가능
+            });
+
             await payment.requestPayment(paymentData);
 
         } catch (err) {
@@ -332,7 +408,15 @@ export default function Checkout() {
             console.error('Error details:', {
                 code: err.code,
                 message: err.message,
-                stack: err.stack
+                stack: err.stack,
+                // 추가 디버깅 정보
+                clientKeyUsed: clientKey?.substring(0, 15) + '...',
+                paymentDataSent: {
+                    method: paymentData.method,
+                    amount: paymentData.amount,
+                    orderId: paymentData.orderId,
+                    orderName: paymentData.orderName?.substring(0, 50) + '...'
+                }
             });
 
             // 에러 타입별 처리
@@ -340,7 +424,12 @@ export default function Checkout() {
                 // 사용자가 결제를 취소한 경우
                 return;
             } else if (err.code === 'COMMON_ERROR') {
-                alert('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                console.error('[TossPayments] COMMON_ERROR - PayPal 관련 가능한 원인:');
+                console.error('1. PayPal 계약 미완료 (고객센터 1544-7772 문의 필요)');
+                console.error('2. 해외간편결제 MID 미설정');
+                console.error('3. PayPal 결제수단 비활성화');
+                console.error('4. API 키 불일치 (해외간편결제용 키 필요)');
+                alert('PayPal 결제 처리 중 오류가 발생했습니다.\nPayPal 계약 상태를 확인하거나 고객센터(1544-7772)로 문의해주세요.');
             } else if (err.code === 'INVALID_CARD_COMPANY') {
                 alert(t('payment.invalid_card_error'));
             } else if (err.code === 'EXCEED_MAX_DAILY_PAYMENT_COUNT') {
@@ -376,10 +465,13 @@ export default function Checkout() {
     const monthlySavings = priceMonthly - priceYearlyMonthly;
     const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
 
-    // Calculate VAT (10%)
+    // Calculate amounts for PayPal (USD)
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
+    const exchangeRate = 1300; // 임시 환율 (실제로는 실시간 환율 API 사용 권장)
+    const baseAmountUSD = Math.round((baseAmount / exchangeRate) * 100) / 100;
     const vatAmount = Math.round(baseAmount * 0.1);
     const totalWithVat = baseAmount + vatAmount;
+    const totalWithVatUSD = Math.round((totalWithVat / exchangeRate) * 100) / 100;
 
     console.log('Calculated prices:', {
         priceYearlyMonthly,
@@ -467,62 +559,67 @@ export default function Checkout() {
                 <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
                     <div className="text-lg font-semibold">{t('payment.payment_methods')}</div>
 
-                    {/* Payment Options Grid */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Payment Options */}
+                    <div className="grid grid-cols-1 gap-3">
+                        {/* Domestic Card Option - 주석처리됨 */}
+                        {/* 
                         <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
                             <input
                                 type="radio"
                                 name="payment"
                                 value="CARD"
                                 className="mr-3 text-blue-600"
+                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                            />
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <span className="font-medium text-sm">국내 카드</span>
+                                    <div className="text-xs text-gray-500">신용카드, 체크카드</div>
+                                </div>
+                                <div className="text-2xl">💳</div>
+                            </div>
+                        </label>
+                        */}
+
+                        {/* PayPal Payment Option */}
+                        <label className="flex flex-row items-center p-4 border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-lg cursor-pointer">
+                            <input
+                                type="radio"
+                                name="payment"
+                                value="PAYPAL"
+                                className="mr-3 text-blue-600"
                                 defaultChecked
                                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                             />
                             <div className="flex items-center justify-between w-full">
                                 <div>
-                                    <span className="font-medium text-sm">{t('payment.domestic_card')}</span>
-                                    <div className="text-xs text-gray-500">{t('payment.credit_debit_card')}</div>
+                                    <span className="font-medium text-sm">PayPal</span>
+                                    <div className="text-xs text-gray-500">Safe and secure international payment</div>
+                                    <div className="text-xs text-blue-600 mt-1">
+                                        Amount: ${totalWithVatUSD} USD (≈ ₩{formatNumberKR(totalWithVat)})
+                                    </div>
                                 </div>
-                                {/* <div className="text-2xl">💳</div> */}
-                            </div>
-                        </label>
-
-                        <label className="flex flex-row items-center p-4 border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="FOREIGN_CARD"
-                                className="mr-3 text-blue-600"
-                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                            />
-                            <div className="flex items-center justify-between w-full">
-                                <div>
-                                    <span className="font-medium text-sm">{t('payment.foreign_card')}</span>
-                                    <div className="text-xs text-gray-500">{t('payment.visa_master_description')}</div>
-                                </div>
-                                {/* <div className="text-2xl">🌍</div> */}
+                                <div className="text-2xl">🌐</div>
                             </div>
                         </label>
                     </div>
 
-                    {/* Guide message when foreign card is selected */}
-                    {selectedPaymentMethod === 'FOREIGN_CARD' && (
-                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <div className="flex items-start space-x-3">
-                                <div className="text-blue-600 dark:text-blue-400 mt-0.5">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">{t('payment.foreign_card_guide_title')}</h4>
-                                    <p className="mt-1 text-sm text-blue-700 dark:text-blue-200">
-                                        {t('payment.foreign_card_guide_description')}
-                                    </p>
-                                </div>
+                    {/* PayPal Guide */}
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <div className="text-blue-600 dark:text-blue-400 mt-0.5">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">PayPal Payment</h4>
+                                <p className="mt-1 text-sm text-blue-700 dark:text-blue-200">
+                                    You will be redirected to PayPal to complete your payment securely. The amount will be charged in USD.
+                                </p>
                             </div>
                         </div>
-                    )}
+                    </div>
 
                     {/* Additional payment methods can be added here */}
                 </div>
@@ -547,11 +644,13 @@ export default function Checkout() {
                     className={`w-full ${(!isTermsAgreed || !tossPayments) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     bg={(isTermsAgreed && tossPayments) ? "bg-purple-600 font-bold" : "bg-gray-400 font-bold"}
                     onClick={() => {
-                        if (selectedPaymentMethod === 'FOREIGN_CARD') {
-                            handlePayment('CARD', true);
-                        } else {
-                            handlePayment(selectedPaymentMethod, false);
-                        }
+                        console.log('🌐 Initiating PayPal payment:', {
+                            selectedMethod: selectedPaymentMethod,
+                            amountUSD: totalWithVatUSD,
+                            amountKRW: totalWithVat
+                        });
+                        // PayPal 해외간편결제 실행
+                        handlePayment('FOREIGN_EASY_PAY', false);
                     }}
                 />
             </CheckoutPage>
