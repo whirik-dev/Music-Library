@@ -32,16 +32,16 @@ const pricePlans: PricePlan[] = [
         monthlyCredits: 70,
         pricing: {
             usd: {
-                monthly: 7.99,
-                yearlyMonthly: 8.99,
-                yearlyTotal: 107.88,    // 8.99 * 12
-                discount: 12.52         // ((7.99*12 - 107.88) / (7.99*12)) * 100
+                monthly: 9.99,
+                yearlyMonthly: 7.99,
+                yearlyTotal: 95.88,     // 7.99 * 12
+                discount: 20.02         // ((9.99*12 - 95.88) / (9.99*12)) * 100
             },
             krw: {
-                monthly: 13900,
-                yearlyMonthly: 12400,
-                yearlyTotal: 148800,    // 12400 * 12
-                savings: 18000          // (13900*12) - 148800
+                monthly: 11900,
+                yearlyMonthly: 9900,
+                yearlyTotal: 118800,    // 9900 * 12
+                savings: 24000          // (11900*12) - 118800
             }
         }
     },
@@ -57,16 +57,16 @@ const pricePlans: PricePlan[] = [
         monthlyCredits: 150,
         pricing: {
             usd: {
-                monthly: 14.99,
-                yearlyMonthly: 15.39,
-                yearlyTotal: 184.68,    // 15.39 * 12
-                discount: 2.67          // ((14.99*12 - 184.68) / (14.99*12)) * 100
+                monthly: 19.99,
+                yearlyMonthly: 14.99,
+                yearlyTotal: 179.88,    // 14.99 * 12
+                discount: 25.01         // ((19.99*12 - 179.88) / (19.99*12)) * 100
             },
             krw: {
-                monthly: 26900,
-                yearlyMonthly: 21590,
-                yearlyTotal: 259080,    // 21590 * 12
-                savings: 63720          // (26900*12) - 259080
+                monthly: 22900,
+                yearlyMonthly: 18900,
+                yearlyTotal: 226800,    // 18900 * 12
+                savings: 48000          // (22900*12) - 226800
             }
         }
     },
@@ -82,16 +82,16 @@ const pricePlans: PricePlan[] = [
         monthlyCredits: 500,
         pricing: {
             usd: {
-                monthly: 35.99,
-                yearlyMonthly: 36.49,
-                yearlyTotal: 437.88,    // 36.49 * 12
-                discount: 1.39          // ((35.99*12 - 437.88) / (35.99*12)) * 100
+                monthly: 49.99,
+                yearlyMonthly: 35.99,
+                yearlyTotal: 431.88,    // 35.99 * 12
+                discount: 28.01         // ((49.99*12 - 431.88) / (49.99*12)) * 100
             },
             krw: {
-                monthly: 69900,
-                yearlyMonthly: 51900,
-                yearlyTotal: 622800,    // 51900 * 12
-                savings: 216000         // (69900*12) - 622800
+                monthly: 59900,
+                yearlyMonthly: 48900,
+                yearlyTotal: 586800,    // 48900 * 12
+                savings: 132000         // (59900*12) - 586800
             }
         }
     }

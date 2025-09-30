@@ -243,19 +243,19 @@ export default function Payment() {
 
                 {isSuccess ? (
                     <>
-                        {paymentData?.receipt?.url && (
+                        {/* {paymentData?.receipt?.url && (
                             <Button
                                 className="w-full"
                                 name="영수증 보기"
                                 onClick={() => window.open(paymentData.receipt.url, '_blank')}
                             />
-                        )}
+                        )} */}
                         <Button className="w-full" name="확인" onClick={paymentSuccessHandler} />
                     </>
                 ) : (
                     <>
                         <Button className="w-full" name="이전 단계로" onClick={() => router.push("/checkout")} />
-                        <Button className="w-full opacity-10" name="DEV: 성공으로 바꾸기" onClick={() => setPaymentStatus('success')} />
+                        {/* <Button className="w-full opacity-10" name="DEV: 성공으로 바꾸기" onClick={() => setPaymentStatus('success')} /> */}
                     </>
                 )}
 
