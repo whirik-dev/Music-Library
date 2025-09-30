@@ -5,6 +5,7 @@ import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import { useTranslations } from 'next-intl';
 
 import usePaymentStore from "@/stores/paymentStore";
+import useAuthStore from "@/stores/authStore";
 
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button2";
@@ -144,12 +145,13 @@ export default function Checkout() {
     const router = useRouter();
     const {
         paymentStep,
-        setPaymentStep,
         selectedMembershipPlan,
-        setSelectedMembershipPlan,
         selectedPaymentType,
         setSelectedPaymentType
     } = usePaymentStore();
+
+    // 사용자 정보 가져오기
+    const { userInfo } = useAuthStore();
     // Terms agreement state
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
     // Selected payment method
@@ -176,7 +178,19 @@ export default function Checkout() {
         let mounted = true;
         (async () => {
             try {
-                if (!clientKey) throw new Error(t('errors.missing_toss_client_key'));
+                if (!clientKey) {
+                    console.error('[TossPayments] Client key is missing');
+                    alert(t('errors.missing_toss_client_key'));
+                    return;
+                }
+
+                // 클라이언트 키 형식 검증 (test_ 또는 live_로 시작해야 함)
+                if (!clientKey.startsWith('test_') && !clientKey.startsWith('live_')) {
+                    console.error('[TossPayments] Invalid client key format');
+                    alert(t('errors.invalid_toss_client_key'));
+                    return;
+                }
+
                 const tossPaymentsInstance = await loadTossPayments(clientKey);
 
                 if (mounted) {
@@ -184,12 +198,13 @@ export default function Checkout() {
                 }
             } catch (err) {
                 console.error('[TossPayments] load error:', err);
+                alert(t('errors.toss_load_failed'));
             }
         })();
         return () => {
             mounted = false;
         };
-    }, [clientKey]);
+    }, [clientKey, t]);
 
     // Generate order ID
     const generateOrderId = () => `order_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -207,6 +222,18 @@ export default function Checkout() {
             return;
         }
 
+        // 로그인 상태 확인
+        if (!userInfo) {
+            alert(t('payment.login_required'));
+            return;
+        }
+
+        // 중복 결제 방지
+        if (paymentStep === 'payment') {
+            alert(t('payment.payment_in_progress'));
+            return;
+        }
+
         try {
             const orderId = generateOrderId();
             const customerKey = generateCustomerKey();
@@ -220,10 +247,21 @@ export default function Checkout() {
             const selectedPlan = selectedMembershipPlan ?
                 pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
-            const baseAmount = selectedPlan ?
-                (selectedPaymentType === 'yearly' ? selectedPlan.pricing.krw.yearlyTotal : selectedPlan.pricing.krw.monthly)
-                : 10000;
-            
+            if (!selectedPlan) {
+                alert(t('payment.invalid_plan_error'));
+                return;
+            }
+
+            const baseAmount = selectedPaymentType === 'yearly'
+                ? selectedPlan.pricing.krw.yearlyTotal
+                : selectedPlan.pricing.krw.monthly;
+
+            // 최소 결제 금액 검증 (100원)
+            if (baseAmount < 100) {
+                alert(t('payment.minimum_amount_error'));
+                return;
+            }
+
             // Add 10% VAT
             const paymentAmount = Math.round(baseAmount * 1.1);
 
@@ -239,10 +277,17 @@ export default function Checkout() {
                 orderName: planName,
                 successUrl: `${window.location.origin}/payment?r=success`,
                 failUrl: `${window.location.origin}/payment?r=fail`,
-                customerEmail: t('payment.customer_email_placeholder'),
-                customerName: t('payment.customer_name_placeholder'),
-                customerMobilePhone: t('payment.customer_phone_placeholder'),
             };
+
+            // 사용자 정보가 있으면 추가
+            if (userInfo) {
+                if (userInfo.email) {
+                    paymentData.customerEmail = userInfo.email;
+                }
+                if (userInfo.name) {
+                    paymentData.customerName = userInfo.name;
+                }
+            }
 
             // Additional options for international card payment
             if (method === 'CARD' && isInternational) {
@@ -270,9 +315,20 @@ export default function Checkout() {
 
         } catch (err) {
             console.error('[TossPayments] requestPayment error:', err);
-            alert(t('payment.payment_error'));
+
+            // 에러 타입별 처리
+            if (err.code === 'USER_CANCEL') {
+                // 사용자가 결제를 취소한 경우
+                return;
+            } else if (err.code === 'INVALID_CARD_COMPANY') {
+                alert(t('payment.invalid_card_error'));
+            } else if (err.code === 'EXCEED_MAX_DAILY_PAYMENT_COUNT') {
+                alert(t('payment.daily_limit_exceeded'));
+            } else {
+                alert(t('payment.payment_error') + ': ' + (err.message || err.code || 'Unknown error'));
+            }
         }
-    }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType]);
+    }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType, userInfo, t, paymentStep]);
 
     function formatNumberKR(num) {
         return Number(num).toLocaleString('ko-KR');
