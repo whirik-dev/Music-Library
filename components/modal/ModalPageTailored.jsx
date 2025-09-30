@@ -125,7 +125,7 @@ const ModalPageTailored = ({ }) => {
             case 'pending': return 'pending';
             case 'estimated': return 'estimated';
             case 'processing': return 'in progress';
-            case 'confirm': return 'confirming';
+            case 'confirming': return 'confirming';
             case 'completed': return 'completed';
             case 'failed': return 'failed';
             case 'cancelled': return 'cancelled';
@@ -138,7 +138,7 @@ const ModalPageTailored = ({ }) => {
             case 'completed': return 'success';
             case 'processing': return 'warning';
             case 'estimated': return 'info';
-            case 'confirm': return 'warning';
+            case 'confirming': return 'warning';
             case 'failed': return 'error';
             case 'cancelled': return 'error';
             case 'pending': return 'off';

@@ -67,7 +67,7 @@ const ModalPageTailoredDetail = ({ }) => {
             rounded: ''
         },
         {
-            id: 'confirm',
+            id: 'confirming',
             label: 'confirm',
             icon: IconCheck,
             bgColor: 'bg-foreground/10',
@@ -168,7 +168,7 @@ const ModalPageTailoredDetail = ({ }) => {
             case 'pending': return 0;        // offer 단계
             case 'estimated': return 1;      // estimate 단계  
             case 'processing': return 2;     // processing 단계
-            case 'confirm': return 3;        // confirm 단계
+            case 'confirming': return 3;        // confirm 단계
             case 'completed': return 4;      // done 단계
             case 'failed': return 2;         // processing에서 실패
             case 'cancelled': return 0;      // 취소된 경우
@@ -302,7 +302,10 @@ const ModalPageTailoredDetail = ({ }) => {
                                         />
                                     )}
                                     {jobDetail.status === 'confirm' && (
-                                        <TailoredDetailResult id={jobDetail.job_id} />
+                                        <TailoredDetailResult 
+                                            id={jobDetail.job_id} 
+                                            onJobUpdate={handleJobUpdate}
+                                        />
                                     )}
                                     {jobDetail.status === 'cancelled' && (
                                         <TailoredDetailCancelled />
