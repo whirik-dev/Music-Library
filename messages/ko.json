@@ -388,7 +388,7 @@
         "authentication_error": "Authentication error",
         "validation_error": "Validation error",
         "service_unavailable": "Service temporarily unavailable",
-        "missing_toss_client_key": "Missing env: NEXT_PUBLIC_TOSS_CLIENT_TEST",
+        "missing_toss_client_key": "Missing env: NEXT_PUBLIC_TOSS_CLIENT",
         "no_login_info": "No login information available.",
         "signout_failed": "Sign out failed",
         "server_error_with_message": "Server error: {message}",

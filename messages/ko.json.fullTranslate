@@ -385,7 +385,7 @@
         "authentication_error": "인증 오류",
         "validation_error": "검증 오류",
         "service_unavailable": "서비스를 일시적으로 사용할 수 없습니다",
-        "missing_toss_client_key": "환경변수 누락: NEXT_PUBLIC_TOSS_CLIENT_TEST",
+        "missing_toss_client_key": "환경변수 누락: NEXT_PUBLIC_TOSS_CLIENT",
         "no_login_info": "로그인 정보가 없습니다.",
         "signout_failed": "로그아웃에 실패했습니다",
         "server_error_with_message": "서버 오류: {message}",

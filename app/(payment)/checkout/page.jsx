@@ -158,7 +158,7 @@ export default function Checkout() {
     // TossPayments instance
     const [tossPayments, setTossPayments] = useState(null);
 
-    const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_TEST;
+    const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT;
 
     useEffect(() => {
         // Redirect to price page if selectedMembershipPlan is missing or lacks required properties

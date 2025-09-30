@@ -36,7 +36,7 @@ export default function PaymentModal({ onClose, onSuccess }) {
     // 고객 키 생성
     const generateCustomerKey = () => `customer_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-    const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_TEST;
+    const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT;
 
     useEffect(() => {
         let mounted = true;
