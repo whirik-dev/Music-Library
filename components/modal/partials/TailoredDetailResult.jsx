@@ -14,6 +14,8 @@ const TailoredDetailResult = ({ id, onJobUpdate }) => {
         if (!session?.user?.ssid || !id) return;
 
         setAudioLoading(true);
+        setError(null);
+
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/preview/${id}`, {
                 method: 'GET',
@@ -23,32 +25,28 @@ const TailoredDetailResult = ({ id, onJobUpdate }) => {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            // JSON 응답에서 wav_url 추출
             const data = await response.json();
 
-            if (data.success && data.data?.wav_url) {
-                const wavUrl = data.data.wav_url;
-
-                // S3 URL인 경우 프록시를 통해 접근하거나 직접 사용
-                if (wavUrl.startsWith('s3://')) {
-                    // S3 URL을 HTTP URL로 변환하거나 프록시 엔드포인트 사용
-                    // 예: s3://bucket/path -> https://bucket.s3.region.amazonaws.com/path
-                    // 또는 백엔드 프록시 엔드포인트 사용
-                    setAudioUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/audio-proxy/${id}`);
+            if (response.ok && data.success) {
+                // 성공 시 HTTP URL 직접 사용
+                if (data.data?.wav_url) {
+                    setAudioUrl(data.data.wav_url);
                 } else {
-                    // 이미 HTTP URL인 경우 직접 사용
-                    setAudioUrl(wavUrl);
+                    throw new Error('Audio URL not found in response');
                 }
             } else {
-                throw new Error(data.message || 'Audio URL not found in response');
+                // 실패 시 (404 등)
+                if (response.status === 404) {
+                    setError('Result is not ready yet. Please wait for the work to be completed.');
+                } else {
+                    throw new Error(data.message || 'Failed to load audio preview');
+                }
             }
         } catch (err) {
             console.error('Error fetching audio preview:', err);
-            setError('Failed to load audio preview');
+            if (!error) { // 이미 404 에러가 설정되지 않은 경우에만
+                setError('Failed to load audio preview');
+            }
         } finally {
             setAudioLoading(false);
         }
@@ -57,12 +55,8 @@ const TailoredDetailResult = ({ id, onJobUpdate }) => {
     useEffect(() => {
         fetchAudioPreview();
 
-        // 컴포넌트 언마운트 시 URL 정리
-        return () => {
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
-            }
-        };
+        // HTTP URL이므로 URL.revokeObjectURL 불필요
+        // Blob URL이 아닌 경우에는 정리할 필요 없음
     }, [id, session]);
 
     const retryHandler = async () => {
@@ -193,15 +187,35 @@ const TailoredDetailResult = ({ id, onJobUpdate }) => {
                             Your browser does not support the audio element.
                         </audio>
                     ) : (
-                        <div className="flex items-center justify-center p-4 text-foreground/50">
-                            Audio preview not available
+                        <div className="flex flex-col items-center justify-center p-4 text-foreground/50 gap-3">
+                            <div className="text-center">
+                                {error?.includes('not ready') ?
+                                    'Result is not ready yet' :
+                                    'Audio preview not available'
+                                }
+                            </div>
+                            {error?.includes('not ready') && (
+                                <Button
+                                    name="Refresh"
+                                    onClick={fetchAudioPreview}
+                                    bg="bg-purple-500/20 font-bold"
+                                    className="text-xs px-3 py-1"
+                                />
+                            )}
                         </div>
                     )}
                 </div>
 
-                {error && (
+                {error && !error.includes('not ready') && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg mb-3 text-sm">
                         {error}
+                    </div>
+                )}
+
+                {error?.includes('not ready') && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 p-3 rounded-lg mb-3 text-sm">
+                        <div className="font-semibold mb-1">Work in Progress</div>
+                        <div>The result is not ready yet. The work may not have been picked up or uploaded. Please check back later.</div>
                     </div>
                 )}
 
