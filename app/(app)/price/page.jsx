@@ -12,6 +12,7 @@ import PricingNotice from "@/components/page/PricingNotice";
 import PricingFAQ from "@/components/page/PricingFAQ";
 import Footer from "@/components/ui/Footer";
 import Checkout from "@/components/payment/CheckoutModal";
+import SignInModal from "@/components/auth/SignInModal";
 
 export default function Price() {
     const t = useTranslations('pages.pricing');
@@ -35,6 +36,7 @@ export default function Price() {
 
     return (
         <>
+            <SignInModal />
             {/* Hero Section */}
             <PageWrapper id="pricing" className="relative bg-gradient-to-br from-zinc-900 via-purple-900/20 to-zinc-900 min-h-screen flex items-center">
                 <div className="absolute inset-0 bg-[url('/bg_price.png')] bg-cover bg-center opacity-10"></div>

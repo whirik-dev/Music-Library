@@ -3,18 +3,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { IconCheck, IconStar } from "@tabler/icons-react"
 import Button from "@/components/ui/Button2";
 import paymentStore from "@/stores/paymentStore";
+import useAuthStore from "@/stores/authStore";
 import pricePlans from "@/data/pricePlans";
 
 const PriceCardItem = ({ plan, isYearly, isPopular }) => {
     const router = useRouter();
     const t = useTranslations('pricing');
+    const { data: session } = useSession();
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
     const setSelectedPaymentType = paymentStore(state => state.setSelectedPaymentType);
+    const toggleAuthModal = useAuthStore(state => state.toggleAuthModal);
 
     const handleSelect = () => {
+        // 로그인 체크
+        if (!session) {
+            // 로그인이 안 되어 있으면 로그인 모달 띄우기
+            toggleAuthModal(true);
+            return;
+        }
+
         // 플랜 정보 설정
         setSelectedMembershipPlan({
             plan_id: `${plan.id}-${isYearly ? 'yearly' : 'monthly'}`,
