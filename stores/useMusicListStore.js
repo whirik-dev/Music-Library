@@ -31,7 +31,39 @@ const useMusicListStore = create((set, get) => ({
         set({ [loadingKey]: true, error: null });
 
         try {
-            const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/music/list?p=${pageNum}`;
+            // 다양성을 위한 페이지 계산
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            
+            // 사용자별 고유 오프셋 (브라우저 지문 기반)
+            const getUserOffset = () => {
+                let offset = localStorage.getItem('userOffset');
+                if (!offset) {
+                    // 브라우저 특성 기반으로 고유 오프셋 생성
+                    const fingerprint = navigator.userAgent.length + 
+                                      screen.width + screen.height + 
+                                      new Date().getTimezoneOffset();
+                    offset = Math.abs(fingerprint % 500) + 1; // 1~500 범위
+                    localStorage.setItem('userOffset', offset.toString());
+                }
+                return parseInt(offset);
+            };
+            
+            // 복합 시드 계산: 날짜 + 시간 + 사용자 오프셋
+            const timeBasedSeed = (dayOfYear * 1440) + (hours * 60) + minutes;
+            const userOffset = getUserOffset();
+            const basePage = (timeBasedSeed + userOffset) % 2400 + 1; // 1~2400 범위로 제한
+            
+            // 실제 페이지는 계산된 페이지 + 추가 페이지 번호 (최대 2500 제한)
+            const actualPage = Math.min(basePage + pageNum, 2500);
+            
+            const params = new URLSearchParams();
+            params.append('q', '*'); // 전체 목록
+            params.append('p', actualPage.toString());
+            
+            const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/search?${params.toString()}`;
             const response = await fetch(url);
             const data = await response.json();
             const items = data.data.items;
@@ -84,15 +116,11 @@ const useMusicListStore = create((set, get) => ({
         set({ [loadingKey]: true, error: null });
 
         // 쿼리 스트링 만들기
-        const keywords = query.trim().split(/\s+/); // 공백 여러 개도 걍 다 잘라버림
         const params = new URLSearchParams();
-
-        keywords.forEach(word => {
-            if (word) {
-                params.append('q', word);
-            }
-        });
-
+        
+        // 띄어쓰기가 포함된 상태로 쿼리 전송
+        params.append('q', query.trim());
+        
         // 페이지 파라미터 추가
         params.append('p', pageNum.toString());
 
@@ -296,8 +324,30 @@ const useMusicListStore = create((set, get) => ({
         }
 
         const nextPage = currentPage + 1;
-
+        
+        // 페이지 제한 체크 (fetch 모드에서만 적용)
         if (listMode === 'fetch') {
+            // 시간 기반 페이지 계산으로 실제 페이지가 2500을 넘을 수 있는지 체크
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            
+            const getUserOffset = () => {
+                const offset = localStorage.getItem('userOffset');
+                return offset ? parseInt(offset) : 1;
+            };
+            
+            const timeBasedSeed = (dayOfYear * 1440) + (hours * 60) + minutes;
+            const userOffset = getUserOffset();
+            const basePage = (timeBasedSeed + userOffset) % 2400 + 1;
+            const wouldBeActualPage = basePage + nextPage;
+            
+            if (wouldBeActualPage > 2500) {
+                set({ hasMore: false });
+                return;
+            }
+            
             await get().fetchMusicList(nextPage, true);
         } else if (listMode === 'query') {
             await get().queryMusicList(nextPage, true);

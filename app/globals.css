@@ -94,8 +94,9 @@ body {
 }
 
 mark {
-  background-color: oklch(85.2% 0.199 91.936);
-  border-radius:1px;
+  background-color: oklch(90.5% 0.182 98.111);
+  border-radius:3px;
   color:black;
-  padding: 0 0px;
+  padding: 1px 2px;
+  font-weight:500;
 }
