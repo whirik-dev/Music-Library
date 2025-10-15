@@ -21,7 +21,7 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
     // 이 아이템이 재생중인지 아닌지 따져봄
     const isActive = playingTrackId === data.id && status != null;
 
-    const title = data.metadata.find(item => item.type === "title")?.content;
+    const title = data.highlights ? data.highlights.title[0] : data.metadata.find(item => item.type === "title")?.content;
     const subtitle = data.metadata.find(item => item.type === "subtitle")?.content;
 
     // const waveform = file.find(item => item.type === "waveform")?.path;
@@ -74,17 +74,23 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
 
                         {/* 제목과 부제목 */}
                         <div className={`flex flex-col w-auto md:w-48 xl:w-48 2xl:w-72 select-none`}>
-                            <div className="font-bold text-foreground">{title}</div>
+                            <div className="font-bold text-foreground">
+                                {data.highlights?.title ? (
+                                    <span dangerouslySetInnerHTML={{ __html: title }} />
+                                ) : (
+                                    title
+                                )}
+                            </div>
                             <div className="hidden md:block text-foreground/40">
                                 {subtitle}
                             </div>
                         </div>
 
                         {/* 태그 */}
-                        <div className="hidden md:flex flex-row gap-1 flex-wrap w-auto xl:w-48 2xl:w-72">
+                        <div className={`hidden md:flex flex-row gap-1 flex-wrap w-auto xl:w-48 2xl:w-72`}>
                             {data.keywords.map((item, index) => {
                                 if (item.type != 'tag') return;
-                                return <Term key={index} name={item.content} />
+                                return <Term key={index} name={item.content} isMark={item.mark && true}/>
                             })}
                         </div>
 

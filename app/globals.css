@@ -92,3 +92,10 @@ body {
   color: var(--foreground);
   font-family: 'Lato', -apple-system, Apple Gothic, 'Noto Sans KR', Arial, Helvetica, sans-serif;
 }
+
+mark {
+  background-color: oklch(85.2% 0.199 91.936);
+  border-radius:1px;
+  color:black;
+  padding: 0 0px;
+}
