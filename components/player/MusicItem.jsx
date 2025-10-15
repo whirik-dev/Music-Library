@@ -4,6 +4,7 @@ import { IconPlayerPlayFilled, IconPlayerStopFilled, IconLoader2 } from "@tabler
 import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
+import { trackMusicPlay, trackMusicStop, trackButtonClick } from "@/lib/analytics";
 
 import Term from "@/components/player/MusicItemTerm"
 import DurationMeter from "@/components/player/DurationMeter";
@@ -44,14 +45,26 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                             <>
                                 {status === "playing" && isActive ? (
                                     // 재생상태
-                                    <IconPlayerStopFilled size="18" onClick={() => { stop() }} />
+                                    <IconPlayerStopFilled size="18" onClick={() => { 
+                                        stop();
+                                        trackMusicStop(data.id, title, subtitle);
+                                        trackButtonClick('Stop Music', 'Music Item');
+                                    }} />
                                 ) : status === "pause" ? (
                                     // 일시정지상태
-                                    <IconPlayerPlayFilled size="18" onClick={() => { play(fid) }} />
+                                    <IconPlayerPlayFilled size="18" onClick={() => { 
+                                        play(data.id);
+                                        trackMusicPlay(data.id, title, subtitle);
+                                        trackButtonClick('Resume Music', 'Music Item');
+                                    }} />
                                 ) : (
                                     // 정지상태
                                     <IconPlayerPlayFilled size="18"
-                                        onClick={() => { play(data.id) }}
+                                        onClick={() => { 
+                                            play(data.id);
+                                            trackMusicPlay(data.id, title, subtitle);
+                                            trackButtonClick('Play Music', 'Music Item');
+                                        }}
                                     />
                                 )}
                             </>

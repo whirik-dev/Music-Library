@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 
 import useMusicListStore from "@/stores/useMusicListStore"; // Adjust path as needed
 import useInfiniteScroll from "@/hooks/useInfiniteScroll";
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
+import { trackPageView } from "@/lib/analytics";
 
 import Hero from "@/components/ui/Hero";
 import FilterOptions from "@/components/search/FilterOptions";
@@ -26,11 +28,16 @@ export default function Home() {
     listMode
   } = useMusicListStore();
 
+  // Google Analytics 추적
+  useGoogleAnalytics();
+
   // 무한스크롤 훅 사용
   const triggerRef = useInfiniteScroll(loadMore, hasMore, isLoadingMore);
 
   useEffect(() => {
     fetchMusicList();
+    // 홈페이지 방문 추적
+    trackPageView('Home');
   }, [fetchMusicList]);
 
   return (

@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import useMusicListStore from "@/stores/useMusicListStore";
 import { IconSearch, IconCornerDownLeft, IconX } from "@tabler/icons-react";
+import { trackSearch, trackButtonClick } from "@/lib/analytics";
 
 import ShortcutHint from "@/components/search/ShortcutHint";
 import SearchKeyPressEvent from "@/components/command/searchKeyPressEvent";
@@ -53,6 +54,10 @@ const Search = () => {
             console.info('Query is empty');
             return;
         }
+
+        // 검색 이벤트 추적
+        trackSearch(trimmed);
+        trackButtonClick('Search Submit', 'Search Component');
 
         // Encode the query to handle special characters correctly in the URL
         const encodedQuery = encodeURIComponent(trimmed);

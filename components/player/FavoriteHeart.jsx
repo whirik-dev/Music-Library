@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { IconHeart, IconHeartFilled } from "@tabler/icons-react"
 import useAuthStore from "@/stores/authStore";
+import { trackMusicFavorite, trackButtonClick } from "@/lib/analytics";
 
 const FavoriteHeart = ({ asset_id }) => {
     const { data: session, status } = useSession();
@@ -49,6 +50,10 @@ const FavoriteHeart = ({ asset_id }) => {
             {
                 addFavoriteList(asset_id);
                 setHeart(newHeart);
+                
+                // 즐겨찾기 추가 이벤트 추적
+                trackMusicFavorite(asset_id, 'Unknown Title', 'Unknown Artist', 'add');
+                trackButtonClick('Add Favorite', 'Music Item');
             }
         } else {
 
@@ -68,6 +73,10 @@ const FavoriteHeart = ({ asset_id }) => {
             {
                 removeFavoriteList(asset_id);
                 setHeart(newHeart);
+                
+                // 즐겨찾기 제거 이벤트 추적
+                trackMusicFavorite(asset_id, 'Unknown Title', 'Unknown Artist', 'remove');
+                trackButtonClick('Remove Favorite', 'Music Item');
             }
             // removeFavoriteList(asset_id); // 함수가 있으면 호출
         }
