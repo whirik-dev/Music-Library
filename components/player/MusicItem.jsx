@@ -4,6 +4,7 @@ import { IconPlayerPlayFilled, IconPlayerStopFilled, IconLoader2 } from "@tabler
 import { useTranslations } from 'next-intl';
 
 import useMusicItemStore from "@/stores/useMusicItemStore";
+import { trackMusicPlay, trackMusicStop, trackButtonClick } from "@/lib/analytics";
 
 import Term from "@/components/player/MusicItemTerm"
 import DurationMeter from "@/components/player/DurationMeter";
@@ -21,7 +22,7 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
     // 이 아이템이 재생중인지 아닌지 따져봄
     const isActive = playingTrackId === data.id && status != null;
 
-    const title = data.metadata.find(item => item.type === "title")?.content;
+    const title = data.highlights ? data.highlights.title[0] : data.metadata.find(item => item.type === "title")?.content;
     const subtitle = data.metadata.find(item => item.type === "subtitle")?.content;
 
     // const waveform = file.find(item => item.type === "waveform")?.path;
@@ -44,14 +45,26 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
                             <>
                                 {status === "playing" && isActive ? (
                                     // 재생상태
-                                    <IconPlayerStopFilled size="18" onClick={() => { stop() }} />
+                                    <IconPlayerStopFilled size="18" onClick={() => { 
+                                        stop();
+                                        trackMusicStop(data.id, title, subtitle);
+                                        trackButtonClick('Stop Music', 'Music Item');
+                                    }} />
                                 ) : status === "pause" ? (
                                     // 일시정지상태
-                                    <IconPlayerPlayFilled size="18" onClick={() => { play(fid) }} />
+                                    <IconPlayerPlayFilled size="18" onClick={() => { 
+                                        play(data.id);
+                                        trackMusicPlay(data.id, title, subtitle);
+                                        trackButtonClick('Resume Music', 'Music Item');
+                                    }} />
                                 ) : (
                                     // 정지상태
                                     <IconPlayerPlayFilled size="18"
-                                        onClick={() => { play(data.id) }}
+                                        onClick={() => { 
+                                            play(data.id);
+                                            trackMusicPlay(data.id, title, subtitle);
+                                            trackButtonClick('Play Music', 'Music Item');
+                                        }}
                                     />
                                 )}
                             </>
@@ -74,17 +87,23 @@ const MusicItem = ({ data }) => { // fid, metadata, keywords, files,
 
                         {/* 제목과 부제목 */}
                         <div className={`flex flex-col w-auto md:w-48 xl:w-48 2xl:w-72 select-none`}>
-                            <div className="font-bold text-foreground">{title}</div>
+                            <div className="font-bold text-foreground">
+                                {data.highlights?.title ? (
+                                    <span dangerouslySetInnerHTML={{ __html: title }} />
+                                ) : (
+                                    title
+                                )}
+                            </div>
                             <div className="hidden md:block text-foreground/40">
                                 {subtitle}
                             </div>
                         </div>
 
                         {/* 태그 */}
-                        <div className="hidden md:flex flex-row gap-1 flex-wrap w-auto xl:w-48 2xl:w-72">
+                        <div className={`hidden md:flex flex-row gap-1 flex-wrap w-auto xl:w-48 2xl:w-72`}>
                             {data.keywords.map((item, index) => {
                                 if (item.type != 'tag') return;
-                                return <Term key={index} name={item.content} />
+                                return <Term key={index} name={item.content} isMark={item.mark && true}/>
                             })}
                         </div>
 

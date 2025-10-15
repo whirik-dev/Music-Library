@@ -6,6 +6,7 @@ import { IconDownload, IconLoader2 } from "@tabler/icons-react";
 import { ToastContainer, toast } from 'react-toastify';
 import { useTranslations } from 'next-intl';
 import useAuthStore from "@/stores/authStore";
+import { trackMusicDownload, trackButtonClick } from "@/lib/analytics";
 
 const DownloadBtn = ({ asset_id }) => {
     const [downloaded, setDownloaded] = useState(false);
@@ -78,6 +79,10 @@ const DownloadBtn = ({ asset_id }) => {
             } else {
                 toast.success(t('download_started'));
             }
+    
+            // 다운로드 이벤트 추적
+            trackMusicDownload(asset_id, 'Unknown Title', 'Unknown Artist');
+            trackButtonClick('Download Music', 'Music Item');
     
             setDownloaded(true);
     

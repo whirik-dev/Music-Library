@@ -6,6 +6,8 @@ import { useTranslations, useLocale } from 'next-intl';
 
 import usePaymentStore from "@/stores/paymentStore";
 import useAuthStore from "@/stores/authStore";
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
+import { trackPayment, trackPageView, trackButtonClick } from "@/lib/analytics";
 
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button2";
@@ -157,6 +159,9 @@ export default function Checkout() {
         setSelectedPaymentType
     } = usePaymentStore();
 
+    // Google Analytics 추적
+    useGoogleAnalytics();
+
     // 로케일 정보 가져오기
     const locale = useLocale();
     const isKorean = locale === 'ko';
@@ -186,6 +191,9 @@ export default function Checkout() {
                 !selectedMembershipPlan.planName ||
                 !selectedMembershipPlan.plan_id) {
                 router.push('/price');
+            } else {
+                // 결제 페이지 방문 추적
+                trackPageView('Checkout');
             }
         }
     }, [selectedMembershipPlan, selectedPaymentType, router, paymentStep, userInfo]);
@@ -345,6 +353,13 @@ export default function Checkout() {
                     validHours: 24,
                 };
             }
+
+            // 결제 시도 추적
+            trackPayment(
+                isKorean ? 'BILLING' : 'PAYPAL',
+                isKorean ? totalWithVat : totalWithVatUSD
+            );
+            trackButtonClick('Payment Attempt', 'Checkout Page');
 
             // 빌링의 경우 requestBillingAuth 사용, 그 외에는 requestPayment 사용
             if (isKorean && method === 'BILLING') {

@@ -2,7 +2,7 @@
 import useMusicListStore from "@/stores/useMusicListStore";
 import { toast } from 'react-toastify';
 
-const MusicItemTerm = ({ name }) => {
+const MusicItemTerm = ({ name, isMark }) => {
     const { query, setQuery, queryMusicList, resetList } = useMusicListStore();
 
     const handleAddTagToQuery = (tag) => {
@@ -20,8 +20,10 @@ const MusicItemTerm = ({ name }) => {
     }
 
     return (
-        <div className="bg-zinc-800 rounded-sm px-1 py-0.5 text-xs select-none cursor-pointer hover:opacity-70"
-             onClick={()=>handleAddTagToQuery(name)}
+        <div className={`rounded-sm px-1 py-0.5 text-xs select-none cursor-pointer hover:opacity-70
+            ${isMark ? 'bg-yellow-300 text-black' : 'bg-zinc-800'}
+            `}
+            onClick={() => handleAddTagToQuery(name)}
         >
             {name}
         </div>

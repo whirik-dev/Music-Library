@@ -60,6 +60,9 @@ This project integrates with TossPayments for payment processing.
 # TossPayments Configuration
 NEXT_PUBLIC_TOSS_CLIENT_TEST=test_ck_xxxxx
 TOSS_SECRET_KEY=test_sk_xxxxx
+
+# Google Analytics Configuration
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 ### API Endpoints
@@ -71,3 +74,62 @@ TOSS_SECRET_KEY=test_sk_xxxxx
 - Payment status translation
 - Error message handling
 - Payment data validation
+
+## 📊 Google Analytics Integration
+This project includes comprehensive Google Analytics tracking for user behavior analysis.
+
+### Analytics Features
+- ✅ Page view tracking
+- ✅ Music play event tracking
+- ✅ Search event tracking
+- ✅ Payment event tracking
+- ✅ Button click tracking
+- ✅ Custom event tracking
+
+### Setup Google Analytics
+1. **Create Google Analytics Account**: Visit [Google Analytics](https://analytics.google.com/)
+2. **Create Property**: Set up a new property for your website
+3. **Get Measurement ID**: Copy your GA4 Measurement ID (format: G-XXXXXXXXXX)
+4. **Update Environment Variables**: Add your Measurement ID to `.env.local`
+
+```env
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+### Analytics Implementation
+The analytics system includes:
+
+#### Core Files
+- `lib/gtag.js` - Google Analytics configuration
+- `lib/analytics.js` - Custom event tracking functions
+- `components/GoogleAnalytics.jsx` - Analytics component
+- `hooks/useGoogleAnalytics.js` - Page view tracking hook
+
+#### Tracked Events
+- **Music Events**: Play, pause, stop music tracks
+- **Search Events**: Search queries and results
+- **Payment Events**: Payment attempts and completions
+- **Navigation Events**: Page views and route changes
+- **User Interactions**: Button clicks and form submissions
+
+#### Usage Examples
+```javascript
+import { trackMusicPlay, trackSearch, trackPayment } from '@/lib/analytics';
+
+// Track music play
+trackMusicPlay('Song Title', 'Artist Name');
+
+// Track search
+trackSearch('search query');
+
+// Track payment
+trackPayment('CARD', 10000);
+```
+
+### Analytics Dashboard
+Monitor your analytics data in the Google Analytics dashboard:
+- Real-time user activity
+- Page performance metrics
+- User engagement patterns
+- Conversion tracking
+- Custom event analysis

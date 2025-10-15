@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import useAuthStore from '@/stores/authStore';
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
+import { trackPageView, trackButtonClick } from "@/lib/analytics";
 import PageWrapper from "@/components/page/PageWrapper";
 import PriceCard from "@/components/page/PriceCard";
 import Heading from "@/components/ui/Heading";
@@ -20,11 +23,21 @@ export default function Price() {
     const { data: session } = useSession();
     const toggleAuthModal = useAuthStore(state => state.toggleAuthModal);
 
+    // Google Analytics 추적
+    useGoogleAnalytics();
+
+    useEffect(() => {
+        // 가격 페이지 방문 추적
+        trackPageView('Pricing');
+    }, []);
+
     const handleChoosePlan = () => {
+        trackButtonClick('Choose Plan', 'Pricing Page');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleTryFree = () => {
+        trackButtonClick('Try Free', 'Pricing Page');
         if (!session) {
             // authStore의 로그인 모달 띄우기
             toggleAuthModal(true);
