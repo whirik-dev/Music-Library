@@ -54,6 +54,7 @@ export default function Payment() {
     const paymentKey = searchParams.get('paymentKey');
     const orderId = searchParams.get('orderId');
     const amount = searchParams.get('amount');
+    const orderName = searchParams.get('orderName');
 
     // 빌링키 발급 파라미터
     const authKey = searchParams.get('authKey');
