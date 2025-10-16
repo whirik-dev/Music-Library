@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { IconCheck, IconStar } from "@tabler/icons-react"
 import Button from "@/components/ui/Button2";
@@ -12,6 +12,7 @@ import pricePlans from "@/data/pricePlans";
 
 const PriceCardItem = ({ plan, isYearly, isPopular }) => {
     const router = useRouter();
+    const locale = useLocale();
     const t = useTranslations('pricing');
     const { data: session } = useSession();
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
@@ -46,14 +47,21 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
         router.push('/checkout');
     };
 
-    function formatNumberKR(num) {
-        return Number(num).toLocaleString('ko-KR');
+    const isKorean = locale === 'ko';
+    const currency = isKorean ? 'krw' : 'usd';
+    const currencySymbol = isKorean ? '₩' : '$';
+    
+    function formatNumber(num) {
+        if (isKorean) {
+            return Number(num).toLocaleString('ko-KR');
+        }
+        return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    const currentPrice = isYearly ? plan.pricing.krw.yearlyMonthly : plan.pricing.krw.monthly;
-    const originalPrice = plan.pricing.krw.monthly;
-    const savings = isYearly ? plan.pricing.krw.savings : 0;
-    const discount = isYearly ? Math.round(((originalPrice - plan.pricing.krw.yearlyMonthly) / originalPrice) * 100) : 0;
+    const currentPrice = isYearly ? plan.pricing[currency].yearlyMonthly : plan.pricing[currency].monthly;
+    const originalPrice = plan.pricing[currency].monthly;
+    const savings = isYearly ? (isKorean ? plan.pricing.krw.savings : (plan.pricing.usd.monthly * 12 - plan.pricing.usd.yearlyTotal)) : 0;
+    const discount = isYearly ? Math.round(((originalPrice - plan.pricing[currency].yearlyMonthly) / originalPrice) * 100) : 0;
 
     return (
         <div className={`
@@ -84,7 +92,7 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                 <div className="flex flex-col gap-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl lg:text-5xl font-black text-white">
-                            ₩{formatNumberKR(currentPrice)}
+                            {currencySymbol}{formatNumber(currentPrice)}
                         </span>
                         <span className="text-zinc-400 text-sm">
                             / {t('per_month')}
@@ -99,14 +107,14 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <span className="text-zinc-400 line-through text-sm">
-                                ₩{formatNumberKR(originalPrice)}
+                                {currencySymbol}{formatNumber(originalPrice)}
                             </span>
                             <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
                                 {discount}% OFF
                             </span>
                         </div>
                         <p className="text-green-400 text-sm">
-                            {t('yearly_savings', { amount: formatNumberKR(savings) })}
+                            {t('yearly_savings', { amount: formatNumber(savings) })}
                         </p>
                     </div>
                 )}

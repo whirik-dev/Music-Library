@@ -126,9 +126,12 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }) {
     );
 }
 
-function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false, t }) {
+function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false, t, currencySymbol = '₩', isKorean = true }) {
     function price2string(price) {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (isKorean) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        return Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Check if content is numeric or string
@@ -140,9 +143,9 @@ function CalculateDetail({ name, content, className, total = false, yearly = fal
             <div className={total ? "text-lg font-bold" : "font-medium"}>{name}</div>
             <div className="">
                 {animated ? (
-                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} suffix={t('payment.won')} />
+                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} prefix={currencySymbol} />
                 ) : (
-                    `${isNumeric ? price2string(numericValue) + t('payment.won') : content}`
+                    `${isNumeric ? currencySymbol + price2string(numericValue) : content}`
                 )}
                 {yearly && t('payment.months_12')}
             </div>
@@ -276,12 +279,14 @@ export default function Checkout() {
                 return;
             }
 
+            // locale에 따라 적절한 통화로 baseAmount 계산
             const baseAmount = selectedPaymentType === 'yearly'
-                ? selectedPlan.pricing.krw.yearlyTotal
-                : selectedPlan.pricing.krw.monthly;
+                ? selectedPlan.pricing[currency].yearlyTotal
+                : selectedPlan.pricing[currency].monthly;
 
-            // 최소 결제 금액 검증 (100원)
-            if (baseAmount < 100) {
+            // 최소 결제 금액 검증 (KRW: 100원, USD: 0.5달러)
+            const minAmount = isKorean ? 100 : 0.5;
+            if (baseAmount < minAmount) {
                 alert(t('payment.minimum_amount_error'));
                 return;
             }
@@ -302,11 +307,8 @@ export default function Checkout() {
                 };
             } else {
                 // 비한국어: PayPal 해외간편결제 사용
-                // PayPal은 USD로 결제 (KRW를 USD로 환산)
-                // 임시 환율: 1 USD = 1300 KRW (실제로는 실시간 환율 API 사용 권장)
-                const exchangeRate = 1300;
-                const baseAmountUSD = Math.round((baseAmount / exchangeRate) * 100) / 100; // 소수점 2자리
-                const paymentAmount = baseAmountUSD;
+                // USD 가격을 직접 사용
+                const paymentAmount = baseAmount;
 
                 paymentData = {
                     method: 'FOREIGN_EASY_PAY', // PayPal은 해외간편결제 방식
@@ -363,7 +365,7 @@ export default function Checkout() {
             // 결제 시도 추적
             trackPayment(
                 isKorean ? 'BILLING' : 'PAYPAL',
-                isKorean ? totalWithVat : totalWithVatUSD
+                totalWithVat
             );
             trackButtonClick('Payment Attempt', 'Checkout Page');
 
@@ -409,8 +411,11 @@ export default function Checkout() {
         }
     }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType, userInfo, t, paymentStep, isKorean]);
 
-    function formatNumberKR(num) {
-        return Number(num).toLocaleString('ko-KR');
+    function formatNumber(num) {
+        if (isKorean) {
+            return Number(num).toLocaleString('ko-KR');
+        }
+        return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Check promotion code
@@ -462,11 +467,17 @@ export default function Checkout() {
     const selectedPlan = selectedMembershipPlan ?
         pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
-    const priceYearlyMonthly = selectedPlan?.pricing.krw.yearlyMonthly || 0; // Monthly unit price for yearly payment
-    const priceMonthly = selectedPlan?.pricing.krw.monthly || 0; // Monthly payment price
-    const priceYearlyTotal = selectedPlan?.pricing.krw.yearlyTotal || 0; // Yearly total amount
+    // locale에 따라 통화 선택
+    const currency = isKorean ? 'krw' : 'usd';
+    const currencySymbol = isKorean ? '₩' : '$';
+    
+    const priceYearlyMonthly = selectedPlan?.pricing[currency].yearlyMonthly || 0; // Monthly unit price for yearly payment
+    const priceMonthly = selectedPlan?.pricing[currency].monthly || 0; // Monthly payment price
+    const priceYearlyTotal = selectedPlan?.pricing[currency].yearlyTotal || 0; // Yearly total amount
     const monthlySavings = priceMonthly - priceYearlyMonthly;
-    const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
+    const savings = isKorean 
+        ? (selectedPlan?.pricing.krw.savings || 0)
+        : (selectedPlan ? (selectedPlan.pricing.usd.monthly * 12 - selectedPlan.pricing.usd.yearlyTotal) : 0); // Total savings amount
 
     // Calculate amounts with promotion discount
     let promotionDiscount = 0;
@@ -477,10 +488,15 @@ export default function Checkout() {
 
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
     const discountedAmount = Math.max(0, baseAmount - promotionDiscount);
-    const exchangeRate = 1300; // 임시 환율 (실제로는 실시간 환율 API 사용 권장)
-    const vatAmount = Math.round(discountedAmount * 0.1);
-    const totalWithVat = discountedAmount + vatAmount;
-    const totalWithVatUSD = Math.round((totalWithVat / exchangeRate) * 100) / 100;
+    
+    // VAT 계산 (KRW는 정수, USD는 소수점 2자리)
+    const vatAmount = isKorean 
+        ? Math.round(discountedAmount * 0.1)
+        : Math.round(discountedAmount * 0.1 * 100) / 100;
+    
+    const totalWithVat = isKorean
+        ? discountedAmount + vatAmount
+        : Math.round((discountedAmount + vatAmount) * 100) / 100;
 
     return (
         <>
@@ -503,10 +519,10 @@ export default function Checkout() {
                     <div className="flex flex-row gap-5">
                         <SelectPlan
                             data={{
-                                price: `${formatNumberKR(priceYearlyMonthly)}${t('payment.won')}`,
+                                price: `${currencySymbol}${formatNumber(priceYearlyMonthly)}`,
                                 priceHighlight: true,
                                 interval: t('payment.monthly_yearly'),
-                                promotionRatio: savings > 0 ? `${formatNumberKR(savings)}${t('payment.won')} ${t('payment.savings')}` : '',
+                                promotionRatio: savings > 0 ? `${currencySymbol}${formatNumber(savings)} ${t('payment.savings')}` : '',
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_yearly')}`
                             }}
                             onClick={() => setSelectedPaymentType('yearly')}
@@ -517,7 +533,7 @@ export default function Checkout() {
                         />
                         <SelectPlan
                             data={{
-                                price: `${formatNumberKR(priceMonthly)}${t('payment.won')}`,
+                                price: `${currencySymbol}${formatNumber(priceMonthly)}`,
                                 priceHighlight: true,
                                 interval: t('payment.monthly'),
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_monthly')}`
@@ -538,13 +554,13 @@ export default function Checkout() {
                 <CheckoutPage>
                     <div className="mt-0" />
                     <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
-                        <CalculateDetail name="" content={t('payment.plan_name_format', { planName: selectedMembershipPlan?.planName?.toUpperCase() || 'UNKNOWN' })} className="font-bold text-lg mb-3" t={t} />
+                        <CalculateDetail name="" content={t('payment.plan_name_format', { planName: selectedMembershipPlan?.planName?.toUpperCase() || 'UNKNOWN' })} className="font-bold text-lg mb-3" t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                         {selectedPaymentType === 'yearly' ? (
                             <div key="yearly-plan">
-                                <CalculateDetail name={t('payment.monthly_unit_price')} content={priceYearlyMonthly} animated t={t} />
-                                <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} />
-                                <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} />
-                                <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} />
+                                <CalculateDetail name={t('payment.monthly_unit_price')} content={priceYearlyMonthly} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                                 {promotionDiscount > 0 && (
                                     <CalculateDetail
                                         name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
@@ -552,15 +568,17 @@ export default function Checkout() {
                                         className="text-green-600 dark:text-green-400"
                                         animated
                                         t={t}
+                                        currencySymbol={currencySymbol}
+                                        isKorean={isKorean}
                                     />
                                 )}
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={discountedAmount} animated t={t} />
-                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={discountedAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                             </div>
                         ) : (
                             <div key="monthly-plan">
-                                <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} />
+                                <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                                 {promotionDiscount > 0 && (
                                     <CalculateDetail
                                         name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
@@ -568,10 +586,12 @@ export default function Checkout() {
                                         className="text-green-600 dark:text-green-400"
                                         animated
                                         t={t}
+                                        currencySymbol={currencySymbol}
+                                        isKorean={isKorean}
                                     />
                                 )}
-                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
+                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                             </div>
                         )}
                     </div>
@@ -603,7 +623,7 @@ export default function Checkout() {
                                     ✅ {promotionData.description || t('payment.promotion_applied')}
                                     {promotionData.discount && (
                                         <div className="mt-1">
-                                            {formatNumberKR(promotionData.discount.discountAmount)}{t('payment.won')} {t('payment.discount_applied')}
+                                            {currencySymbol}{formatNumber(promotionData.discount.discountAmount)} {t('payment.discount_applied')}
                                             ({promotionData.discount.discountRate}%)
                                         </div>
                                     )}
