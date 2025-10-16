@@ -437,8 +437,9 @@ export default function Checkout() {
             const amountToCheck = selectedPaymentType === 'monthly' ? 0 : priceYearlyMonthly;
             const planName = selectedMembershipPlan?.planName?.toUpperCase();
 
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
             const response = await fetch(
-                `/api/promotion/check/${promotionCode.trim()}?amount=${amountToCheck}&plan=${planName}`
+                `${backendUrl}/api/promotion/check/${promotionCode.trim()}?amount=${amountToCheck}&plan=${planName}`
             );
             const data = await response.json();
 
