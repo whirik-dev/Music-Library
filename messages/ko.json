@@ -222,7 +222,22 @@
         "customer_email_placeholder": "customer@example.com",
         "customer_name_placeholder": "Customer",
         "customer_phone_placeholder": "01012345678",
-        "income_deduction": "Income Deduction"
+        "income_deduction": "Income Deduction",
+        "promotion_code": "Promotion Code",
+        "enter_promotion_code": "Enter promotion code",
+        "apply": "Apply",
+        "checking": "Checking...",
+        "promotion_applied": "Promotion code applied",
+        "invalid_promotion_code": "Invalid promotion code",
+        "promotion_check_error": "Error checking promotion code",
+        "promotion_discount": "Promotion Discount",
+        "discount_applied": "discount applied",
+        "promotion_yearly_only": "This promotion code is only applicable to yearly plans",
+        "payment_in_progress": "Payment is already in progress",
+        "invalid_plan_error": "Invalid plan selected",
+        "minimum_amount_error": "Minimum payment amount is 100 KRW",
+        "invalid_card_error": "Invalid card information",
+        "daily_limit_exceeded": "Daily payment limit exceeded"
     },
     "pricing": {
         "basic_plan": "Basic Plan",

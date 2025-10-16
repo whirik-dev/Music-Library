@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { IconCheck, IconStar } from "@tabler/icons-react"
 import Button from "@/components/ui/Button2";
@@ -12,6 +12,7 @@ import pricePlans from "@/data/pricePlans";
 
 const PriceCardItem = ({ plan, isYearly, isPopular }) => {
     const router = useRouter();
+    const locale = useLocale();
     const t = useTranslations('pricing');
     const { data: session } = useSession();
     const setSelectedMembershipPlan = paymentStore(state => state.setSelectedMembershipPlan);
@@ -32,28 +33,35 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
             planName: plan.id,
             billing: isYearly ? 'yearly' : 'monthly'
         });
-        
+
         // 결제 타입 설정
         setSelectedPaymentType(isYearly ? 'yearly' : 'monthly');
-        
+
         console.log('Selected Plan:', {
             plan_id: `${plan.id}-${isYearly ? 'yearly' : 'monthly'}`,
             planName: plan.id,
             billing: isYearly ? 'yearly' : 'monthly',
             paymentType: isYearly ? 'yearly' : 'monthly'
         });
-        
+
         router.push('/checkout');
     };
 
-    function formatNumberKR(num) {
-        return Number(num).toLocaleString('ko-KR');
+    const isKorean = locale === 'ko';
+    const currency = isKorean ? 'krw' : 'usd';
+    const currencySymbol = isKorean ? '₩' : '$';
+
+    function formatNumber(num) {
+        if (isKorean) {
+            return Number(num).toLocaleString('ko-KR');
+        }
+        return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    const currentPrice = isYearly ? plan.pricing.krw.yearlyMonthly : plan.pricing.krw.monthly;
-    const originalPrice = plan.pricing.krw.monthly;
-    const savings = isYearly ? plan.pricing.krw.savings : 0;
-    const discount = isYearly ? Math.round(((originalPrice - plan.pricing.krw.yearlyMonthly) / originalPrice) * 100) : 0;
+    const currentPrice = isYearly ? plan.pricing[currency].yearlyMonthly : plan.pricing[currency].monthly;
+    const originalPrice = plan.pricing[currency].monthly;
+    const savings = isYearly ? (isKorean ? plan.pricing.krw.savings : (plan.pricing.usd.monthly * 12 - plan.pricing.usd.yearlyTotal)) : 0;
+    const discount = isYearly ? Math.round(((originalPrice - plan.pricing[currency].yearlyMonthly) / originalPrice) * 100) : 0;
 
     return (
         <div className={`
@@ -70,7 +78,7 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                     </div>
                 </div>
             )}
-            
+
             <div className="flex flex-col gap-2">
                 <h3 className="font-black uppercase text-xl lg:text-2xl text-white">
                     {t(plan.id)}
@@ -84,7 +92,7 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                 <div className="flex flex-col gap-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl lg:text-5xl font-black text-white">
-                            ₩{formatNumberKR(currentPrice)}
+                            {currencySymbol}{formatNumber(currentPrice)}
                         </span>
                         <span className="text-zinc-400 text-sm">
                             / {t('per_month')}
@@ -94,23 +102,23 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                         {t('vat_separate')}
                     </p>
                 </div>
-                
+
                 {isYearly && (
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <span className="text-zinc-400 line-through text-sm">
-                                ₩{formatNumberKR(originalPrice)}
+                                {currencySymbol}{formatNumber(originalPrice)}
                             </span>
                             <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
                                 {discount}% OFF
                             </span>
                         </div>
                         <p className="text-green-400 text-sm">
-                            {t('yearly_savings', { amount: formatNumberKR(savings) })}
+                            {t('yearly_savings', { amount: formatNumber(savings) })}
                         </p>
                     </div>
                 )}
-                
+
                 <Button
                     name={t('select_plan')}
                     bg={isPopular ? "bg-purple-600 hover:bg-purple-700" : "bg-zinc-300 hover:bg-zinc-200"}
@@ -134,7 +142,7 @@ const PriceCardItem = ({ plan, isYearly, isPopular }) => {
                         </div>
                     ))}
                 </div>
-                
+
                 <div className="mt-4 p-3 bg-zinc-700/30 rounded-lg">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-zinc-400">
@@ -162,21 +170,19 @@ const PriceCard = () => {
                     <div className="flex">
                         <button
                             onClick={() => setIsYearly(false)}
-                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                !isYearly 
-                                    ? 'bg-white text-zinc-900 shadow-lg' 
+                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${!isYearly
+                                    ? 'bg-white text-zinc-900 shadow-lg'
                                     : 'text-zinc-400 hover:text-white'
-                            }`}
+                                }`}
                         >
                             {t('monthly_payment')}
                         </button>
                         <button
                             onClick={() => setIsYearly(true)}
-                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
-                                isYearly 
-                                    ? 'bg-white text-zinc-900 shadow-lg' 
+                            className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${isYearly
+                                    ? 'bg-white text-zinc-900 shadow-lg'
                                     : 'text-zinc-400 hover:text-white'
-                            }`}
+                                }`}
                         >
                             {t('yearly_payment')}
                             <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -190,9 +196,9 @@ const PriceCard = () => {
             {/* Price Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {pricePlans.map((plan, index) => (
-                    <PriceCardItem 
-                        key={plan.id} 
-                        plan={plan} 
+                    <PriceCardItem
+                        key={plan.id}
+                        plan={plan}
                         isYearly={isYearly}
                         isPopular={index === 1} // PRO 플랜을 인기 플랜으로 설정
                     />
