@@ -433,8 +433,8 @@ export default function Checkout() {
                 return;
             }
 
-            // For monthly: send 0, for yearly: send monthly amount
-            const amountToCheck = selectedPaymentType === 'monthly' ? 0 : priceYearlyMonthly;
+            // For monthly: send monthly price, for yearly: send yearly monthly price
+            const amountToCheck = selectedPaymentType === 'monthly' ? priceMonthly : priceYearlyMonthly;
             const planName = selectedMembershipPlan?.planName?.toUpperCase();
 
             const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
@@ -471,11 +471,8 @@ export default function Checkout() {
     // Calculate amounts with promotion discount
     let promotionDiscount = 0;
     if (promotionData && promotionData.discount) {
-        // For monthly: no discount (amount was 0)
-        // For yearly: discount on monthly amount
-        if (selectedPaymentType === 'yearly') {
-            promotionDiscount = promotionData.discount.discountAmount || 0;
-        }
+        // Apply discount for both monthly and yearly
+        promotionDiscount = promotionData.discount.discountAmount || 0;
     }
 
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
@@ -564,7 +561,15 @@ export default function Checkout() {
                         ) : (
                             <div key="monthly-plan">
                                 <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} />
-                                <CalculateDetail name={t('payment.discount_amount')} content={0} animated t={t} />
+                                {promotionDiscount > 0 && (
+                                    <CalculateDetail
+                                        name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
+                                        content={-promotionDiscount}
+                                        className="text-green-600 dark:text-green-400"
+                                        animated
+                                        t={t}
+                                    />
+                                )}
                                 <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
                                 <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
                             </div>
@@ -596,15 +601,10 @@ export default function Checkout() {
                             {promotionData && (
                                 <div className="text-sm text-green-600 dark:text-green-400">
                                     ✅ {promotionData.description || t('payment.promotion_applied')}
-                                    {selectedPaymentType === 'yearly' && promotionData.discount && (
+                                    {promotionData.discount && (
                                         <div className="mt-1">
                                             {formatNumberKR(promotionData.discount.discountAmount)}{t('payment.won')} {t('payment.discount_applied')}
                                             ({promotionData.discount.discountRate}%)
-                                        </div>
-                                    )}
-                                    {selectedPaymentType === 'monthly' && (
-                                        <div className="mt-1 text-orange-500 dark:text-orange-400">
-                                            ⚠️ {t('payment.promotion_yearly_only')}
                                         </div>
                                     )}
                                 </div>
