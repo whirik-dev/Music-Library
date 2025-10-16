@@ -172,6 +172,11 @@ export default function Checkout() {
     // Terms agreement state
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
 
+    // Promotion code state
+    const [promotionCode, setPromotionCode] = useState('');
+    const [promotionData, setPromotionData] = useState(null);
+    const [promotionError, setPromotionError] = useState('');
+    const [isCheckingPromotion, setIsCheckingPromotion] = useState(false);
 
     // TossPayments instance
     const [tossPayments, setTossPayments] = useState(null);
@@ -408,6 +413,50 @@ export default function Checkout() {
         return Number(num).toLocaleString('ko-KR');
     }
 
+    // Check promotion code
+    const checkPromotionCode = async () => {
+        if (!promotionCode.trim()) {
+            setPromotionError(t('payment.enter_promotion_code'));
+            return;
+        }
+
+        setIsCheckingPromotion(true);
+        setPromotionError('');
+        setPromotionData(null);
+
+        try {
+            const selectedPlan = selectedMembershipPlan ?
+                pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
+
+            if (!selectedPlan) {
+                setPromotionError(t('payment.invalid_plan_error'));
+                return;
+            }
+
+            // For monthly: send 0, for yearly: send monthly amount
+            const amountToCheck = selectedPaymentType === 'monthly' ? 0 : priceYearlyMonthly;
+            const planName = selectedMembershipPlan?.planName?.toUpperCase();
+
+            const response = await fetch(
+                `/api/promotion/check/${promotionCode.trim()}?amount=${amountToCheck}&plan=${planName}`
+            );
+            const data = await response.json();
+
+            if (data.valid) {
+                setPromotionData(data.data);
+                setPromotionError('');
+            } else {
+                setPromotionError(data.message || t('payment.invalid_promotion_code'));
+                setPromotionData(null);
+            }
+        } catch (error) {
+            setPromotionError(t('payment.promotion_check_error'));
+            setPromotionData(null);
+        } finally {
+            setIsCheckingPromotion(false);
+        }
+    };
+
     // Safely get price information
     const selectedPlan = selectedMembershipPlan ?
         pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
@@ -418,11 +467,21 @@ export default function Checkout() {
     const monthlySavings = priceMonthly - priceYearlyMonthly;
     const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
 
-    // Calculate amounts
+    // Calculate amounts with promotion discount
+    let promotionDiscount = 0;
+    if (promotionData && promotionData.discount) {
+        // For monthly: no discount (amount was 0)
+        // For yearly: discount on monthly amount
+        if (selectedPaymentType === 'yearly') {
+            promotionDiscount = promotionData.discount.discountAmount || 0;
+        }
+    }
+
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
+    const discountedAmount = Math.max(0, baseAmount - promotionDiscount);
     const exchangeRate = 1300; // 임시 환율 (실제로는 실시간 환율 API 사용 권장)
-    const vatAmount = Math.round(baseAmount * 0.1);
-    const totalWithVat = baseAmount + vatAmount;
+    const vatAmount = Math.round(discountedAmount * 0.1);
+    const totalWithVat = discountedAmount + vatAmount;
     const totalWithVatUSD = Math.round((totalWithVat / exchangeRate) * 100) / 100;
 
     return (
@@ -488,7 +547,16 @@ export default function Checkout() {
                                 <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} />
                                 <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} />
                                 <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={priceYearlyTotal} animated t={t} />
+                                {promotionDiscount > 0 && (
+                                    <CalculateDetail
+                                        name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
+                                        content={-promotionDiscount}
+                                        className="text-green-600 dark:text-green-400"
+                                        animated
+                                        t={t}
+                                    />
+                                )}
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={discountedAmount} animated t={t} />
                                 <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
                                 <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
                             </div>
@@ -503,15 +571,43 @@ export default function Checkout() {
                     </div>
 
                     <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
-                        <div className="text-lg font-semibold">Promotion Code</div>
+                        <div className="text-lg font-semibold">{t('payment.promotion_code')}</div>
                         <div className="flex flex-col flex-1 gap-3">
-                            <div className="flex flex-row gap-5">
-                                <InputField className="flex-1" />
-                                <Button name="apply"/>
+                            <div className="flex flex-row gap-3">
+                                <InputField
+                                    className="flex-1"
+                                    value={promotionCode}
+                                    onChange={(e) => setPromotionCode(e.target.value.toUpperCase())}
+                                    placeholder={t('payment.enter_promotion_code')}
+                                    disabled={isCheckingPromotion}
+                                />
+                                <Button
+                                    name={isCheckingPromotion ? t('payment.checking') : t('payment.apply')}
+                                    onClick={checkPromotionCode}
+                                    disabled={isCheckingPromotion || !promotionCode.trim()}
+                                />
                             </div>
-                            <div className="text-xs">
-                                여기에 쿠폰 상태 알림
-                            </div>
+                            {promotionError && (
+                                <div className="text-sm text-red-500 dark:text-red-400">
+                                    ❌ {promotionError}
+                                </div>
+                            )}
+                            {promotionData && (
+                                <div className="text-sm text-green-600 dark:text-green-400">
+                                    ✅ {promotionData.description || t('payment.promotion_applied')}
+                                    {selectedPaymentType === 'yearly' && promotionData.discount && (
+                                        <div className="mt-1">
+                                            {formatNumberKR(promotionData.discount.discountAmount)}{t('payment.won')} {t('payment.discount_applied')}
+                                            ({promotionData.discount.discountRate}%)
+                                        </div>
+                                    )}
+                                    {selectedPaymentType === 'monthly' && (
+                                        <div className="mt-1 text-orange-500 dark:text-orange-400">
+                                            ⚠️ {t('payment.promotion_yearly_only')}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -565,7 +661,7 @@ export default function Checkout() {
                                 </label>
                             )}
                         </div>
-                        
+
                         {/* Payment Guide */}
                         {/* <div className={`mt-4 p-4 ${isKorean ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'} rounded-lg`}>
                             <div className="flex items-start space-x-3">
