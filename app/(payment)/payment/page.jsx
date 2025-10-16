@@ -146,24 +146,38 @@ export default function Payment() {
             const billingDay = cycleType === 'MONTHLY' ? new Date().getDate() : new Date().getMonth() * 30 + new Date().getDate();
             const membershipDuration = cycleType === 'MONTHLY' ? 30 : 365;
 
+            // 다음 결제일 계산
+            const now = new Date();
+            const nextBillingDate = new Date(now);
+            if (cycleType === 'MONTHLY') {
+                nextBillingDate.setMonth(now.getMonth() + 1);
+            } else {
+                nextBillingDate.setFullYear(now.getFullYear() + 1);
+            }
+
+            const billingCreatePayload = {
+                customerKey,
+                billingKey,
+                cycleType,
+                billingDay,
+                amount: Number(amount),
+                orderName,
+                membershipTier,
+                membershipDuration,
+                nextBillingDate: nextBillingDate.toISOString(),
+                maxRetries: 3,
+                executeFirstPayment: true
+            };
+
+            console.log('빌링 사이클 생성 요청 데이터:', billingCreatePayload);
+
             const createResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${userSsid}`
                 },
-                body: JSON.stringify({
-                    customerKey,
-                    billingKey,
-                    cycleType,
-                    billingDay,
-                    amount: Number(amount),
-                    orderName,
-                    membershipTier,
-                    membershipDuration,
-                    maxRetries: 3,
-                    executeFirstPayment: true
-                })
+                body: JSON.stringify(billingCreatePayload)
             });
 
             const createData = await createResponse.json();
