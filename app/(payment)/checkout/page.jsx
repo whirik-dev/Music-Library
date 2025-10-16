@@ -12,6 +12,7 @@ import { trackPayment, trackPageView, trackButtonClick } from "@/lib/analytics";
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button2";
 import SignInModal from "@/components/auth/SignInModal";
+import InputField from "@/components/ui/InputField";
 
 import pricePlans from "@/data/pricePlans";
 
@@ -501,7 +502,20 @@ export default function Checkout() {
                         )}
                     </div>
 
-                    <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
+                    <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
+                        <div className="text-lg font-semibold">Promotion Code</div>
+                        <div className="flex flex-col flex-1 gap-3">
+                            <div className="flex flex-row gap-5">
+                                <InputField className="flex-1" />
+                                <Button name="apply"/>
+                            </div>
+                            <div className="text-xs">
+                                여기에 쿠폰 상태 알림
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
                         <div className="text-lg font-semibold">{t('payment.payment_methods')}</div>
 
                         {/* Payment Options */}
@@ -521,9 +535,9 @@ export default function Checkout() {
                                         <div>
                                             <span className="font-medium text-sm">Subscription Payment</span>
                                             <div className="text-xs text-gray-500">Credit card and debit card automatic payment</div>
-                                            <div className="text-xs text-purple-600 mt-1">
+                                            {/* <div className="text-xs text-purple-600 mt-1">
                                                 Amount: ₩{formatNumberKR(totalWithVat)}
-                                            </div>
+                                            </div> */}
                                         </div>
                                         <div className="text-2xl">💳</div>
                                     </div>
@@ -542,18 +556,18 @@ export default function Checkout() {
                                         <div>
                                             <span className="font-medium text-sm">PayPal</span>
                                             <div className="text-xs text-gray-500">Safe and secure international payment</div>
-                                            <div className="text-xs text-blue-600 mt-1">
+                                            {/* <div className="text-xs text-blue-600 mt-1">
                                                 Amount: ${totalWithVatUSD} USD (≈ ₩{formatNumberKR(totalWithVat)})
-                                            </div>
+                                            </div> */}
                                         </div>
                                         <div className="text-2xl">🌐</div>
                                     </div>
                                 </label>
                             )}
                         </div>
-
+                        
                         {/* Payment Guide */}
-                        <div className={`mt-4 p-4 ${isKorean ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'} rounded-lg`}>
+                        {/* <div className={`mt-4 p-4 ${isKorean ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'} rounded-lg`}>
                             <div className="flex items-start space-x-3">
                                 <div className={`${isKorean ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400'} mt-0.5`}>
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -578,7 +592,7 @@ export default function Checkout() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Security Notice */}
