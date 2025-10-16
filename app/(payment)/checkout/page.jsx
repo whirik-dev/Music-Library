@@ -12,6 +12,7 @@ import { trackPayment, trackPageView, trackButtonClick } from "@/lib/analytics";
 import Logo from "@/components/Logo";
 import Button from "@/components/ui/Button2";
 import SignInModal from "@/components/auth/SignInModal";
+import InputField from "@/components/ui/InputField";
 
 import pricePlans from "@/data/pricePlans";
 
@@ -93,7 +94,7 @@ function SelectPlan({ data, onClick, selected, t, userInfo, toggleAuthModal }) {
 }
 
 // Animated number component - count up from 0 to target value
-function AnimatedNumber({ value, prefix = "", suffix = "" }) {
+function AnimatedNumber({ value, prefix = "", suffix = "", isKorean = true }) {
     const [currentValue, setCurrentValue] = useState(0);
     const targetValue = Number(value) || 0;
 
@@ -111,23 +112,35 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }) {
                 setCurrentValue(targetValue);
                 clearInterval(timer);
             } else {
-                setCurrentValue(Math.round(increment * step));
+                // USD의 경우 소수점 단위로 증가
+                if (isKorean) {
+                    setCurrentValue(Math.round(increment * step));
+                } else {
+                    setCurrentValue(Math.round(increment * step * 100) / 100);
+                }
             }
         }, duration / steps);
 
         return () => clearInterval(timer);
-    }, [targetValue]);
+    }, [targetValue, isKorean]);
+
+    const formattedValue = isKorean 
+        ? currentValue.toLocaleString('ko-KR')
+        : currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     return (
         <span>
-            {prefix}{currentValue.toLocaleString('ko-KR')}{suffix}
+            {prefix}{formattedValue}{suffix}
         </span>
     );
 }
 
-function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false, t }) {
+function CalculateDetail({ name, content, className, total = false, yearly = false, animated = false, t, currencySymbol = '₩', isKorean = true }) {
     function price2string(price) {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (isKorean) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        return Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Check if content is numeric or string
@@ -139,9 +152,9 @@ function CalculateDetail({ name, content, className, total = false, yearly = fal
             <div className={total ? "text-lg font-bold" : "font-medium"}>{name}</div>
             <div className="">
                 {animated ? (
-                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} suffix={t('payment.won')} />
+                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} prefix={currencySymbol} isKorean={isKorean} />
                 ) : (
-                    `${isNumeric ? price2string(numericValue) + t('payment.won') : content}`
+                    `${isNumeric ? currencySymbol + price2string(numericValue) : content}`
                 )}
                 {yearly && t('payment.months_12')}
             </div>
@@ -171,6 +184,11 @@ export default function Checkout() {
     // Terms agreement state
     const [isTermsAgreed, setIsTermsAgreed] = useState(false);
 
+    // Promotion code state
+    const [promotionCode, setPromotionCode] = useState('');
+    const [promotionData, setPromotionData] = useState(null);
+    const [promotionError, setPromotionError] = useState('');
+    const [isCheckingPromotion, setIsCheckingPromotion] = useState(false);
 
     // TossPayments instance
     const [tossPayments, setTossPayments] = useState(null);
@@ -270,12 +288,14 @@ export default function Checkout() {
                 return;
             }
 
+            // locale에 따라 적절한 통화로 baseAmount 계산
             const baseAmount = selectedPaymentType === 'yearly'
-                ? selectedPlan.pricing.krw.yearlyTotal
-                : selectedPlan.pricing.krw.monthly;
+                ? selectedPlan.pricing[currency].yearlyTotal
+                : selectedPlan.pricing[currency].monthly;
 
-            // 최소 결제 금액 검증 (100원)
-            if (baseAmount < 100) {
+            // 최소 결제 금액 검증 (KRW: 100원, USD: 0.5달러)
+            const minAmount = isKorean ? 100 : 0.5;
+            if (baseAmount < minAmount) {
                 alert(t('payment.minimum_amount_error'));
                 return;
             }
@@ -296,11 +316,8 @@ export default function Checkout() {
                 };
             } else {
                 // 비한국어: PayPal 해외간편결제 사용
-                // PayPal은 USD로 결제 (KRW를 USD로 환산)
-                // 임시 환율: 1 USD = 1300 KRW (실제로는 실시간 환율 API 사용 권장)
-                const exchangeRate = 1300;
-                const baseAmountUSD = Math.round((baseAmount / exchangeRate) * 100) / 100; // 소수점 2자리
-                const paymentAmount = baseAmountUSD;
+                // USD 가격을 직접 사용
+                const paymentAmount = baseAmount;
 
                 paymentData = {
                     method: 'FOREIGN_EASY_PAY', // PayPal은 해외간편결제 방식
@@ -357,7 +374,7 @@ export default function Checkout() {
             // 결제 시도 추적
             trackPayment(
                 isKorean ? 'BILLING' : 'PAYPAL',
-                isKorean ? totalWithVat : totalWithVatUSD
+                totalWithVat
             );
             trackButtonClick('Payment Attempt', 'Checkout Page');
 
@@ -403,26 +420,92 @@ export default function Checkout() {
         }
     }, [tossPayments, isTermsAgreed, selectedMembershipPlan, selectedPaymentType, userInfo, t, paymentStep, isKorean]);
 
-    function formatNumberKR(num) {
-        return Number(num).toLocaleString('ko-KR');
+    function formatNumber(num) {
+        if (isKorean) {
+            return Number(num).toLocaleString('ko-KR');
+        }
+        return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+
+    // Check promotion code
+    const checkPromotionCode = async () => {
+        if (!promotionCode.trim()) {
+            setPromotionError(t('payment.enter_promotion_code'));
+            return;
+        }
+
+        setIsCheckingPromotion(true);
+        setPromotionError('');
+        setPromotionData(null);
+
+        try {
+            const selectedPlan = selectedMembershipPlan ?
+                pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
+
+            if (!selectedPlan) {
+                setPromotionError(t('payment.invalid_plan_error'));
+                return;
+            }
+
+            // For monthly: send monthly price, for yearly: send yearly monthly price
+            const amountToCheck = selectedPaymentType === 'monthly' ? priceMonthly : priceYearlyMonthly;
+            const planName = selectedMembershipPlan?.planName?.toUpperCase();
+
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+            const response = await fetch(
+                `${backendUrl}/api/promotion/check/${promotionCode.trim()}?amount=${amountToCheck}&plan=${planName}`
+            );
+            const data = await response.json();
+
+            if (data.valid) {
+                setPromotionData(data.data);
+                setPromotionError('');
+            } else {
+                setPromotionError(data.message || t('payment.invalid_promotion_code'));
+                setPromotionData(null);
+            }
+        } catch (error) {
+            setPromotionError(t('payment.promotion_check_error'));
+            setPromotionData(null);
+        } finally {
+            setIsCheckingPromotion(false);
+        }
+    };
 
     // Safely get price information
     const selectedPlan = selectedMembershipPlan ?
         pricePlans.find((item) => item.id === selectedMembershipPlan.planName) : null;
 
-    const priceYearlyMonthly = selectedPlan?.pricing.krw.yearlyMonthly || 0; // Monthly unit price for yearly payment
-    const priceMonthly = selectedPlan?.pricing.krw.monthly || 0; // Monthly payment price
-    const priceYearlyTotal = selectedPlan?.pricing.krw.yearlyTotal || 0; // Yearly total amount
+    // locale에 따라 통화 선택
+    const currency = isKorean ? 'krw' : 'usd';
+    const currencySymbol = isKorean ? '₩' : '$';
+    
+    const priceYearlyMonthly = selectedPlan?.pricing[currency].yearlyMonthly || 0; // Monthly unit price for yearly payment
+    const priceMonthly = selectedPlan?.pricing[currency].monthly || 0; // Monthly payment price
+    const priceYearlyTotal = selectedPlan?.pricing[currency].yearlyTotal || 0; // Yearly total amount
     const monthlySavings = priceMonthly - priceYearlyMonthly;
-    const savings = selectedPlan?.pricing.krw.savings || 0; // Total savings amount
+    const savings = isKorean 
+        ? (selectedPlan?.pricing.krw.savings || 0)
+        : (selectedPlan ? (selectedPlan.pricing.usd.monthly * 12 - selectedPlan.pricing.usd.yearlyTotal) : 0); // Total savings amount
 
-    // Calculate amounts
+    // Calculate amounts with promotion discount
+    let promotionDiscount = 0;
+    if (promotionData && promotionData.discount) {
+        // Apply discount for both monthly and yearly
+        promotionDiscount = promotionData.discount.discountAmount || 0;
+    }
+
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
-    const exchangeRate = 1300; // 임시 환율 (실제로는 실시간 환율 API 사용 권장)
-    const vatAmount = Math.round(baseAmount * 0.1);
-    const totalWithVat = baseAmount + vatAmount;
-    const totalWithVatUSD = Math.round((totalWithVat / exchangeRate) * 100) / 100;
+    const discountedAmount = Math.max(0, baseAmount - promotionDiscount);
+    
+    // VAT 계산 (KRW는 정수, USD는 소수점 2자리)
+    const vatAmount = isKorean 
+        ? Math.round(discountedAmount * 0.1)
+        : Math.round(discountedAmount * 0.1 * 100) / 100;
+    
+    const totalWithVat = isKorean
+        ? discountedAmount + vatAmount
+        : Math.round((discountedAmount + vatAmount) * 100) / 100;
 
     return (
         <>
@@ -445,10 +528,10 @@ export default function Checkout() {
                     <div className="flex flex-row gap-5">
                         <SelectPlan
                             data={{
-                                price: `${formatNumberKR(priceYearlyMonthly)}${t('payment.won')}`,
+                                price: `${currencySymbol}${formatNumber(priceYearlyMonthly)}`,
                                 priceHighlight: true,
                                 interval: t('payment.monthly_yearly'),
-                                promotionRatio: savings > 0 ? `${formatNumberKR(savings)}${t('payment.won')} ${t('payment.savings')}` : '',
+                                promotionRatio: savings > 0 ? `${currencySymbol}${formatNumber(savings)} ${t('payment.savings')}` : '',
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_yearly')}`
                             }}
                             onClick={() => setSelectedPaymentType('yearly')}
@@ -459,7 +542,7 @@ export default function Checkout() {
                         />
                         <SelectPlan
                             data={{
-                                price: `${formatNumberKR(priceMonthly)}${t('payment.won')}`,
+                                price: `${currencySymbol}${formatNumber(priceMonthly)}`,
                                 priceHighlight: true,
                                 interval: t('payment.monthly'),
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_monthly')}`
@@ -480,28 +563,85 @@ export default function Checkout() {
                 <CheckoutPage>
                     <div className="mt-0" />
                     <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
-                        <CalculateDetail name="" content={t('payment.plan_name_format', { planName: selectedMembershipPlan?.planName?.toUpperCase() || 'UNKNOWN' })} className="font-bold text-lg mb-3" t={t} />
+                        <CalculateDetail name="" content={t('payment.plan_name_format', { planName: selectedMembershipPlan?.planName?.toUpperCase() || 'UNKNOWN' })} className="font-bold text-lg mb-3" t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                         {selectedPaymentType === 'yearly' ? (
                             <div key="yearly-plan">
-                                <CalculateDetail name={t('payment.monthly_unit_price')} content={priceYearlyMonthly} animated t={t} />
-                                <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} />
-                                <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} />
-                                <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={priceYearlyTotal} animated t={t} />
-                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
+                                <CalculateDetail name={t('payment.monthly_unit_price')} content={priceYearlyMonthly} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.discount')} content={-monthlySavings} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.yearly_total_amount')} content={priceYearlyTotal + savings} className="mt-7" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.total_discount')} content={-savings} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                {promotionDiscount > 0 && (
+                                    <CalculateDetail
+                                        name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
+                                        content={-promotionDiscount}
+                                        className="text-green-600 dark:text-green-400"
+                                        animated
+                                        t={t}
+                                        currencySymbol={currencySymbol}
+                                        isKorean={isKorean}
+                                    />
+                                )}
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={discountedAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                             </div>
                         ) : (
                             <div key="monthly-plan">
-                                <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} />
-                                <CalculateDetail name={t('payment.discount_amount')} content={0} animated t={t} />
-                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} />
-                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} />
+                                <CalculateDetail name={t('payment.monthly_charge')} content={priceMonthly} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                {promotionDiscount > 0 && (
+                                    <CalculateDetail
+                                        name={`${t('payment.promotion_discount')} (${promotionData?.code})`}
+                                        content={-promotionDiscount}
+                                        className="text-green-600 dark:text-green-400"
+                                        animated
+                                        t={t}
+                                        currencySymbol={currencySymbol}
+                                        isKorean={isKorean}
+                                    />
+                                )}
+                                <CalculateDetail name={t('payment.vat_amount')} content={vatAmount} animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
+                                <CalculateDetail name={t('payment.final_payment_amount')} content={totalWithVat} total className="mt-5" animated t={t} currencySymbol={currencySymbol} isKorean={isKorean} />
                             </div>
                         )}
                     </div>
 
-                    <div className="w-full flex flex-col gap-5 rounded-sm p-10 bg-foreground/2">
+                    <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
+                        <div className="text-lg font-semibold">{t('payment.promotion_code')}</div>
+                        <div className="flex flex-col flex-1 gap-3">
+                            <div className="flex flex-row gap-3">
+                                <InputField
+                                    className="flex-1"
+                                    value={promotionCode}
+                                    onChange={(e) => setPromotionCode(e.target.value.toUpperCase())}
+                                    placeholder={t('payment.enter_promotion_code')}
+                                    disabled={isCheckingPromotion}
+                                />
+                                <Button
+                                    name={isCheckingPromotion ? t('payment.checking') : t('payment.apply')}
+                                    onClick={checkPromotionCode}
+                                    disabled={isCheckingPromotion || !promotionCode.trim()}
+                                />
+                            </div>
+                            {promotionError && (
+                                <div className="text-sm text-red-500 dark:text-red-400">
+                                    ❌ {promotionError}
+                                </div>
+                            )}
+                            {promotionData && (
+                                <div className="text-sm text-green-600 dark:text-green-400">
+                                    ✅ {promotionData.description || t('payment.promotion_applied')}
+                                    {promotionData.discount && (
+                                        <div className="mt-1">
+                                            {currencySymbol}{formatNumber(promotionData.discount.discountAmount)} {t('payment.discount_applied')}
+                                            ({promotionData.discount.discountRate}%)
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
                         <div className="text-lg font-semibold">{t('payment.payment_methods')}</div>
 
                         {/* Payment Options */}
@@ -521,9 +661,9 @@ export default function Checkout() {
                                         <div>
                                             <span className="font-medium text-sm">Subscription Payment</span>
                                             <div className="text-xs text-gray-500">Credit card and debit card automatic payment</div>
-                                            <div className="text-xs text-purple-600 mt-1">
+                                            {/* <div className="text-xs text-purple-600 mt-1">
                                                 Amount: ₩{formatNumberKR(totalWithVat)}
-                                            </div>
+                                            </div> */}
                                         </div>
                                         <div className="text-2xl">💳</div>
                                     </div>
@@ -542,9 +682,9 @@ export default function Checkout() {
                                         <div>
                                             <span className="font-medium text-sm">PayPal</span>
                                             <div className="text-xs text-gray-500">Safe and secure international payment</div>
-                                            <div className="text-xs text-blue-600 mt-1">
+                                            {/* <div className="text-xs text-blue-600 mt-1">
                                                 Amount: ${totalWithVatUSD} USD (≈ ₩{formatNumberKR(totalWithVat)})
-                                            </div>
+                                            </div> */}
                                         </div>
                                         <div className="text-2xl">🌐</div>
                                     </div>
@@ -553,7 +693,7 @@ export default function Checkout() {
                         </div>
 
                         {/* Payment Guide */}
-                        <div className={`mt-4 p-4 ${isKorean ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'} rounded-lg`}>
+                        {/* <div className={`mt-4 p-4 ${isKorean ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'} rounded-lg`}>
                             <div className="flex items-start space-x-3">
                                 <div className={`${isKorean ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400'} mt-0.5`}>
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -578,7 +718,7 @@ export default function Checkout() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Security Notice */}
