@@ -165,6 +165,7 @@ export default function Payment() {
                 membershipTier,
                 membershipDuration,
                 nextBillingDate: nextBillingDate.toISOString(),
+                next_billing_date: nextBillingDate.toISOString(), // snake_case로도 시도
                 maxRetries: 3,
                 executeFirstPayment: true
             };
