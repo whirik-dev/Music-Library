@@ -94,7 +94,7 @@ function SelectPlan({ data, onClick, selected, t, userInfo, toggleAuthModal }) {
 }
 
 // Animated number component - count up from 0 to target value
-function AnimatedNumber({ value, prefix = "", suffix = "" }) {
+function AnimatedNumber({ value, prefix = "", suffix = "", isKorean = true }) {
     const [currentValue, setCurrentValue] = useState(0);
     const targetValue = Number(value) || 0;
 
@@ -112,16 +112,25 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }) {
                 setCurrentValue(targetValue);
                 clearInterval(timer);
             } else {
-                setCurrentValue(Math.round(increment * step));
+                // USD의 경우 소수점 단위로 증가
+                if (isKorean) {
+                    setCurrentValue(Math.round(increment * step));
+                } else {
+                    setCurrentValue(Math.round(increment * step * 100) / 100);
+                }
             }
         }, duration / steps);
 
         return () => clearInterval(timer);
-    }, [targetValue]);
+    }, [targetValue, isKorean]);
+
+    const formattedValue = isKorean 
+        ? currentValue.toLocaleString('ko-KR')
+        : currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     return (
         <span>
-            {prefix}{currentValue.toLocaleString('ko-KR')}{suffix}
+            {prefix}{formattedValue}{suffix}
         </span>
     );
 }
@@ -143,7 +152,7 @@ function CalculateDetail({ name, content, className, total = false, yearly = fal
             <div className={total ? "text-lg font-bold" : "font-medium"}>{name}</div>
             <div className="">
                 {animated ? (
-                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} prefix={currencySymbol} />
+                    <AnimatedNumber key={`${name}-${numericValue}`} value={numericValue} prefix={currencySymbol} isKorean={isKorean} />
                 ) : (
                     `${isNumeric ? currencySymbol + price2string(numericValue) : content}`
                 )}
