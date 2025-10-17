@@ -398,18 +398,22 @@ export default function Checkout() {
 
             // 빌링의 경우 requestBillingAuth 사용, 그 외에는 requestPayment 사용
             if (isKorean && method === 'BILLING') {
-                // 빌링키 발급 및 첫 결제를 위한 정보를 URL에 포함
-                const billingParams = new URLSearchParams({
+                // 빌링 결제 정보를 세션 스토리지에 저장 (토스 리다이렉트 후 사용)
+                const billingPaymentInfo = {
                     orderId: orderId,
-                    amount: finalAmount.toString(),
-                    originalAmount: originalAmount.toString(),
+                    amount: finalAmount,
+                    originalAmount: originalAmount,
                     orderName: planName,
                     promotionCode: promotionData?.code || '',
-                }).toString();
+                    membershipPlan: selectedMembershipPlan?.planName?.toUpperCase(),
+                    paymentType: selectedPaymentType,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('billingPaymentInfo', JSON.stringify(billingPaymentInfo));
 
                 await payment.requestBillingAuth({
                     method: 'CARD', // 빌링은 카드만 지원
-                    successUrl: `${window.location.origin}/payment?r=success&type=billing&${billingParams}`,
+                    successUrl: `${window.location.origin}/payment?r=success&type=billing`,
                     failUrl: `${window.location.origin}/payment?r=fail&type=billing`,
                     customerEmail: userInfo?.email || 'user@example.com',
                     customerName: userInfo?.name || 'User Name',

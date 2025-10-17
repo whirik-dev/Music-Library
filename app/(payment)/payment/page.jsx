@@ -293,9 +293,29 @@ export default function Payment() {
 
         // 빌링 타입: authKey와 customerKey로 빌링키 발급 및 첫 결제
         if (resultParam === 'success' && paymentType === 'billing' && authKey && customerKey) {
-            const originalAmount = searchParams.get('originalAmount');
-            const promotionCode = searchParams.get('promotionCode');
-            confirmBillingPayment(authKey, customerKey, orderId, amount, orderName, originalAmount, promotionCode);
+            // 세션 스토리지에서 결제 정보 가져오기
+            const billingPaymentInfoStr = sessionStorage.getItem('billingPaymentInfo');
+            let originalAmount = null;
+            let promotionCode = null;
+            let storedOrderName = orderName;
+            let storedAmount = amount;
+
+            if (billingPaymentInfoStr) {
+                try {
+                    const billingPaymentInfo = JSON.parse(billingPaymentInfoStr);
+                    originalAmount = billingPaymentInfo.originalAmount;
+                    promotionCode = billingPaymentInfo.promotionCode;
+                    storedOrderName = billingPaymentInfo.orderName || orderName;
+                    storedAmount = billingPaymentInfo.amount || amount;
+                    
+                    // 사용 후 삭제
+                    sessionStorage.removeItem('billingPaymentInfo');
+                } catch (e) {
+                    console.error('Failed to parse billing payment info:', e);
+                }
+            }
+
+            confirmBillingPayment(authKey, customerKey, orderId, storedAmount, storedOrderName, originalAmount, promotionCode);
         }
         // 일반 결제: r=success이고 필요한 파라미터가 모두 있는 경우
         else if (resultParam === 'success' && paymentKey && orderId && amount) {
