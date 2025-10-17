@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import Hero from "@/components/ui/Hero";
 import Box from "@/components/ui/Box";
+import Playlists from "@/components/playlist/Playlists";
 
 export default function Playlist() 
 {
@@ -8,11 +9,7 @@ export default function Playlist()
     
     return (
         <div className="min-h-screen relative">
-            <Box
-            title={t('title')}
-            >
-            {t('content')}
-            </Box>
+            <Playlists />
         </div>
     );
 }

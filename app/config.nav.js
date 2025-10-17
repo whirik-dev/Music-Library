@@ -4,11 +4,11 @@ const ListOfNavigation = [
         pagename : "explorer",
         path : "/",
     },
-    // {
-    //     key : 'nav-2',
-    //     pagename : "playlist",
-    //     path : "/playlist",
-    // },
+    {
+        key : 'nav-2',
+        pagename : "playlist",
+        path : "/playlist",
+    },
 ]
 
 export default ListOfNavigation
