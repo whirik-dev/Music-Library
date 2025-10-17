@@ -124,7 +124,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "", isKorean = true }) {
         return () => clearInterval(timer);
     }, [targetValue, isKorean]);
 
-    const formattedValue = isKorean 
+    const formattedValue = isKorean
         ? currentValue.toLocaleString('ko-KR')
         : currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -293,9 +293,22 @@ export default function Checkout() {
                 ? selectedPlan.pricing[currency].yearlyTotal
                 : selectedPlan.pricing[currency].monthly;
 
+            // 프로모션 할인 적용
+            const discountedAmount = Math.max(0, baseAmount - (promotionData?.discount?.discountAmount || 0));
+
+            // 부가세 계산
+            const vatAmount = isKorean
+                ? Math.round(discountedAmount * 0.1)
+                : Math.round(discountedAmount * 0.1 * 100) / 100;
+
+            // 부가세 포함 총액
+            const finalAmount = isKorean
+                ? discountedAmount + vatAmount
+                : Math.round((discountedAmount + vatAmount) * 100) / 100;
+
             // 최소 결제 금액 검증 (KRW: 100원, USD: 0.5달러)
             const minAmount = isKorean ? 100 : 0.5;
-            if (baseAmount < minAmount) {
+            if (finalAmount < minAmount) {
                 alert(t('payment.minimum_amount_error'));
                 return;
             }
@@ -308,7 +321,7 @@ export default function Checkout() {
                 // 한국어: 토스 빌링 (자동결제) 사용
                 paymentData = {
                     method: 'BILLING', // 빌링 방식
-                    amount: baseAmount,
+                    amount: finalAmount,
                     orderId: orderId,
                     orderName: planName.length > 100 ? planName.substring(0, 100) : planName,
                     successUrl: `${window.location.origin}/payment?r=success`,
@@ -316,14 +329,11 @@ export default function Checkout() {
                 };
             } else {
                 // 비한국어: PayPal 해외간편결제 사용
-                // USD 가격을 직접 사용
-                const paymentAmount = baseAmount;
-
                 paymentData = {
                     method: 'FOREIGN_EASY_PAY', // PayPal은 해외간편결제 방식
                     amount: {
                         currency: 'USD', // PayPal은 USD 필수
-                        value: paymentAmount,
+                        value: finalAmount,
                     },
                     orderId: orderId,
                     orderName: planName.length > 100 ? planName.substring(0, 100) : planName,
@@ -374,7 +384,7 @@ export default function Checkout() {
             // 결제 시도 추적
             trackPayment(
                 isKorean ? 'BILLING' : 'PAYPAL',
-                totalWithVat
+                finalAmount
             );
             trackButtonClick('Payment Attempt', 'Checkout Page');
 
@@ -383,10 +393,10 @@ export default function Checkout() {
                 // 빌링키 발급 및 첫 결제를 위한 정보를 URL에 포함
                 const billingParams = new URLSearchParams({
                     orderId: orderId,
-                    amount: baseAmount.toString(),
+                    amount: finalAmount.toString(),
                     orderName: planName,
                 }).toString();
-                
+
                 await payment.requestBillingAuth({
                     method: 'CARD', // 빌링은 카드만 지원
                     successUrl: `${window.location.origin}/payment?r=success&type=billing&${billingParams}`,
@@ -486,12 +496,12 @@ export default function Checkout() {
     // locale에 따라 통화 선택
     const currency = isKorean ? 'krw' : 'usd';
     const currencySymbol = isKorean ? '₩' : '$';
-    
+
     const priceYearlyMonthly = selectedPlan?.pricing[currency].yearlyMonthly || 0; // Monthly unit price for yearly payment
     const priceMonthly = selectedPlan?.pricing[currency].monthly || 0; // Monthly payment price
     const priceYearlyTotal = selectedPlan?.pricing[currency].yearlyTotal || 0; // Yearly total amount
     const monthlySavings = priceMonthly - priceYearlyMonthly;
-    const savings = isKorean 
+    const savings = isKorean
         ? (selectedPlan?.pricing.krw.savings || 0)
         : (selectedPlan ? (selectedPlan.pricing.usd.monthly * 12 - selectedPlan.pricing.usd.yearlyTotal) : 0); // Total savings amount
 
@@ -504,12 +514,12 @@ export default function Checkout() {
 
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
     const discountedAmount = Math.max(0, baseAmount - promotionDiscount);
-    
+
     // VAT 계산 (KRW는 정수, USD는 소수점 2자리)
-    const vatAmount = isKorean 
+    const vatAmount = isKorean
         ? Math.round(discountedAmount * 0.1)
         : Math.round(discountedAmount * 0.1 * 100) / 100;
-    
+
     const totalWithVat = isKorean
         ? discountedAmount + vatAmount
         : Math.round((discountedAmount + vatAmount) * 100) / 100;
