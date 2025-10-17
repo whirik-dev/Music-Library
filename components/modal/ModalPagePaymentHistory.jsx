@@ -26,12 +26,16 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
     const formatDate = (dateString) => {
         if (!dateString) return '-';
         const date = new Date(dateString);
-        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     };
 
-    const formatAmount = (amount) => {
+    const formatAmount = (amount, currency = 'KRW') => {
         if (!amount) return '-';
-        return `₩${Number(amount).toLocaleString('ko-KR')}`;
+        const numAmount = Number(amount);
+        if (currency === 'KRW') {
+            return `₩${numAmount.toLocaleString('ko-KR')}`;
+        }
+        return `$${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const getStatusText = (status) => {
@@ -41,7 +45,9 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
             'PARTIAL_CANCELED': t('status_partial_canceled'),
             'WAITING_FOR_DEPOSIT': t('status_waiting'),
             'ABORTED': t('status_aborted'),
-            'EXPIRED': t('status_expired')
+            'EXPIRED': t('status_expired'),
+            'READY': 'Ready',
+            'IN_PROGRESS': 'In Progress'
         };
         return statusMap[status] || status;
     };
@@ -50,6 +56,7 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
         if (status === 'DONE') return 'text-green-600 dark:text-green-400';
         if (status === 'CANCELED' || status === 'ABORTED' || status === 'EXPIRED') return 'text-red-600 dark:text-red-400';
         if (status === 'PARTIAL_CANCELED') return 'text-orange-600 dark:text-orange-400';
+        if (status === 'READY' || status === 'IN_PROGRESS') return 'text-blue-600 dark:text-blue-400';
         return 'text-gray-600 dark:text-gray-400';
     };
 
@@ -57,13 +64,13 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
         <div className="border-b border-foreground/10 hover:bg-foreground/5 transition-colors">
             <div className="flex flex-row w-full py-3 text-sm">
                 <div className="w-1/5 text-foreground/70">
-                    {formatDate(data.approvedAt || data.requestedAt)}
+                    {formatDate(data.created_at || data.updated_at)}
                 </div>
-                <div className="w-1/5 text-foreground/70 truncate" title={data.orderId}>
-                    {data.orderId}
+                <div className="w-1/5 text-foreground/70 truncate" title={data.order_id}>
+                    {data.order_id}
                 </div>
                 <div className="w-1/5 text-foreground font-medium">
-                    {formatAmount(data.amount)}
+                    {formatAmount(data.amount, data.currency)}
                 </div>
                 <div className={`w-1/5 font-medium ${getStatusColor(data.status)}`}>
                     {getStatusText(data.status)}
@@ -80,7 +87,7 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
             {data.cancellations && data.cancellations.length > 0 && (
                 <div className="px-4 pb-3">
                     <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                        {t('canceled_info')}: {formatAmount(data.cancellations[0].cancelAmount)} - {data.cancellations[0].cancelReason}
+                        {t('canceled_info')}: {formatAmount(data.cancellations[0].cancel_amount, data.currency)} - {data.cancellations[0].cancel_reason}
                     </div>
                 </div>
             )}
@@ -134,8 +141,10 @@ const ModalPageDownloadHistory = () => {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                setPayments(result.data.items || []);
-                setTotalPages(result.data.pagination?.totalPages || 1);
+                // API 응답이 data.data 구조로 중첩되어 있음
+                const items = result.data?.data || [];
+                setPayments(items);
+                setTotalPages(result.data?.pagination?.totalPages || 1);
                 setError(null);
             } else {
                 setError(result.message || t('fetch_error'));
