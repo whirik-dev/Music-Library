@@ -417,7 +417,22 @@
         "date": "Date",
         "plan": "Plan",
         "amount": "Amount",
-        "desc": "desc"
+        "desc": "desc",
+        "order_id": "Order ID",
+        "actions": "Actions",
+        "view_details": "View Details",
+        "status_done": "Done",
+        "status_canceled": "Canceled",
+        "status_partial_canceled": "Partial Canceled",
+        "status_waiting": "Waiting for Deposit",
+        "status_aborted": "Aborted",
+        "status_expired": "Expired",
+        "canceled_info": "Canceled Info",
+        "login_required": "Login Required",
+        "fetch_error": "Failed to fetch payment history",
+        "network_error": "Network error occurred",
+        "no_payment_history": "No payment history",
+        "prev": "Previous"
     },
     "tailored": {
         "request": "Request",
