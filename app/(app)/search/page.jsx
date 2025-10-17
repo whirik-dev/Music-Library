@@ -70,7 +70,9 @@ export default function Search() {
     return (
         <div className="min-h-screen relative">
             {queryExists && (
-                <FilterOptions />
+                <>
+                    {/* <FilterOptions /> */}
+                </>
             )}
 
             <MusicItemList>
