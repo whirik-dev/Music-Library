@@ -82,7 +82,7 @@ export default function Payment() {
     });
 
     // 빌링키 발급 및 첫 결제 API 호출
-    const confirmBillingPayment = async (authKey, customerKey, orderId, amount, orderName) => {
+    const confirmBillingPayment = async (authKey, customerKey, orderId, amount, orderName, originalAmount, promotionCode) => {
         try {
             setPaymentStatus('loading');
             setStorePaymentStatus('processing');
@@ -161,13 +161,15 @@ export default function Payment() {
                 cycleType,
                 billingDay,
                 amount: Number(amount),
+                originalAmount: originalAmount ? Number(originalAmount) : Number(amount),
                 orderName,
                 membershipTier,
                 membershipDuration,
                 nextBillingDate: nextBillingDate.toISOString(),
                 next_billing_date: nextBillingDate.toISOString(), // snake_case로도 시도
                 maxRetries: 3,
-                executeFirstPayment: true
+                executeFirstPayment: true,
+                promotionCode: promotionCode || undefined
             };
 
             console.log('빌링 사이클 생성 요청 데이터:', billingCreatePayload);
@@ -291,7 +293,9 @@ export default function Payment() {
 
         // 빌링 타입: authKey와 customerKey로 빌링키 발급 및 첫 결제
         if (resultParam === 'success' && paymentType === 'billing' && authKey && customerKey) {
-            confirmBillingPayment(authKey, customerKey, orderId, amount, orderName);
+            const originalAmount = searchParams.get('originalAmount');
+            const promotionCode = searchParams.get('promotionCode');
+            confirmBillingPayment(authKey, customerKey, orderId, amount, orderName, originalAmount, promotionCode);
         }
         // 일반 결제: r=success이고 필요한 파라미터가 모두 있는 경우
         else if (resultParam === 'success' && paymentKey && orderId && amount) {
