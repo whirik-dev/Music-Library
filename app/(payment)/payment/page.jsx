@@ -168,11 +168,17 @@ export default function Payment() {
                 nextBillingDate: nextBillingDate.toISOString(),
                 next_billing_date: nextBillingDate.toISOString(), // snake_case로도 시도
                 maxRetries: 3,
-                executeFirstPayment: true,
-                promotionCode: promotionCode || undefined
+                executeFirstPayment: true
             };
 
+            // promotionCode가 있으면 추가 (빈 문자열이 아닐 때만)
+            if (promotionCode && promotionCode.trim()) {
+                billingCreatePayload.promotionCode = promotionCode;
+            }
+
             console.log('빌링 사이클 생성 요청 데이터:', billingCreatePayload);
+            console.log('프로모션 코드:', promotionCode);
+            console.log('원래 금액:', originalAmount);
 
             const createResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/create`, {
                 method: 'POST',
@@ -300,19 +306,27 @@ export default function Payment() {
             let storedOrderName = orderName;
             let storedAmount = amount;
 
+            console.log('세션 스토리지 원본:', billingPaymentInfoStr);
+
             if (billingPaymentInfoStr) {
                 try {
                     const billingPaymentInfo = JSON.parse(billingPaymentInfoStr);
+                    console.log('파싱된 결제 정보:', billingPaymentInfo);
+                    
                     originalAmount = billingPaymentInfo.originalAmount;
                     promotionCode = billingPaymentInfo.promotionCode;
                     storedOrderName = billingPaymentInfo.orderName || orderName;
                     storedAmount = billingPaymentInfo.amount || amount;
+                    
+                    console.log('추출된 값:', { originalAmount, promotionCode, storedOrderName, storedAmount });
                     
                     // 사용 후 삭제
                     sessionStorage.removeItem('billingPaymentInfo');
                 } catch (e) {
                     console.error('Failed to parse billing payment info:', e);
                 }
+            } else {
+                console.warn('세션 스토리지에 billingPaymentInfo가 없습니다.');
             }
 
             confirmBillingPayment(authKey, customerKey, orderId, storedAmount, storedOrderName, originalAmount, promotionCode);
