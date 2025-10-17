@@ -1,37 +1,95 @@
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import useToggle from "@/utils/useToggle";
 import modalStore from "@/stores/modalStore";
 
 import ModalCard from "@/components/modal/ModalCard";
 
-const ModalPageDownloadHistoryItem = ({ type, data }) => {
+const PaymentHistoryItem = ({ type, data }) => {
     const t = useTranslations('modal');
-    
-    return (
-        <div className="border-b-1 border-zinc-500/50">
-            <div className={`flex flex-row w-full py-2 ${type === "head" ? "text-foreground" : "text-foreground/50"}`}>
-                <div className="w-1/5 flex flex-row gap-2 items-center justify-start capitalize">
-                    {type === "head" ? t('date') : data.date}
-                </div>
-                <div className="w-1/5 flex justify-start">
-                    {type === "head" ? t('plan') : data.plan}
-                </div>
-                <div className="w-1/5 flex justify-start">
-                    {type === "head" ? t('amount') : data.amount}
-                </div>
-                <div className="w-1/5 flex flex-row gap-2 items-center justify-start capitalize">
-                    {type === "head" ? t('status') : data.status}
-                </div>
-                <div className="ml-auto">
-                    {t('btn_area')}
+
+    if (type === "head") {
+        return (
+            <div className="border-b-2 border-foreground/20">
+                <div className="flex flex-row w-full py-3 text-foreground font-semibold text-sm">
+                    <div className="w-1/3">{t('date')}</div>
+                    <div className="w-1/3">{t('order_id')}</div>
+                    <div className="w-1/3">{t('amount')}</div>
                 </div>
             </div>
-        </div>
-    )
-}
+        );
+    }
 
-const ModalPageDownloadHistory = ({}) => {
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const formatAmount = (amount, currency = 'KRW') => {
+        if (!amount) return '-';
+        const numAmount = Number(amount);
+        if (currency === 'KRW') {
+            return `₩${numAmount.toLocaleString('ko-KR')}`;
+        }
+        return `$${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const getStatusText = (status) => {
+        const statusMap = {
+            'DONE': t('status_done'),
+            'CANCELED': t('status_canceled'),
+            'PARTIAL_CANCELED': t('status_partial_canceled'),
+            'WAITING_FOR_DEPOSIT': t('status_waiting'),
+            'ABORTED': t('status_aborted'),
+            'EXPIRED': t('status_expired'),
+            'READY': 'Ready',
+            'IN_PROGRESS': 'In Progress'
+        };
+        return statusMap[status] || status;
+    };
+
+    const getStatusColor = (status) => {
+        if (status === 'DONE') return 'text-green-600 dark:text-green-400';
+        if (status === 'CANCELED' || status === 'ABORTED' || status === 'EXPIRED') return 'text-red-600 dark:text-red-400';
+        if (status === 'PARTIAL_CANCELED') return 'text-orange-600 dark:text-orange-400';
+        if (status === 'READY' || status === 'IN_PROGRESS') return 'text-blue-600 dark:text-blue-400';
+        return 'text-gray-600 dark:text-gray-400';
+    };
+
+    return (
+        <div className="border-b border-foreground/10 hover:bg-foreground/5 transition-colors">
+            <div className="flex flex-row w-full py-3 text-sm">
+                <div className="w-1/3 text-foreground/70">
+                    {formatDate(data.created_at || data.updated_at)}
+                </div>
+                <div className="w-1/3 text-foreground/70 truncate" title={data.order_id}>
+                    {data.order_id}
+                </div>
+                <div className="w-1/3 text-foreground font-medium">
+                    {formatAmount(data.amount, data.currency)}
+                </div>
+            </div>
+            {data.cancellations && data.cancellations.length > 0 && (
+                <div className="px-4 pb-3">
+                    <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                        {t('canceled_info')}: {formatAmount(data.cancellations[0].cancel_amount, data.currency)} - {data.cancellations[0].cancel_reason}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ModalPageDownloadHistory = () => {
     const t = useTranslations('modal');
+    const { data: session } = useSession();
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useToggle(
         () => {
@@ -45,14 +103,101 @@ const ModalPageDownloadHistory = ({}) => {
 
     const { toggleExpand, setDepth } = modalStore();
 
+    useEffect(() => {
+        fetchPaymentHistory();
+    }, [page, session]);
+
+    const fetchPaymentHistory = async () => {
+        if (!session?.user?.ssid) {
+            setError(t('login_required'));
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payments/user/history-with-cancellations?page=${page}&limit=10`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${session.user.ssid}`
+                    }
+                }
+            );
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // API 응답이 data.data 구조로 중첩되어 있음
+                const items = result.data?.data || [];
+                setPayments(items);
+                setTotalPages(result.data?.pagination?.totalPages || 1);
+                setError(null);
+            } else {
+                setError(result.message || t('fetch_error'));
+            }
+        } catch (err) {
+            console.error('Failed to fetch payment history:', err);
+            setError(t('network_error'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
     return (
         <>
-            <ModalCard title={t('payment_history')}/>
-            {/* <div className="mx-3">
-                <ModalPageDownloadHistoryItem type="head" data={{ name:`asd`, timestamp:`2025-01-04` }}/>
-                <ModalPageDownloadHistoryItem data={{ date:`2025-01-04`,plan:`basic`, amount:`7.99 USD`, status:`success` }}/>
-            </div> */}
+            <ModalCard title={t('payment_history')} />
+            <div className="mx-3 mb-5">
+                {loading ? (
+                    <div className="text-center py-10 text-foreground/50">
+                        {t('loading')}...
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-10 text-red-600 dark:text-red-400">
+                        {error}
+                    </div>
+                ) : payments.length === 0 ? (
+                    <div className="text-center py-10 text-foreground/50">
+                        {t('no_payment_history')}
+                    </div>
+                ) : (
+                    <>
+                        <PaymentHistoryItem type="head" />
+                        {payments.map((payment) => (
+                            <PaymentHistoryItem
+                                key={payment.id}
+                                data={payment}
+                            />
+                        ))}
+
+                        {totalPages > 1 && (
+                            <div className="flex justify-center gap-2 mt-5">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="px-3 py-1 rounded bg-foreground/10 hover:bg-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                                >
+                                    {t('prev')}
+                                </button>
+                                <span className="px-3 py-1 text-sm text-foreground/70">
+                                    {page} / {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="px-3 py-1 rounded bg-foreground/10 hover:bg-foreground/20 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                                >
+                                    {t('next')}
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </>
-    )
-}
+    );
+};
+
 export default ModalPageDownloadHistory;

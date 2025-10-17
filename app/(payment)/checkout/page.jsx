@@ -124,7 +124,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "", isKorean = true }) {
         return () => clearInterval(timer);
     }, [targetValue, isKorean]);
 
-    const formattedValue = isKorean 
+    const formattedValue = isKorean
         ? currentValue.toLocaleString('ko-KR')
         : currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -288,14 +288,35 @@ export default function Checkout() {
                 return;
             }
 
-            // locale에 따라 적절한 통화로 baseAmount 계산
+            // locale에 따라 적절한 통화로 baseAmount 계산 (부가세 제외 원래 금액)
             const baseAmount = selectedPaymentType === 'yearly'
                 ? selectedPlan.pricing[currency].yearlyTotal
                 : selectedPlan.pricing[currency].monthly;
 
+            // 원래 금액 (부가세 포함) - 빌링 사이클용
+            const originalVatAmount = isKorean
+                ? Math.round(baseAmount * 0.1)
+                : Math.round(baseAmount * 0.1 * 100) / 100;
+            const originalAmount = isKorean
+                ? baseAmount + originalVatAmount
+                : Math.round((baseAmount + originalVatAmount) * 100) / 100;
+
+            // 프로모션 할인 적용
+            const discountedAmount = Math.max(0, baseAmount - (promotionData?.discount?.discountAmount || 0));
+
+            // 부가세 계산 (할인 후 금액 기준)
+            const vatAmount = isKorean
+                ? Math.round(discountedAmount * 0.1)
+                : Math.round(discountedAmount * 0.1 * 100) / 100;
+
+            // 부가세 포함 총액 (실제 결제 금액)
+            const finalAmount = isKorean
+                ? discountedAmount + vatAmount
+                : Math.round((discountedAmount + vatAmount) * 100) / 100;
+
             // 최소 결제 금액 검증 (KRW: 100원, USD: 0.5달러)
             const minAmount = isKorean ? 100 : 0.5;
-            if (baseAmount < minAmount) {
+            if (finalAmount < minAmount) {
                 alert(t('payment.minimum_amount_error'));
                 return;
             }
@@ -308,7 +329,7 @@ export default function Checkout() {
                 // 한국어: 토스 빌링 (자동결제) 사용
                 paymentData = {
                     method: 'BILLING', // 빌링 방식
-                    amount: baseAmount,
+                    amount: finalAmount,
                     orderId: orderId,
                     orderName: planName.length > 100 ? planName.substring(0, 100) : planName,
                     successUrl: `${window.location.origin}/payment?r=success`,
@@ -316,14 +337,11 @@ export default function Checkout() {
                 };
             } else {
                 // 비한국어: PayPal 해외간편결제 사용
-                // USD 가격을 직접 사용
-                const paymentAmount = baseAmount;
-
                 paymentData = {
                     method: 'FOREIGN_EASY_PAY', // PayPal은 해외간편결제 방식
                     amount: {
                         currency: 'USD', // PayPal은 USD 필수
-                        value: paymentAmount,
+                        value: finalAmount,
                     },
                     orderId: orderId,
                     orderName: planName.length > 100 ? planName.substring(0, 100) : planName,
@@ -374,12 +392,25 @@ export default function Checkout() {
             // 결제 시도 추적
             trackPayment(
                 isKorean ? 'BILLING' : 'PAYPAL',
-                totalWithVat
+                finalAmount
             );
             trackButtonClick('Payment Attempt', 'Checkout Page');
 
             // 빌링의 경우 requestBillingAuth 사용, 그 외에는 requestPayment 사용
             if (isKorean && method === 'BILLING') {
+                // 빌링 결제 정보를 세션 스토리지에 저장 (토스 리다이렉트 후 사용)
+                const billingPaymentInfo = {
+                    orderId: orderId,
+                    amount: finalAmount,
+                    originalAmount: originalAmount,
+                    orderName: planName,
+                    promotionCode: promotionData?.code || '',
+                    membershipPlan: selectedMembershipPlan?.planName?.toUpperCase(),
+                    paymentType: selectedPaymentType,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('billingPaymentInfo', JSON.stringify(billingPaymentInfo));
+
                 await payment.requestBillingAuth({
                     method: 'CARD', // 빌링은 카드만 지원
                     successUrl: `${window.location.origin}/payment?r=success&type=billing`,
@@ -479,12 +510,12 @@ export default function Checkout() {
     // locale에 따라 통화 선택
     const currency = isKorean ? 'krw' : 'usd';
     const currencySymbol = isKorean ? '₩' : '$';
-    
+
     const priceYearlyMonthly = selectedPlan?.pricing[currency].yearlyMonthly || 0; // Monthly unit price for yearly payment
     const priceMonthly = selectedPlan?.pricing[currency].monthly || 0; // Monthly payment price
     const priceYearlyTotal = selectedPlan?.pricing[currency].yearlyTotal || 0; // Yearly total amount
     const monthlySavings = priceMonthly - priceYearlyMonthly;
-    const savings = isKorean 
+    const savings = isKorean
         ? (selectedPlan?.pricing.krw.savings || 0)
         : (selectedPlan ? (selectedPlan.pricing.usd.monthly * 12 - selectedPlan.pricing.usd.yearlyTotal) : 0); // Total savings amount
 
@@ -497,12 +528,12 @@ export default function Checkout() {
 
     const baseAmount = selectedPaymentType === 'yearly' ? priceYearlyTotal : priceMonthly;
     const discountedAmount = Math.max(0, baseAmount - promotionDiscount);
-    
+
     // VAT 계산 (KRW는 정수, USD는 소수점 2자리)
-    const vatAmount = isKorean 
+    const vatAmount = isKorean
         ? Math.round(discountedAmount * 0.1)
         : Math.round(discountedAmount * 0.1 * 100) / 100;
-    
+
     const totalWithVat = isKorean
         ? discountedAmount + vatAmount
         : Math.round((discountedAmount + vatAmount) * 100) / 100;
@@ -534,7 +565,12 @@ export default function Checkout() {
                                 promotionRatio: savings > 0 ? `${currencySymbol}${formatNumber(savings)} ${t('payment.savings')}` : '',
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_yearly')}`
                             }}
-                            onClick={() => setSelectedPaymentType('yearly')}
+                            onClick={() => {
+                                setSelectedPaymentType('yearly');
+                                setPromotionCode('');
+                                setPromotionData(null);
+                                setPromotionError('');
+                            }}
                             selected={selectedPaymentType === 'yearly'}
                             t={t}
                             userInfo={userInfo}
@@ -547,7 +583,12 @@ export default function Checkout() {
                                 interval: t('payment.monthly'),
                                 description: `${selectedMembershipPlan?.planName?.toUpperCase()} ${t('payment.plan')} ${t('payment.plan_monthly')}`
                             }}
-                            onClick={() => setSelectedPaymentType('monthly')}
+                            onClick={() => {
+                                setSelectedPaymentType('monthly');
+                                setPromotionCode('');
+                                setPromotionData(null);
+                                setPromotionError('');
+                            }}
                             selected={selectedPaymentType === 'monthly'}
                             t={t}
                             userInfo={userInfo}
@@ -605,41 +646,43 @@ export default function Checkout() {
                         )}
                     </div>
 
-                    <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
-                        <div className="text-lg font-semibold">{t('payment.promotion_code')}</div>
-                        <div className="flex flex-col flex-1 gap-3">
-                            <div className="flex flex-row gap-3">
-                                <InputField
-                                    className="flex-1"
-                                    value={promotionCode}
-                                    onChange={(e) => setPromotionCode(e.target.value.toUpperCase())}
-                                    placeholder={t('payment.enter_promotion_code')}
-                                    disabled={isCheckingPromotion}
-                                />
-                                <Button
-                                    name={isCheckingPromotion ? t('payment.checking') : t('payment.apply')}
-                                    onClick={checkPromotionCode}
-                                    disabled={isCheckingPromotion || !promotionCode.trim()}
-                                />
+                    {selectedPaymentType === 'monthly' && (
+                        <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
+                            <div className="text-lg font-semibold">{t('payment.promotion_code')}</div>
+                            <div className="flex flex-col flex-1 gap-3">
+                                <div className="flex flex-row gap-3">
+                                    <InputField
+                                        className="flex-1"
+                                        value={promotionCode}
+                                        onChange={(e) => setPromotionCode(e.target.value.toUpperCase())}
+                                        placeholder={t('payment.enter_promotion_code')}
+                                        disabled={isCheckingPromotion}
+                                    />
+                                    <Button
+                                        name={isCheckingPromotion ? t('payment.checking') : t('payment.apply')}
+                                        onClick={checkPromotionCode}
+                                        disabled={isCheckingPromotion || !promotionCode.trim()}
+                                    />
+                                </div>
+                                {promotionError && (
+                                    <div className="text-sm text-red-500 dark:text-red-400">
+                                        ❌ {promotionError}
+                                    </div>
+                                )}
+                                {promotionData && (
+                                    <div className="text-sm text-green-600 dark:text-green-400">
+                                        ✅ {promotionData.description || t('payment.promotion_applied')}
+                                        {promotionData.discount && (
+                                            <div className="mt-1">
+                                                {currencySymbol}{formatNumber(promotionData.discount.discountAmount)} {t('payment.discount_applied')}
+                                                ({promotionData.discount.discountRate}%)
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            {promotionError && (
-                                <div className="text-sm text-red-500 dark:text-red-400">
-                                    ❌ {promotionError}
-                                </div>
-                            )}
-                            {promotionData && (
-                                <div className="text-sm text-green-600 dark:text-green-400">
-                                    ✅ {promotionData.description || t('payment.promotion_applied')}
-                                    {promotionData.discount && (
-                                        <div className="mt-1">
-                                            {currencySymbol}{formatNumber(promotionData.discount.discountAmount)} {t('payment.discount_applied')}
-                                            ({promotionData.discount.discountRate}%)
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
-                    </div>
+                    )}
 
                     <div className="w-full flex flex-col gap-5 rounded-sm px-10 py-5 bg-foreground/2">
                         <div className="text-lg font-semibold">{t('payment.payment_methods')}</div>

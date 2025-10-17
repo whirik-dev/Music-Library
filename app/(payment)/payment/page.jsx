@@ -48,9 +48,17 @@ export default function Payment() {
 
     // 토스페이먼츠 결제 응답 파라미터
     const resultParam = searchParams.get('r'); // 'success' 또는 'fail'
+    const paymentType = searchParams.get('type'); // 'billing' 또는 일반 결제
+
+    // 일반 결제 파라미터
     const paymentKey = searchParams.get('paymentKey');
     const orderId = searchParams.get('orderId');
     const amount = searchParams.get('amount');
+    const orderName = searchParams.get('orderName');
+
+    // 빌링키 발급 파라미터
+    const authKey = searchParams.get('authKey');
+    const customerKey = searchParams.get('customerKey');
 
     // 결제 실패 파라미터
     const errorCode = searchParams.get('code');
@@ -63,14 +71,151 @@ export default function Payment() {
 
     console.log('결제 응답 파라미터:', {
         resultParam,
+        paymentType,
         paymentKey,
         orderId,
         amount,
+        authKey,
+        customerKey,
         errorCode,
         errorMessage
     });
 
-    // 결제 승인 API 호출
+    // 빌링키 발급 및 첫 결제 API 호출
+    const confirmBillingPayment = async (authKey, customerKey, orderId, amount, orderName, originalAmount, promotionCode) => {
+        try {
+            setPaymentStatus('loading');
+            setStorePaymentStatus('processing');
+
+            // 세션 체크
+            if (!session || !session.user || !session.user.ssid) {
+                const errorMsg = '로그인 정보를 확인할 수 없습니다.';
+                setPaymentStatus('failed');
+                setError(errorMsg);
+                setStorePaymentStatus('failed');
+                setStorePaymentError(errorMsg);
+                return;
+            }
+
+            const userSsid = session.user.ssid;
+
+            // Step 1: 빌링키 발급
+            const issueResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/issue-key`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userSsid}`
+                },
+                body: JSON.stringify({
+                    authKey,
+                    customerKey
+                })
+            });
+
+            const issueData = await issueResponse.json();
+            console.log('빌링키 발급 응답:', issueData);
+
+            if (!issueResponse.ok) {
+                const errorMsg = issueData.error || issueData.message || '빌링키 발급 중 오류가 발생했습니다.';
+                setPaymentStatus('failed');
+                setError(errorMsg);
+                setStorePaymentStatus('failed');
+                setStorePaymentError(errorMsg);
+                return;
+            }
+
+            const responseData = issueData.data || issueData;
+            const billingKey = responseData.billingKey;
+
+            if (!billingKey) {
+                const errorMsg = '빌링키를 받지 못했습니다.';
+                setPaymentStatus('failed');
+                setError(errorMsg);
+                setStorePaymentStatus('failed');
+                setStorePaymentError(errorMsg);
+                return;
+            }
+
+            // Step 2: 빌링 사이클 생성 및 첫 결제
+            // orderName에서 멤버십 정보 파싱 (예: "PRO PLAN (yearly payment)" -> tier: PRO, cycle: YEARLY)
+            const tierMatch = orderName?.match(/^(\w+)\s+PLAN/i);
+            const cycleMatch = orderName?.match(/\((yearly|monthly)/i);
+
+            const membershipTier = tierMatch ? tierMatch[1].toUpperCase() : 'BASIC';
+            const cycleType = cycleMatch && cycleMatch[1].toLowerCase() === 'yearly' ? 'YEARLY' : 'MONTHLY';
+            const billingDay = cycleType === 'MONTHLY' ? new Date().getDate() : new Date().getMonth() * 30 + new Date().getDate();
+            const membershipDuration = cycleType === 'MONTHLY' ? 30 : 365;
+
+            // 다음 결제일 계산
+            const now = new Date();
+            const nextBillingDate = new Date(now);
+            if (cycleType === 'MONTHLY') {
+                nextBillingDate.setMonth(now.getMonth() + 1);
+            } else {
+                nextBillingDate.setFullYear(now.getFullYear() + 1);
+            }
+
+            const billingCreatePayload = {
+                customerKey,
+                billingKey,
+                cycleType,
+                billingDay,
+                amount: Number(amount),
+                originalAmount: originalAmount ? Number(originalAmount) : Number(amount),
+                orderName,
+                membershipTier,
+                membershipDuration,
+                nextBillingDate: nextBillingDate.toISOString(),
+                next_billing_date: nextBillingDate.toISOString(), // snake_case로도 시도
+                maxRetries: 3,
+                executeFirstPayment: true
+            };
+
+            // promotionCode가 있으면 추가 (빈 문자열이 아닐 때만)
+            if (promotionCode && promotionCode.trim()) {
+                billingCreatePayload.promotionCode = promotionCode;
+            }
+
+            console.log('빌링 사이클 생성 요청 데이터:', billingCreatePayload);
+            console.log('프로모션 코드:', promotionCode);
+            console.log('원래 금액:', originalAmount);
+
+            const createResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userSsid}`
+                },
+                body: JSON.stringify(billingCreatePayload)
+            });
+
+            const createData = await createResponse.json();
+            console.log('빌링 사이클 생성 응답:', createData);
+
+            if (createResponse.ok) {
+                setPaymentStatus('success');
+                setPaymentData(createData.data);
+                setStorePaymentStatus('success');
+                setPaymentResult(createData.data);
+                setStorePaymentError(null);
+            } else {
+                const errorMsg = createData.error || '빌링 사이클 생성 중 오류가 발생했습니다.';
+                setPaymentStatus('failed');
+                setError(errorMsg);
+                setStorePaymentStatus('failed');
+                setStorePaymentError(errorMsg);
+            }
+        } catch (error) {
+            console.error('빌링 처리 오류:', error);
+            const errorMsg = '빌링 처리 중 네트워크 오류가 발생했습니다.';
+            setPaymentStatus('failed');
+            setError(errorMsg);
+            setStorePaymentStatus('failed');
+            setStorePaymentError(errorMsg);
+        }
+    };
+
+    // 일반 결제 승인 API 호출
     const confirmPayment = async (paymentKey, orderId, amount) => {
         try {
             setPaymentStatus('loading');
@@ -102,7 +247,7 @@ export default function Payment() {
             });
 
             const data = await response.json();
-            console.log(data);
+            console.log('일반 결제 승인 응답:', data);
 
             if (response.ok) {
                 setPaymentStatus('success');
@@ -152,8 +297,42 @@ export default function Payment() {
             return;
         }
 
-        // r=success이고 필요한 파라미터가 모두 있는 경우
-        if (resultParam === 'success' && paymentKey && orderId && amount) {
+        // 빌링 타입: authKey와 customerKey로 빌링키 발급 및 첫 결제
+        if (resultParam === 'success' && paymentType === 'billing' && authKey && customerKey) {
+            // 세션 스토리지에서 결제 정보 가져오기
+            const billingPaymentInfoStr = sessionStorage.getItem('billingPaymentInfo');
+            let originalAmount = null;
+            let promotionCode = null;
+            let storedOrderName = orderName;
+            let storedAmount = amount;
+
+            console.log('세션 스토리지 원본:', billingPaymentInfoStr);
+
+            if (billingPaymentInfoStr) {
+                try {
+                    const billingPaymentInfo = JSON.parse(billingPaymentInfoStr);
+                    console.log('파싱된 결제 정보:', billingPaymentInfo);
+                    
+                    originalAmount = billingPaymentInfo.originalAmount;
+                    promotionCode = billingPaymentInfo.promotionCode;
+                    storedOrderName = billingPaymentInfo.orderName || orderName;
+                    storedAmount = billingPaymentInfo.amount || amount;
+                    
+                    console.log('추출된 값:', { originalAmount, promotionCode, storedOrderName, storedAmount });
+                    
+                    // 사용 후 삭제
+                    sessionStorage.removeItem('billingPaymentInfo');
+                } catch (e) {
+                    console.error('Failed to parse billing payment info:', e);
+                }
+            } else {
+                console.warn('세션 스토리지에 billingPaymentInfo가 없습니다.');
+            }
+
+            confirmBillingPayment(authKey, customerKey, orderId, storedAmount, storedOrderName, originalAmount, promotionCode);
+        }
+        // 일반 결제: r=success이고 필요한 파라미터가 모두 있는 경우
+        else if (resultParam === 'success' && paymentKey && orderId && amount) {
             // 결제 데이터 검증
             const validation = validatePaymentData(paymentKey, orderId, amount);
             if (!validation.isValid) {
@@ -190,7 +369,7 @@ export default function Payment() {
             setStorePaymentStatus('failed');
             setStorePaymentError(errorMsg);
         }
-    }, [session, status, resultParam, paymentKey, orderId, amount, errorCode, errorMessage]);
+    }, [session, status, resultParam, paymentType, paymentKey, orderId, amount, authKey, customerKey, orderName, errorCode, errorMessage]);
     // 로딩 상태 렌더링 (세션 로딩 중이거나 결제 처리 중)
     if (status === 'loading' || paymentStatus === 'loading') {
         return (

@@ -27,19 +27,26 @@ const useInfiniteScroll = (loadMore, hasMore, isLoading) => {
         }
     }, [loadMore, hasMore, isLoading]);
 
-    // 옵저버를 설정하는 함수
-    const setupObserver = useCallback(() => {
-        const currentTriggerRef = triggerRef.current;
+    // ref가 설정될 때마다 옵저버 설정 시도
+    const enhancedTriggerRef = useCallback((element) => {
+        // 기존 옵저버 정리
+        if (observerRef.current) {
+            observerRef.current.disconnect();
+            observerRef.current = null;
+        }
 
-        if (currentTriggerRef && currentTriggerRef.isConnected && !observerRef.current) {
+        triggerRef.current = element;
+
+        if (element) {
+            // 즉시 옵저버 생성 및 관찰 시작
             try {
                 observerRef.current = new IntersectionObserver(handleIntersection, {
                     root: null,
-                    rootMargin: '0px 0px 100px 0px', // 뷰포트 하단 5% 지점에서 트리거
+                    rootMargin: '0px 0px 200px 0px', // 뷰포트 하단 200px 전에 트리거
                     threshold: 0
                 });
 
-                observerRef.current.observe(currentTriggerRef);
+                observerRef.current.observe(element);
             } catch (error) {
                 console.error('Failed to create intersection observer:', error);
             }
@@ -55,26 +62,6 @@ const useInfiniteScroll = (loadMore, hasMore, isLoading) => {
             }
         };
     }, []);
-
-    // ref가 설정될 때마다 옵저버 설정 시도
-    const enhancedTriggerRef = useCallback((element) => {
-        // 기존 옵저버 정리
-        if (observerRef.current) {
-            observerRef.current.disconnect();
-            observerRef.current = null;
-        }
-
-        triggerRef.current = element;
-
-        if (element) {
-            // DOM이 완전히 렌더링된 후 옵저버 설정
-            setTimeout(() => {
-                if (triggerRef.current === element) {
-                    setupObserver();
-                }
-            }, 100);
-        }
-    }, [setupObserver]);
 
     return enhancedTriggerRef;
 };
