@@ -6,18 +6,16 @@ import modalStore from "@/stores/modalStore";
 
 import ModalCard from "@/components/modal/ModalCard";
 
-const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
+const PaymentHistoryItem = ({ type, data }) => {
     const t = useTranslations('modal');
 
     if (type === "head") {
         return (
             <div className="border-b-2 border-foreground/20">
                 <div className="flex flex-row w-full py-3 text-foreground font-semibold text-sm">
-                    <div className="w-1/5">{t('date')}</div>
-                    <div className="w-1/5">{t('order_id')}</div>
-                    <div className="w-1/5">{t('amount')}</div>
-                    <div className="w-1/5">{t('status')}</div>
-                    <div className="w-1/5 text-right">{t('actions')}</div>
+                    <div className="w-1/3">{t('date')}</div>
+                    <div className="w-1/3">{t('order_id')}</div>
+                    <div className="w-1/3">{t('amount')}</div>
                 </div>
             </div>
         );
@@ -63,25 +61,14 @@ const PaymentHistoryItem = ({ type, data, onViewDetails }) => {
     return (
         <div className="border-b border-foreground/10 hover:bg-foreground/5 transition-colors">
             <div className="flex flex-row w-full py-3 text-sm">
-                <div className="w-1/5 text-foreground/70">
+                <div className="w-1/3 text-foreground/70">
                     {formatDate(data.created_at || data.updated_at)}
                 </div>
-                <div className="w-1/5 text-foreground/70 truncate" title={data.order_id}>
+                <div className="w-1/3 text-foreground/70 truncate" title={data.order_id}>
                     {data.order_id}
                 </div>
-                <div className="w-1/5 text-foreground font-medium">
+                <div className="w-1/3 text-foreground font-medium">
                     {formatAmount(data.amount, data.currency)}
-                </div>
-                <div className={`w-1/5 font-medium ${getStatusColor(data.status)}`}>
-                    {getStatusText(data.status)}
-                </div>
-                <div className="w-1/5 text-right">
-                    <button
-                        onClick={() => onViewDetails(data)}
-                        className="text-xs px-3 py-1 rounded bg-foreground/10 hover:bg-foreground/20 transition-colors"
-                    >
-                        {t('view_details')}
-                    </button>
                 </div>
             </div>
             {data.cancellations && data.cancellations.length > 0 && (
@@ -157,11 +144,7 @@ const ModalPageDownloadHistory = () => {
         }
     };
 
-    const handleViewDetails = (payment) => {
-        // 상세 정보 모달 또는 확장 뷰 구현
-        console.log('Payment details:', payment);
-        alert(JSON.stringify(payment, null, 2));
-    };
+
 
     return (
         <>
@@ -186,7 +169,6 @@ const ModalPageDownloadHistory = () => {
                             <PaymentHistoryItem
                                 key={payment.id}
                                 data={payment}
-                                onViewDetails={handleViewDetails}
                             />
                         ))}
 
