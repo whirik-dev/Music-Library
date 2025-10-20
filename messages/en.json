@@ -548,7 +548,22 @@
         },
         "playlist": {
             "title": "Playlist Page",
-            "content": "Playlist Page Content"
+            "content": "Playlist Page Content",
+            "my_playlists": "My Playlists",
+            "create_playlist": "Create Playlist",
+            "create_new_playlist": "Create New Playlist",
+            "playlist_title": "Playlist Title",
+            "playlist_description": "Description (optional)",
+            "make_public": "Make Public",
+            "create": "Create",
+            "cancel": "Cancel",
+            "enter_title": "Please enter a title",
+            "login_required": "Login required",
+            "loading": "Loading...",
+            "playlist_not_found": "Playlist not found",
+            "tracks": "tracks",
+            "no_music_in_playlist": "No music in this playlist",
+            "create_failed": "Failed to create playlist"
         },
         "pricing": {
             "hero_title": "Unlock Unlimited Access to Our Music Library!",

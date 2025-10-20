@@ -38,9 +38,9 @@ const Player = ({ }) => {
 
                 {/* 제목 */}
                 <div className="flex flex-col w-auto md:w-36 xl:w-48">
-                    <div className="font-bold">{status != null ? playingMetadata.find(item => item.type === "title")?.content : (<span className="text-white/30">{t('now_standby')}</span>)}</div>
+                    <div className="font-bold">{status != null && playingMetadata ? playingMetadata.find(item => item.type === "title")?.content : (<span className="text-white/30">{t('now_standby')}</span>)}</div>
                     <div className="hidden md:block text-foreground/40">
-                        {status != null ? playingMetadata.find(item => item.type === "subtitle")?.content
+                        {status != null && playingMetadata ? playingMetadata.find(item => item.type === "subtitle")?.content
                             : (<span className="text-foreground/30">{t('subtitle_placeholder')}</span>)}
                     </div>
                 </div>

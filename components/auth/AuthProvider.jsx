@@ -103,20 +103,8 @@ export default function AuthProvider() {
                         }
 
                         // favorite 아이디 가져오기 
-                        const userFavoriteId = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/favoriteId`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${session.user.ssid}`
-                            },
-                        })
-                        const userFavoriteIdData = await userFavoriteId.json();
-                        if (userFavoriteIdData.data) {
-                            const favoriteId = userFavoriteIdData.data.id;
-                            setFavoriteId(favoriteId); // 이건 그대로 유지
-
-                            // 바로 변수로 요청
-                            const userFavoriteList = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/playlist/${favoriteId}/musics`, {
+                        try {
+                            const userFavoriteId = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/favoriteId`, {
                                 method: 'GET',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -124,15 +112,47 @@ export default function AuthProvider() {
                                 },
                             });
 
-                            const userFavoriteListData = await userFavoriteList.json();
-                            if (userFavoriteListData.data.items && userFavoriteListData.data.items.length > 0) {
-                                // console.log('fl')
-                                // console.log(userFavoriteIdData);
-                                userFavoriteListData.data.items.forEach(m => {
-                                    // console.log(m.id);
-                                    addFavoriteList(m.id);
-                                });
+                            if (!userFavoriteId.ok) {
+                                console.error('Failed to fetch favorite ID:', userFavoriteId.status);
+                                return;
                             }
+
+                            const userFavoriteIdData = await userFavoriteId.json();
+                            
+                            if (userFavoriteIdData.data && userFavoriteIdData.data.id) {
+                                const favoriteId = userFavoriteIdData.data.id;
+                                setFavoriteId(favoriteId);
+
+                                // favorite 플레이리스트의 음악 목록 가져오기
+                                const userFavoriteList = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/playlist/${favoriteId}/musics?page=1&limit=1000`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${session.user.ssid}`
+                                    },
+                                });
+
+                                if (!userFavoriteList.ok) {
+                                    console.error('Failed to fetch favorite list:', userFavoriteList.status);
+                                    return;
+                                }
+
+                                const userFavoriteListData = await userFavoriteList.json();
+                                
+                                // API 응답 구조: { success: true, data: { items: [...], count, total_count, ... } }
+                                if (userFavoriteListData.success && userFavoriteListData.data && Array.isArray(userFavoriteListData.data.items)) {
+                                    userFavoriteListData.data.items.forEach(m => {
+                                        if (m && m.id) {
+                                            addFavoriteList(m.id);
+                                        }
+                                    });
+                                    console.log(`Loaded ${userFavoriteListData.data.items.length} favorite items`);
+                                } else {
+                                    console.log('No favorite items found or invalid response structure');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error loading favorite list:', error);
                         }
 
 
