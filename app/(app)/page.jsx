@@ -10,7 +10,6 @@ import { trackPageView } from "@/lib/analytics";
 
 import Hero from "@/components/ui/Hero";
 import Playlists from "@/components/playlist/Playlists";
-import FilterOptions from "@/components/search/FilterOptions";
 import Footer from "@/components/ui/Footer";
 import MusicItemList from "@/components/player/MusicItemList";
 import MusicItem from "@/components/player/MusicItem";
@@ -51,7 +50,7 @@ export default function Home() {
       <Playlists />
       {/* <FilterOptions /> */}
 
-      
+
 
       <MusicItemList>
         {listMode === 'empty' ? (
