@@ -9,7 +9,7 @@ import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import { trackPageView } from "@/lib/analytics";
 
 import Hero from "@/components/ui/Hero";
-import FilterOptions from "@/components/search/FilterOptions";
+import Playlists from "@/components/playlist/Playlists";
 import Footer from "@/components/ui/Footer";
 import MusicItemList from "@/components/player/MusicItemList";
 import MusicItem from "@/components/player/MusicItem";
@@ -47,8 +47,10 @@ export default function Home() {
       </Hero>
 
 
-
+      <Playlists />
       {/* <FilterOptions /> */}
+
+
 
       <MusicItemList>
         {listMode === 'empty' ? (

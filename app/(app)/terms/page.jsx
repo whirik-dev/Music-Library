@@ -5,7 +5,7 @@ import Footer from "@/components/ui/Footer";
 const { H1, H2, H3, Paragraph, Caption } = Typography;
 
 export const metadata = {
-    title: "이용약관 - 휘릭",
+    title: "이용약관",
     description: "휘릭 서비스 이용약관을 읽어보세요. 이 페이지는 이용자의 책임, 회사의 책임 제한 및 기타 법적 동의사항을 규정합니다.",
 };
   

@@ -27,7 +27,7 @@ const DurationMeter = ({ id, metadata }) => {
     } = useMusicItemStore();
     const isActive = playingTrackId === id && status != null;
 
-    const metaDuration = metadata.find(item => item.type === "duration")?.content ?? "--";
+    const metaDuration = metadata?.find(item => item.type === "duration")?.content ?? "--";
 
     return (
         <div className={`relative select-none text-foreground ${status === 'loading' && isActive && 'animate-pulse'}`}>
