@@ -17,7 +17,7 @@ const PlaylistItem = ({ playlist, onClick, isFavorite = false }) => {
             onClick={onClick}
             className="flex-shrink-0 w-44 sm:w-52 cursor-pointer group"
         >
-            <div className={`aspect-square p-4 sm:p-5 rounded-lg group-hover:scale-105 transition-transform flex flex-col justify-between ${bgClass}`}>
+            <div className={`aspect-square p-4 sm:p-5 rounded-lg group-hover:scale-95 transition-transform flex flex-col justify-between ${bgClass}`}>
                 {/* Top Section - Track Count & Icon */}
                 <div className="flex justify-between items-start">
                     {!isFavorite && (
@@ -58,7 +58,7 @@ const MoreButton = ({ onClick }) => {
             onClick={onClick}
             className="flex-shrink-0 w-44 sm:w-52 cursor-pointer group"
         >
-            <div className="aspect-square p-4 sm:p-5 rounded-lg group-hover:scale-105 transition-transform 
+            <div className="aspect-square p-4 sm:p-5 rounded-lg group-hover:scale-95 transition-transform 
                             flex flex-col items-center justify-center 
                             bg-foreground/10 border-2 border-dashed border-foreground/30 
                             group-hover:border-foreground/50">

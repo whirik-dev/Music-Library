@@ -168,7 +168,7 @@ export default function PlaylistDetail() {
                 </div>
 
                 {/* Content Container */}
-                <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 flex items-end pb-6 sm:pb-8">
+                <div className="relative h-full w-full mx-auto px-4 sm:px-6 flex items-end pb-6 sm:pb-8">
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-end w-full">
                         {/* Thumbnail */}
                         <div className="flex-shrink-0">

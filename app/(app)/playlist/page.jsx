@@ -134,16 +134,16 @@ export default function Playlist() {
 
     return (
         <div className="min-h-screen relative">
-            <Hero className="bg-gradient-to-r from-0% via-50% from-blue-400 via-purple-400 to-pink-400 bg-no-repeat">
+            {/* <Hero className="bg-gradient-to-r from-0% via-50% from-blue-400 via-purple-400 to-pink-400 bg-no-repeat">
                 <h1 className="text-3xl font-bold py-5 text-white">{t('my_playlists')}</h1>
-            </Hero>
+            </Hero> */}
 
             <div className="container mx-auto px-5 py-10">
                 {loading ? (
                     <div className="text-center py-10 text-foreground/50">{t('loading')}</div>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        <CreatePlaylistCard onClick={() => setShowCreateModal(true)} />
+                        {/* <CreatePlaylistCard onClick={() => setShowCreateModal(true)} /> */}
                         {playlists.map((playlist) => (
                             <PlaylistCard
                                 key={playlist.id}
