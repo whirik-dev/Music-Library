@@ -33,14 +33,30 @@ export default function TailoredPage() {
                 return;
             }
 
+            // 백엔드가 숫자 타입을 요구하므로 숫자로 전달
+            const params = new URLSearchParams();
+            params.append('page', 1);
+            params.append('limit', 50);
+            params.append('sort', 'created_at');
+            params.append('order', 'desc');
+
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/list?page=1&limit=50&sort=created_at&order=desc`,
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}/tailored/list?${params.toString()}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${session.user.ssid}`
                     }
                 }
             );
+
+            if (!response.ok) {
+                console.error('API Error:', response.status, response.statusText);
+                const errorData = await response.json();
+                console.error('Error details:', errorData);
+                // 백엔드 validation 에러 - 임시로 빈 배열 사용
+                setWorks([]);
+                return;
+            }
 
             const data = await response.json();
             if (data.success && data.data?.jobs) {

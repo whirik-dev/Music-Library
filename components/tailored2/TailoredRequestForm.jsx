@@ -1,16 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import Button from "@/components/ui/Button2";
 import InputTextarea from "@/components/ui/InputTextarea";
 import TailoredPlayer from "@/components/tailored/TailoredPlayer";
 
-const TailoredRequestForm = ({ music, file, onSubmit, onBack }) => {
+const TailoredRequestForm = ({ music, file, musicTitle, onSubmit, onBack }) => {
     const t = useTranslations('tailored');
     const [selectedItems, setSelectedItems] = useState([]);
+    const [title, setTitle] = useState('');
     const [comment1, setComment1] = useState('');
-    const [comment2, setComment2] = useState('');
+    const [comment2, setComment2] = useState(t('whirik_reference_work') || 'Reference work for tailored service');
+
+    // musicTitle이 변경되면 title 업데이트
+    useEffect(() => {
+        if (musicTitle) {
+            setTitle(musicTitle);
+        }
+    }, [musicTitle]);
 
     // 요청 가능한 항목들
     const availableItems = [
@@ -31,6 +39,10 @@ const TailoredRequestForm = ({ music, file, onSubmit, onBack }) => {
     };
 
     const handleSubmit = () => {
+        if (!title.trim()) {
+            alert(t('please_enter_title') || '제목을 입력해주세요');
+            return;
+        }
         if (selectedItems.length === 0) {
             alert(t('please_select_items') || '최소 1개 이상의 항목을 선택해주세요');
             return;
@@ -41,6 +53,7 @@ const TailoredRequestForm = ({ music, file, onSubmit, onBack }) => {
         }
 
         onSubmit({
+            title: title.trim(),
             items: selectedItems.map(id => 
                 availableItems.find(item => item.id === id)?.label
             ).filter(Boolean), // null/undefined 제거
@@ -58,6 +71,20 @@ const TailoredRequestForm = ({ music, file, onSubmit, onBack }) => {
                 <p className="text-zinc-400">
                     {t('enter_request_details_description') || '어떻게 수정하고 싶으신가요?'}
                 </p>
+            </div>
+
+            {/* Title Input */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                <label className="text-sm font-semibold text-white mb-2 block">
+                    {t('request_title') || '요청 제목'} *
+                </label>
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={t('request_title_placeholder') || 'Tailored Jobs - 음악 이름'}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500"
+                />
             </div>
 
             {/* Music Preview */}

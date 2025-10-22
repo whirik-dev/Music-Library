@@ -21,7 +21,9 @@ export default function TailoredNewPage() {
     const [requestType, setRequestType] = useState(null); // 'service' or 'upload'
     const [selectedMusic, setSelectedMusic] = useState(null);
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [musicTitle, setMusicTitle] = useState('');
     const [requestData, setRequestData] = useState({
+        title: '',
         items: [],
         comment1: '',
         comment2: ''
@@ -37,9 +39,28 @@ export default function TailoredNewPage() {
             // 서비스 음악으로 자동 설정
             setRequestType('service');
             setSelectedMusic({ id: musicId });
+            
+            // 음악 정보 가져오기
+            fetchMusicTitle(musicId);
+            
             setStep(3); // 바로 요청사항 입력 단계로
         }
     }, [searchParams]);
+
+    // 음악 제목 가져오기
+    const fetchMusicTitle = async (musicId) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/${musicId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const title = data.data?.metadata?.find(item => item.type === 'title')?.content || '';
+                setMusicTitle(`Tailored Jobs - ${title}`);
+            }
+        } catch (error) {
+            console.error('Failed to fetch music title:', error);
+            setMusicTitle(`Tailored Jobs - ${musicId.slice(-6)}`);
+        }
+    };
 
     const handleBack = () => {
         if (step === 1) {
@@ -54,13 +75,32 @@ export default function TailoredNewPage() {
         setStep(2);
     };
 
-    const handleMusicSelect = (music) => {
+    const handleMusicSelect = async (music) => {
         setSelectedMusic(music);
+        
+        // 음악 제목 가져오기
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/music/${music.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                const title = data.data?.metadata?.find(item => item.type === 'title')?.content || '';
+                setMusicTitle(`Tailored Jobs - ${title}`);
+            } else {
+                setMusicTitle(`Tailored Jobs - ${music.id.slice(-6)}`);
+            }
+        } catch (error) {
+            console.error('Failed to fetch music title:', error);
+            setMusicTitle(`Tailored Jobs - ${music.id.slice(-6)}`);
+        }
+        
         setStep(3);
     };
 
     const handleFileUpload = (file) => {
         setUploadedFile(file);
+        // 파일 업로드 시 파일명 기반 제목
+        const fileName = file.name.replace(/\.[^/.]+$/, ''); // 확장자 제거
+        setMusicTitle(`Tailored Jobs - ${fileName}`);
         setStep(3);
     };
 
@@ -84,7 +124,7 @@ export default function TailoredNewPage() {
             const musicId = requestType === 'service' ? selectedMusic?.id : null;
             
             const requestBody = {
-                title: `Tailored Request - ${new Date().toISOString().slice(0, 10)}`,
+                title: data.title,
                 director: session.user.email || 'user@example.com',
                 'music-genre': [], // TODO: Add genre selection
                 'due-date': threeDaysLater.toISOString(),
@@ -96,7 +136,7 @@ export default function TailoredNewPage() {
                         comment: item
                     })),
                     comment1: data.comment1,
-                    comment2: data.comment2 || ''
+                    comment2: data.comment2 || t('whirik_reference_work') || 'Reference work for tailored service'
                 }
             };
 
@@ -224,6 +264,7 @@ export default function TailoredNewPage() {
                             <TailoredRequestForm
                                 music={selectedMusic}
                                 file={uploadedFile}
+                                musicTitle={musicTitle}
                                 onSubmit={handleRequestSubmit}
                                 onBack={() => setStep(2)}
                             />
