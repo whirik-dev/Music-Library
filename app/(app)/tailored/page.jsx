@@ -9,13 +9,16 @@ import Button from "@/components/ui/Button2";
 import PageHero from "@/components/page/PageHero";
 import EmptyContent from "@/components/page/EmptyContent";
 import TailoredWorkCard from "@/components/tailored2/TailoredWorkCard";
+import TailoredWorkListItem from "@/components/tailored2/TailoredWorkListItem";
 import TailoredWorkCardSkeleton from "@/components/tailored2/TailoredWorkCardSkeleton";
+import { IconLayoutGrid, IconList } from "@tabler/icons-react";
 
 export default function TailoredPage() {
     const t = useTranslations('tailored');
     const router = useRouter();
     const [works, setWorks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
     useEffect(() => {
         fetchWorks();
@@ -65,6 +68,34 @@ export default function TailoredPage() {
 
             {/* Works List */}
             <div className="max-w-7xl mx-auto px-4 py-12">
+                {/* View Mode Toggle */}
+                {!isLoading && works.length > 0 && (
+                    <div className="flex justify-end mb-6">
+                        <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${viewMode === 'grid'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
+                            >
+                                <IconLayoutGrid size={18} />
+                                <span className="text-sm font-medium">Grid</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${viewMode === 'list'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
+                            >
+                                <IconList size={18} />
+                                <span className="text-sm font-medium">List</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[...Array(6)].map((_, i) => (
@@ -87,11 +118,21 @@ export default function TailoredPage() {
                         </div>
                     </EmptyContent>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {works.map((work) => (
-                            <TailoredWorkCard key={work.id} work={work} />
-                        ))}
-                    </div>
+                    <>
+                        {viewMode === 'grid' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {works.map((work) => (
+                                    <TailoredWorkCard key={work.id} work={work} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {works.map((work) => (
+                                    <TailoredWorkListItem key={work.id} work={work} />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

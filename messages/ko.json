@@ -482,9 +482,12 @@
         "enter_request_details": "Enter Request Details",
         "confirm_request": "Confirm Request",
         "status_pending": "Pending",
-        "status_in_progress": "In Progress",
+        "status_estimated": "Estimated",
+        "status_processing": "Processing",
+        "status_confirming": "Confirming",
         "status_completed": "Completed",
         "status_cancelled": "Cancelled",
+        "status_failed": "Failed",
         "created_at": "Created At",
         "original_music": "Original Music",
         "timeline": "Timeline",
@@ -556,7 +559,10 @@
         "request_failed": "Request Failed",
         "request_failed_message": "Failed to submit your request. Please try again.",
         "try_again": "Try Again",
-        "go_back": "Go Back"
+        "go_back": "Go Back",
+        "action_required_approve": "⚡ Action Required - Approve",
+        "action_required_confirm": "⚡ Action Required - Confirm",
+        "completed_music": "Completed Music"
     },
     "forms": {
         "input_reset_warning": "Input information will be reset.",
