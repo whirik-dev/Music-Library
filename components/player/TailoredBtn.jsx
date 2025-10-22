@@ -1,42 +1,35 @@
-import { IconScissors } from "@tabler/icons-react"
+"use client";
 
-import useTailoredStore from "@/stores/useTailoredStore";
+import { useRouter } from "next/navigation";
+import { IconScissors } from "@tabler/icons-react";
 import useAuthStore from "@/stores/authStore";
 
-const DownloadBtn = ({ id }) => {
-    const { target, setTarget, setStep, addWorks, works } = useTailoredStore();
+const TailoredBtn = ({ id }) => {
+    const router = useRouter();
     const { toggleAuthModal, isLogged } = useAuthStore();
 
-    const handleTailoredToggle = (id) => {
+    const handleTailoredClick = (e) => {
+        e.stopPropagation(); // 부모 요소의 클릭 이벤트 방지
 
-        // 로그인 했는지 안했는지
-        if(!isLogged)
-        {
+        // 로그인 확인
+        if (!isLogged) {
             toggleAuthModal();
             return;
         }
-    
-        TailoredHandler(id);
-        setStep(1);
-        addWorks("work-d-1");
-        console.log(works);
-    }
 
-    function TailoredHandler(id){
-        if(target === null )
-        {
-            setTarget(id);
-        }
-        else
-        {
-            console.log('tailored target aleady exist');
-        }
-    }
+        // Tailored 신규 요청 페이지로 이동 (음악 ID 포함)
+        router.push(`/tailored/new?musicId=${id}`);
+    };
 
     return (
-        <div className="cursor-pointer hover:opacity-50" onClick={()=>handleTailoredToggle(id)}>
-            <IconScissors size="18"  />
+        <div 
+            className="cursor-pointer hover:opacity-50 transition-opacity" 
+            onClick={handleTailoredClick}
+            title="Request tailored music"
+        >
+            <IconScissors size="18" />
         </div>
-    )
-}
-export default DownloadBtn;
+    );
+};
+
+export default TailoredBtn;

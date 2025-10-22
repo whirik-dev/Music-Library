@@ -137,7 +137,7 @@ const TailoredDetailCompleted = ({ id }) => {
 
                 <div className="bg-foreground/3 p-3 rounded-lg mb-3">
                     <div className="text-xs text-foreground/50 uppercase mb-2">
-                        Generated Music
+                        Completed Music
                     </div>
                     {audioLoading ? (
                         <div className="flex items-center justify-center p-4 text-foreground/50">

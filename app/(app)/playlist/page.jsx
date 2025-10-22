@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { IconPlus, IconLock, IconWorld } from '@tabler/icons-react';
-import Hero from "@/components/ui/Hero";
+import PageHero from "@/components/page/PageHero";
 import Footer from "@/components/ui/Footer";
 
 const PlaylistCard = ({ playlist, onClick }) => {
@@ -134,11 +134,14 @@ export default function Playlist() {
 
     return (
         <div className="min-h-screen relative">
-            {/* <Hero className="bg-gradient-to-r from-0% via-50% from-blue-400 via-purple-400 to-pink-400 bg-no-repeat">
-                <h1 className="text-3xl font-bold py-5 text-white">{t('my_playlists')}</h1>
-            </Hero> */}
+            <PageHero
+                title={t('my_playlists')}
+                description={t('playlist_description') || '나만의 플레이리스트를 만들고 관리하세요'}
+                // buttonText={t('create_playlist')}
+                // onButtonClick={() => setShowCreateModal(true)}
+            />
 
-            <div className="container mx-auto px-5 py-10">
+            <div className="max-w-7xl mx-auto px-4 py-10">
                 {loading ? (
                     <div className="text-center py-10 text-foreground/50">{t('loading')}</div>
                 ) : (
