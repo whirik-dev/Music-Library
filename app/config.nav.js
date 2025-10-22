@@ -14,11 +14,11 @@ const ListOfNavigation = [
         pagename: "tailored",
         path: "/tailored",
     },
-    {
-        key: 'nav-4',
-        pagename: "refineSearch",
-        path: "#",
-    },
+    // {
+    //     key: 'nav-4',
+    //     pagename: "refineSearch",
+    //     path: "#",
+    // },
 ]
 
 export default ListOfNavigation
