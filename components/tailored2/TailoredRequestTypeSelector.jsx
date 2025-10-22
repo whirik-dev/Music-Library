@@ -39,24 +39,22 @@ const TailoredRequestTypeSelector = ({ onSelect }) => {
                     </div>
                 </button>
 
-                {/* Upload Music Option */}
+                {/* Upload Music Option - Disabled */}
                 <button
-                    onClick={() => onSelect('upload')}
+                    disabled
                     className="group relative bg-zinc-900 border-2 border-zinc-800 rounded-xl p-8 
-                               hover:border-blue-500 transition-all duration-300 text-left
-                               hover:shadow-lg hover:shadow-blue-500/20"
+                               text-left opacity-50 cursor-not-allowed"
                 >
                     <div className="flex flex-col items-center text-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center
-                                      group-hover:bg-blue-500/30 transition-colors">
-                            <IconUpload size={32} className="text-blue-400" />
+                        <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
+                            <IconUpload size={32} className="text-zinc-600" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-white mb-2">
+                            <h3 className="text-xl font-bold text-zinc-500 mb-2">
                                 {t('upload_my_music') || '내 음악 업로드'}
                             </h3>
-                            <p className="text-zinc-400 text-sm">
-                                {t('upload_my_music_description') || '직접 보유한 음악 파일을 업로드하세요'}
+                            <p className="text-zinc-600 text-sm">
+                                {t('coming_soon') || 'Coming Soon'}
                             </p>
                         </div>
                     </div>

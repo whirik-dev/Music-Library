@@ -501,6 +501,7 @@
         "no_music_available": "No music available",
         "shuffle": "Shuffle",
         "select_and_continue": "Select & Continue",
+        "coming_soon": "Coming Soon",
         "status_pending": "Pending",
         "status_estimated": "Estimated",
         "status_processing": "Processing",
