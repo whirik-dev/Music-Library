@@ -125,7 +125,7 @@ export default function TailoredNewPage() {
             
             const requestBody = {
                 title: data.title,
-                director: session.user.email || 'user@example.com',
+                director: 'api@whirik.com',
                 'music-genre': ['Tailored Service'],
                 'due-date': threeDaysLater.toISOString(),
                 invisible: false,
