@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { IconChevronLeft, IconMusic, IconUpload, IconCheck } from "@tabler/icons-react";
 
@@ -16,6 +16,7 @@ import TailoredRequestConfirm from "@/components/tailored2/TailoredRequestConfir
 export default function TailoredNewPage() {
     const t = useTranslations('tailored');
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1); // 1: 타입선택, 2: 음악선택/업로드, 3: 요청사항입력
     const [requestType, setRequestType] = useState(null); // 'service' or 'upload'
     const [selectedMusic, setSelectedMusic] = useState(null);
@@ -28,6 +29,17 @@ export default function TailoredNewPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState(null); // 'success' or 'error'
     const [submitMessage, setSubmitMessage] = useState('');
+
+    // URL 파라미터에서 음악 ID 확인 (다른 페이지에서 직접 연결된 경우)
+    useEffect(() => {
+        const musicId = searchParams.get('musicId');
+        if (musicId) {
+            // 서비스 음악으로 자동 설정
+            setRequestType('service');
+            setSelectedMusic({ id: musicId });
+            setStep(3); // 바로 요청사항 입력 단계로
+        }
+    }, [searchParams]);
 
     const handleBack = () => {
         if (step === 1) {
