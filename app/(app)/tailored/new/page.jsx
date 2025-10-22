@@ -126,15 +126,17 @@ export default function TailoredNewPage() {
             const requestBody = {
                 title: data.title,
                 director: session.user.email || 'user@example.com',
-                'music-genre': [], // TODO: Add genre selection
+                'music-genre': ['Tailored Service'],
                 'due-date': threeDaysLater.toISOString(),
                 invisible: false,
                 sow: {
-                    items: data.items.map(item => ({
-                        pos1: '00:00.00',
-                        pos2: '00:00.00',
-                        comment: item
-                    })),
+                    items: [
+                        {
+                            pos1: '00:00.00',
+                            pos2: '00:00.00',
+                            comment: data.comment1 // 상세 요청사항을 comment로
+                        }
+                    ],
                     comment1: data.comment1,
                     comment2: data.comment2 || t('whirik_reference_work') || 'Reference work for tailored service'
                 }
