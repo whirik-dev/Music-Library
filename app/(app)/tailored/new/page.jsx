@@ -10,7 +10,9 @@ import Button from "@/components/ui/Button2";
 import TailoredRequestTypeSelector from "@/components/tailored2/TailoredRequestTypeSelector";
 import TailoredMusicSelector from "@/components/tailored2/TailoredMusicSelector";
 import TailoredFileUploader from "@/components/tailored2/TailoredFileUploader";
+import TailoredR2FileUploader from "@/components/tailored2/TailoredR2FileUploader";
 import TailoredRequestForm from "@/components/tailored2/TailoredRequestForm";
+import TailoredUploadRequestForm from "@/components/tailored2/TailoredUploadRequestForm";
 import TailoredRequestConfirm from "@/components/tailored2/TailoredRequestConfirm";
 
 export default function TailoredNewPage() {
@@ -104,6 +106,11 @@ export default function TailoredNewPage() {
         setStep(3);
     };
 
+    const handleR2UploadComplete = (uploadedFiles) => {
+        setUploadedFile(uploadedFiles); // 배열로 저장
+        setStep(3);
+    };
+
     const handleRequestSubmit = async (data) => {
         setRequestData(data);
         setIsSubmitting(true);
@@ -145,6 +152,12 @@ export default function TailoredNewPage() {
             // 서비스 음악 선택 시 ref-music 추가
             if (musicId) {
                 requestBody['ref-music'] = `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${musicId}?r=preview`;
+            }
+            
+            // 업로드된 파일이 있는 경우 (R2 업로드)
+            if (requestType === 'upload' && data.uploadedFiles && data.uploadedFiles.length > 0) {
+                // 첫 번째 파일의 공개 URL 사용
+                requestBody['ref-music'] = data.uploadedFiles[0].publicUrl;
             }
 
             const response = await fetch(
@@ -256,20 +269,33 @@ export default function TailoredNewPage() {
                                 {requestType === 'service' ? (
                                     <TailoredMusicSelector onSelect={handleMusicSelect} />
                                 ) : (
-                                    <TailoredFileUploader onUpload={handleFileUpload} />
+                                    <TailoredR2FileUploader 
+                                        onUploadComplete={handleR2UploadComplete}
+                                        onBack={() => setStep(1)}
+                                    />
                                 )}
                             </>
                         )}
 
                         {/* Step 3: Request Form */}
                         {step === 3 && (
-                            <TailoredRequestForm
-                                music={selectedMusic}
-                                file={uploadedFile}
-                                musicTitle={musicTitle}
-                                onSubmit={handleRequestSubmit}
-                                onBack={() => setStep(2)}
-                            />
+                            <>
+                                {requestType === 'service' ? (
+                                    <TailoredRequestForm
+                                        music={selectedMusic}
+                                        file={null}
+                                        musicTitle={musicTitle}
+                                        onSubmit={handleRequestSubmit}
+                                        onBack={() => setStep(2)}
+                                    />
+                                ) : (
+                                    <TailoredUploadRequestForm
+                                        uploadedFiles={uploadedFile}
+                                        onSubmit={handleRequestSubmit}
+                                        onBack={() => setStep(2)}
+                                    />
+                                )}
+                            </>
                         )}
                     </>
                 )}

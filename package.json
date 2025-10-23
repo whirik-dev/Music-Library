@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.914.0",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.8.2",
     "@tabler/icons-react": "^3.31.0",

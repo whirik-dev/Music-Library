@@ -131,7 +131,19 @@ export default function TailoredDetailPage() {
                             <h3 className="text-lg font-semibold text-white mb-4">
                                 {t('reference_music') || 'Reference Music'}
                             </h3>
-                            <TailoredPlayer id={work.requirements['ref-music'].split('/').pop().split('?')[0]} />
+                            {work.requirements['ref-music'].includes('tailoredrequestfiles.probgm.com') ? (
+                                // 업로드된 파일 - 기본 audio 태그 사용
+                                <div className="bg-zinc-800/50 p-4 rounded-lg">
+                                    <audio
+                                        controls
+                                        src={`/api/media-stream?url=${encodeURIComponent(work.requirements['ref-music'])}`}
+                                        className="w-full"
+                                    />
+                                </div>
+                            ) : (
+                                // 서비스 음악 - TailoredPlayer 사용
+                                <TailoredPlayer id={work.requirements['ref-music'].split('/').pop().split('?')[0]} />
+                            )}
                         </div>
                     )}
 
