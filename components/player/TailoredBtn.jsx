@@ -25,7 +25,7 @@ const TailoredBtn = ({ id }) => {
         <div 
             className="cursor-pointer hover:opacity-50 transition-opacity" 
             onClick={handleTailoredClick}
-            title="Request tailored music"
+            title="Custom Request"
         >
             <IconScissors size="18" />
         </div>

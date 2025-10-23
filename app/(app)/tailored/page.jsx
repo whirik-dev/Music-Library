@@ -78,7 +78,7 @@ export default function TailoredPage() {
             <PageHero
                 title={t('tailored_service')}
                 description={t('tailored_description') || '음악을 당신의 취향에 맞게 커스터마이징하세요'}
-                buttonText={t('new_request') || '새 요청'}
+                buttonText={t('custom_request') || 'Custom Request'}
                 onButtonClick={handleNewRequest}
             />
 

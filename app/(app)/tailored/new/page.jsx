@@ -19,8 +19,8 @@ export default function TailoredNewPage() {
     const t = useTranslations('tailored');
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [step, setStep] = useState(1); // 1: 타입선택, 2: 음악선택/업로드, 3: 요청사항입력
-    const [requestType, setRequestType] = useState(null); // 'service' or 'upload'
+    const [step, setStep] = useState(2); // 1: 타입선택, 2: 음악선택/업로드, 3: 요청사항입력
+    const [requestType, setRequestType] = useState('upload'); // 'service' or 'upload' - 기본값 upload
     const [selectedMusic, setSelectedMusic] = useState(null);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [musicTitle, setMusicTitle] = useState('');
@@ -46,6 +46,10 @@ export default function TailoredNewPage() {
             fetchMusicTitle(musicId);
             
             setStep(3); // 바로 요청사항 입력 단계로
+        } else {
+            // musicId가 없으면 업로드 화면으로 (기본값)
+            setRequestType('upload');
+            setStep(2);
         }
     }, [searchParams]);
 
