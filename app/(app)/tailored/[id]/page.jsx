@@ -17,11 +17,13 @@ import TailoredDetailResult from "@/components/modal/partials/TailoredDetailResu
 import TailoredDetailCompleted from "@/components/modal/partials/TailoredDetailCompleted";
 import TailoredDetailCancelled from "@/components/modal/partials/TailoredDetailCancelled";
 import TailoredDetailFail from "@/components/modal/partials/TailoredDetailFail";
+import useAuthStore from "@/stores/authStore";
 
 export default function TailoredDetailPage() {
     const t = useTranslations('tailored');
     const params = useParams();
     const router = useRouter();
+    const { credits } = useAuthStore();
     const [work, setWork] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -86,9 +88,9 @@ export default function TailoredDetailPage() {
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -127,20 +129,20 @@ export default function TailoredDetailPage() {
                     <TailoredDetailPending id={work.job_id} onJobUpdate={fetchWorkDetail} />
                 )}
                 {work.status === 'estimated' && (
-                    <TailoredDetailEstimate 
-                        id={work.job_id} 
-                        onJobUpdate={() => fetchWorkDetail(params.id)} 
+                    <TailoredDetailEstimate
+                        id={work.job_id}
+                        onJobUpdate={() => fetchWorkDetail(params.id)}
                         jobDetail={work}
-                        userBalance={0} // TODO: Get from user context
+                        userBalance={credits}
                     />
                 )}
                 {work.status === 'processing' && (
                     <TailoredDetailProcessing id={work.job_id} />
                 )}
                 {work.status === 'confirming' && (
-                    <TailoredDetailResult 
-                        id={work.job_id} 
-                        onJobUpdate={() => fetchWorkDetail(params.id)} 
+                    <TailoredDetailResult
+                        id={work.job_id}
+                        onJobUpdate={() => fetchWorkDetail(params.id)}
                     />
                 )}
                 {work.status === 'completed' && (
