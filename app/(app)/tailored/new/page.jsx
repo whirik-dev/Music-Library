@@ -139,7 +139,7 @@ export default function TailoredNewPage() {
                 director: 'api@whirik.com',
                 'music-genre': ['Tailored Service'],
                 'due-date': threeDaysLater.toISOString(),
-                invisible: false,
+                invisible: true,
                 sow: {
                     items: [
                         {
