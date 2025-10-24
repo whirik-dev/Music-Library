@@ -39,22 +39,27 @@ const TailoredRequestTypeSelector = ({ onSelect }) => {
                     </div>
                 </button>
 
-                {/* Upload Music Option - Disabled */}
+                {/* Upload Music Option */}
                 <button
-                    disabled
+                    onClick={() => onSelect('upload')}
                     className="group relative bg-zinc-900 border-2 border-zinc-800 rounded-xl p-8 
-                               text-left opacity-50 cursor-not-allowed"
+                               hover:border-blue-500 transition-all duration-300 text-left
+                               hover:shadow-lg hover:shadow-blue-500/20"
                 >
                     <div className="flex flex-col items-center text-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
-                            <IconUpload size={32} className="text-zinc-600" />
+                        <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center
+                                      group-hover:bg-blue-500/30 transition-colors">
+                            <IconUpload size={32} className="text-blue-400" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-zinc-500 mb-2">
+                            <h3 className="text-xl font-bold text-white mb-2">
                                 {t('upload_my_music') || '내 음악 업로드'}
                             </h3>
-                            <p className="text-zinc-600 text-sm">
-                                {t('coming_soon') || 'Coming Soon'}
+                            <p className="text-zinc-400 text-sm mb-2">
+                                {t('upload_my_music_description') || '직접 보유한 음악 파일을 업로드하세요'}
+                            </p>
+                            <p className="text-zinc-500 text-xs">
+                                {t('supported_formats_extended') || 'Audio: MP3, WAV, AAC • Video: MP4, MOV • Image: JPG, PNG'}
                             </p>
                         </div>
                     </div>

@@ -17,11 +17,13 @@ import TailoredDetailResult from "@/components/modal/partials/TailoredDetailResu
 import TailoredDetailCompleted from "@/components/modal/partials/TailoredDetailCompleted";
 import TailoredDetailCancelled from "@/components/modal/partials/TailoredDetailCancelled";
 import TailoredDetailFail from "@/components/modal/partials/TailoredDetailFail";
+import useAuthStore from "@/stores/authStore";
 
 export default function TailoredDetailPage() {
     const t = useTranslations('tailored');
     const params = useParams();
     const router = useRouter();
+    const { credits } = useAuthStore();
     const [work, setWork] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -86,9 +88,9 @@ export default function TailoredDetailPage() {
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -122,25 +124,105 @@ export default function TailoredDetailPage() {
 
             {/* Content */}
             <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="space-y-6 mb-8">
+                    {/* Reference Music */}
+                    {work.requirements?.['ref-music'] && (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-white mb-4">
+                                {t('reference_music') || 'Reference Music'}
+                            </h3>
+                            {work.requirements['ref-music'].includes('tailoredrequestfiles.probgm.com') ? (
+                                // 업로드된 파일 - 기본 audio 태그 사용
+                                <div className="bg-zinc-800/50 p-4 rounded-lg">
+                                    <audio
+                                        controls
+                                        src={`/api/media-stream?url=${encodeURIComponent(work.requirements['ref-music'])}`}
+                                        className="w-full"
+                                    />
+                                </div>
+                            ) : (
+                                // 서비스 음악 - TailoredPlayer 사용
+                                <TailoredPlayer id={work.requirements['ref-music'].split('/').pop().split('?')[0]} />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Request Details */}
+                    {work.requirements?.sow && (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-white mb-4">
+                                {t('request_details') || 'Request Details'}
+                            </h3>
+
+                            <div className="space-y-4">
+                                {/* Items */}
+                                {work.requirements.sow.items && work.requirements.sow.items.length > 0 && (
+                                    <div>
+                                        <div className="text-sm font-semibold text-zinc-400 mb-2">
+                                            {t('detailed_requests') || 'Detailed Requests'}
+                                        </div>
+                                        <div className="space-y-2">
+                                            {work.requirements.sow.items.map((item, index) => (
+                                                <div key={index} className="bg-zinc-800/50 p-3 rounded-lg">
+                                                    <div className="text-xs font-mono text-purple-400 mb-1">
+                                                        {item.pos1} - {item.pos2}
+                                                    </div>
+                                                    <div className="text-sm text-white">
+                                                        {item.comment}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Comment1 */}
+                                {work.requirements.sow.comment1 && (
+                                    <div>
+                                        <div className="text-sm font-semibold text-zinc-400 mb-2">
+                                            {t('additional_requests') || 'Additional Requests'}
+                                        </div>
+                                        <div className="bg-zinc-800/50 p-4 rounded-lg text-sm text-white whitespace-pre-wrap">
+                                            {work.requirements.sow.comment1}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Comment2 */}
+                                {work.requirements.sow.comment2 && (
+                                    <div>
+                                        <div className="text-sm font-semibold text-zinc-400 mb-2">
+                                            {t('reference_notes') || 'Reference Notes'}
+                                        </div>
+                                        <div className="bg-zinc-800/50 p-4 rounded-lg text-sm text-zinc-400">
+                                            {work.requirements.sow.comment2}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Status-based Content */}
                 {work.status === 'pending' && (
                     <TailoredDetailPending id={work.job_id} onJobUpdate={fetchWorkDetail} />
                 )}
                 {work.status === 'estimated' && (
-                    <TailoredDetailEstimate 
-                        id={work.job_id} 
-                        onJobUpdate={() => fetchWorkDetail(params.id)} 
+                    <TailoredDetailEstimate
+                        id={work.job_id}
+                        onJobUpdate={() => fetchWorkDetail(params.id)}
                         jobDetail={work}
-                        userBalance={0} // TODO: Get from user context
+                        userBalance={credits}
                     />
                 )}
                 {work.status === 'processing' && (
                     <TailoredDetailProcessing id={work.job_id} />
                 )}
                 {work.status === 'confirming' && (
-                    <TailoredDetailResult 
-                        id={work.job_id} 
-                        onJobUpdate={() => fetchWorkDetail(params.id)} 
+                    <TailoredDetailResult
+                        id={work.job_id}
+                        onJobUpdate={() => fetchWorkDetail(params.id)}
                     />
                 )}
                 {work.status === 'completed' && (

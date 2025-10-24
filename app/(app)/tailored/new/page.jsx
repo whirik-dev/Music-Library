@@ -10,15 +10,17 @@ import Button from "@/components/ui/Button2";
 import TailoredRequestTypeSelector from "@/components/tailored2/TailoredRequestTypeSelector";
 import TailoredMusicSelector from "@/components/tailored2/TailoredMusicSelector";
 import TailoredFileUploader from "@/components/tailored2/TailoredFileUploader";
+import TailoredR2FileUploader from "@/components/tailored2/TailoredR2FileUploader";
 import TailoredRequestForm from "@/components/tailored2/TailoredRequestForm";
+import TailoredUploadRequestForm from "@/components/tailored2/TailoredUploadRequestForm";
 import TailoredRequestConfirm from "@/components/tailored2/TailoredRequestConfirm";
 
 export default function TailoredNewPage() {
     const t = useTranslations('tailored');
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [step, setStep] = useState(1); // 1: 타입선택, 2: 음악선택/업로드, 3: 요청사항입력
-    const [requestType, setRequestType] = useState(null); // 'service' or 'upload'
+    const [step, setStep] = useState(2); // 1: 타입선택, 2: 음악선택/업로드, 3: 요청사항입력
+    const [requestType, setRequestType] = useState('upload'); // 'service' or 'upload' - 기본값 upload
     const [selectedMusic, setSelectedMusic] = useState(null);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [musicTitle, setMusicTitle] = useState('');
@@ -44,6 +46,10 @@ export default function TailoredNewPage() {
             fetchMusicTitle(musicId);
             
             setStep(3); // 바로 요청사항 입력 단계로
+        } else {
+            // musicId가 없으면 업로드 화면으로 (기본값)
+            setRequestType('upload');
+            setStep(2);
         }
     }, [searchParams]);
 
@@ -104,6 +110,11 @@ export default function TailoredNewPage() {
         setStep(3);
     };
 
+    const handleR2UploadComplete = (uploadedFiles) => {
+        setUploadedFile(uploadedFiles); // 배열로 저장
+        setStep(3);
+    };
+
     const handleRequestSubmit = async (data) => {
         setRequestData(data);
         setIsSubmitting(true);
@@ -145,6 +156,12 @@ export default function TailoredNewPage() {
             // 서비스 음악 선택 시 ref-music 추가
             if (musicId) {
                 requestBody['ref-music'] = `https://${process.env.NEXT_PUBLIC_ASSET_SERVER}/${musicId}?r=preview`;
+            }
+            
+            // 업로드된 파일이 있는 경우 (R2 업로드)
+            if (requestType === 'upload' && data.uploadedFiles && data.uploadedFiles.length > 0) {
+                // 첫 번째 파일의 공개 URL 사용
+                requestBody['ref-music'] = data.uploadedFiles[0].publicUrl;
             }
 
             const response = await fetch(
@@ -256,20 +273,33 @@ export default function TailoredNewPage() {
                                 {requestType === 'service' ? (
                                     <TailoredMusicSelector onSelect={handleMusicSelect} />
                                 ) : (
-                                    <TailoredFileUploader onUpload={handleFileUpload} />
+                                    <TailoredR2FileUploader 
+                                        onUploadComplete={handleR2UploadComplete}
+                                        onBack={() => setStep(1)}
+                                    />
                                 )}
                             </>
                         )}
 
                         {/* Step 3: Request Form */}
                         {step === 3 && (
-                            <TailoredRequestForm
-                                music={selectedMusic}
-                                file={uploadedFile}
-                                musicTitle={musicTitle}
-                                onSubmit={handleRequestSubmit}
-                                onBack={() => setStep(2)}
-                            />
+                            <>
+                                {requestType === 'service' ? (
+                                    <TailoredRequestForm
+                                        music={selectedMusic}
+                                        file={null}
+                                        musicTitle={musicTitle}
+                                        onSubmit={handleRequestSubmit}
+                                        onBack={() => setStep(2)}
+                                    />
+                                ) : (
+                                    <TailoredUploadRequestForm
+                                        uploadedFiles={uploadedFile}
+                                        onSubmit={handleRequestSubmit}
+                                        onBack={() => setStep(2)}
+                                    />
+                                )}
+                            </>
                         )}
                     </>
                 )}

@@ -32,6 +32,14 @@ const orgs = {
         "logo_tailwind": "bg-white/20 backdrop-sm",
         "tailwind": "bg-white border-t-7 border-blue-700",
     },
+    "hansei.ac.kr" : {
+        "org_id" : "whirik",
+        "name" : "한세대학교",
+        "name_en" : "hansei university",
+        "logo" : "/org/hansei.png",
+        "logo_tailwind" : "bg-white/20 backdrop-sm",
+        "tailwind" : "bg-white border-t-7 border-blue-800",
+    },
 
     "backup": {
         "org_id": "dummy",
