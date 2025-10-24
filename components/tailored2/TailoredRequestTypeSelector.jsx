@@ -55,8 +55,11 @@ const TailoredRequestTypeSelector = ({ onSelect }) => {
                             <h3 className="text-xl font-bold text-white mb-2">
                                 {t('upload_my_music') || '내 음악 업로드'}
                             </h3>
-                            <p className="text-zinc-400 text-sm">
+                            <p className="text-zinc-400 text-sm mb-2">
                                 {t('upload_my_music_description') || '직접 보유한 음악 파일을 업로드하세요'}
+                            </p>
+                            <p className="text-zinc-500 text-xs">
+                                {t('supported_formats_extended') || 'Audio: MP3, WAV, AAC • Video: MP4, MOV • Image: JPG, PNG'}
                             </p>
                         </div>
                     </div>
